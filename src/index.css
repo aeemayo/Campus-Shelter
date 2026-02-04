@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Campus-Shelter Design System - Bold & Vibrant Theme */
+
+@layer base {
+  :root {
+    /* Deep Purple/Blue Primary */
+    --background: 250 100% 99%;
+    --foreground: 250 50% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 250 50% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 250 50% 10%;
+
+    /* Deep Purple Primary */
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Lighter Purple Secondary */
+    --secondary: 262 60% 95%;
+    --secondary-foreground: 262 83% 35%;
+
+    --muted: 250 30% 96%;
+    --muted-foreground: 250 20% 45%;
+
+    /* Vibrant Orange Accent */
+    --accent: 28 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 250 20% 90%;
+    --input: 250 20% 90%;
+    --ring: 262 83% 58%;
+
+    --radius: 0.75rem;
+
+    /* Custom Campus-Shelter tokens */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(280, 80%, 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(28, 100%, 55%) 0%, hsl(38, 100%, 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(262, 70%, 45%) 50%, hsl(280, 80%, 40%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(262 83% 58% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(262 83% 58% / 0.1), 0 2px 4px -2px hsl(262 83% 58% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(262 83% 58% / 0.1), 0 4px 6px -4px hsl(262 83% 58% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(262 83% 58% / 0.15), 0 8px 10px -6px hsl(262 83% 58% / 0.1);
+
+    --sidebar-background: 250 100% 99%;
+    --sidebar-foreground: 250 50% 10%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 262 60% 95%;
+    --sidebar-accent-foreground: 262 83% 35%;
+    --sidebar-border: 250 20% 90%;
+    --sidebar-ring: 262 83% 58%;
+  }
+
+  .dark {
+    --background: 250 50% 6%;
+    --foreground: 250 20% 98%;
+
+    --card: 250 45% 10%;
+    --card-foreground: 250 20% 98%;
+
+    --popover: 250 45% 10%;
+    --popover-foreground: 250 20% 98%;
+
+    --primary: 262 83% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 262 40% 20%;
+    --secondary-foreground: 262 60% 85%;
+
+    --muted: 250 30% 15%;
+    --muted-foreground: 250 20% 65%;
+
+    --accent: 28 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 250 30% 18%;
+    --input: 250 30% 18%;
+    --ring: 262 83% 65%;
+
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --sidebar-background: 250 50% 8%;
+    --sidebar-foreground: 250 20% 98%;
+    --sidebar-primary: 262 83% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 262 40% 20%;
+    --sidebar-accent-foreground: 262 60% 85%;
+    --sidebar-border: 250 30% 18%;
+    --sidebar-ring: 262 83% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .shadow-primary-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-primary-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-primary-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-primary-xl {
+    box-shadow: var(--shadow-xl);
+  }
+}
