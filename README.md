@@ -2,7 +2,7 @@
 
 Welcome to **Campus Shelter**! This project is a modern, responsive landing page designed to help students find their perfect accommodation with ease. It's built with love using the latest web technologies to ensure a smooth and engaging user experience.
 
-## What's Inside? 🌟
+## What's Inside? 
 
 We've crafted a set of components that work together to create a compelling landing page:
 
@@ -13,7 +13,7 @@ We've crafted a set of components that work together to create a compelling land
 - **Testimonials**: Social proof from happy students who found their homes.
 - **Call to Action**: Encourages users to sign up or start their search.
 
-## Tech Stack 🛠️
+## Tech Stack 
 
 We're using a robust and modern stack:
 
@@ -24,9 +24,9 @@ We're using a robust and modern stack:
 - **State Management**: [TanStack Query](https://tanstack.com/query/latest) (For efficient data fetching).
 - **Testing**: [Vitest](https://vitest.dev/) (For peace of mind).
 
-## Getting Started 🚀
+## Getting Started 
 
-Want to run this locally? It's easy peasy.
+Want to run this locally? It's easy easy.
 
 ### Prerequisites
 
@@ -62,7 +62,7 @@ Make sure you have Node.js installed. We also noticed a `bun.lockb` file, so if 
 
     Open your browser and head to the URL shown in your terminal (usually `http://localhost:5173`).
 
-## Available Scripts 📜
+## Available Scripts 
 
 Here are some helpful commands you can run:
 
@@ -72,7 +72,7 @@ Here are some helpful commands you can run:
 - **`npm run test`**: Run the test suite to ensure everything is working correctly.
 - **`npm run lint`**: Check your code for style issues and potential bugs.
 
-## Project Structure 📂
+## Project Structure 
 
 Here's a quick map of the project files:
 
