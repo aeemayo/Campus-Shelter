@@ -1,44 +1,46 @@
-import { MapPin, Home, Users, ArrowRight } from "lucide-react";
+import { MapPin, Home, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const locations = [
   {
     name: "Ilesha Road",
     properties: 120,
-    image: "gradient-to-br from-primary to-primary/70",
+    image: "/images/locations/ilesha-road.jpg",
     popular: true,
   },
   {
     name: "FUTA South Gate",
     properties: 85,
-    image: "gradient-to-br from-accent to-accent/70",
+    image: "/images/locations/south-gate.jpg",
     popular: true,
   },
   {
     name: "North Gate",
     properties: 65,
-    image: "gradient-to-br from-success to-success/70",
+    image: "/images/locations/north-gate.jpg",
     popular: false,
   },
   {
     name: "Apatapiti",
     properties: 45,
-    image: "gradient-to-br from-warning to-warning/70",
+    image: "/images/locations/apatapiti.jpg",
     popular: false,
   },
   {
     name: "FUTA Road",
     properties: 78,
-    image: "gradient-to-br from-primary to-accent",
+    image: "/images/locations/futa-road.jpg",
     popular: true,
   },
   {
     name: "Obakekere",
     properties: 32,
-    image: "gradient-to-br from-secondary-foreground to-muted-foreground",
+    image: "/images/locations/obakekere.jpg",
     popular: false,
   },
 ];
+
+const DEFAULT_LOCATION_IMAGE = "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=750&fit=crop&q=80";
 
 const PopularLocations = () => {
   return (
@@ -69,8 +71,15 @@ const PopularLocations = () => {
               to={`/properties?location=${encodeURIComponent(location.name)}`}
               className="group relative rounded-2xl overflow-hidden aspect-[4/5] hover:shadow-primary-lg transition-all duration-300"
             >
-              {/* Background */}
-              <div className={`absolute inset-0 bg-${location.image}`} />
+              {/* Background Image */}
+              <img
+                src={location.image}
+                alt={location.name}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = DEFAULT_LOCATION_IMAGE;
+                }}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               
               {/* Popular Badge */}
