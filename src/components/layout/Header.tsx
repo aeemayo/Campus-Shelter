@@ -1,10 +1,32 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const scrollToSection = (sectionId: string) => {
+    setIsMenuOpen(false);
+
+    const scroll = () => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
+    if (location.pathname === "/") {
+      // Already on homepage, scroll directly
+      scroll();
+    } else {
+      // Navigate to homepage first, then scroll after render
+      navigate("/");
+      setTimeout(scroll, 150);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -25,9 +47,16 @@ const Header = () => {
             <Link to="/properties" className="text-muted-foreground hover:text-foreground transition-colors">
               Browse Properties
             </Link>
-            <Link to="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a
+              href="/#how-it-works"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection("how-it-works");
+              }}
+              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
               How It Works
-            </Link>
+            </a>
             <Link to="/for-landlords" className="text-muted-foreground hover:text-foreground transition-colors">
               For Landlords
             </Link>
@@ -63,13 +92,16 @@ const Header = () => {
               >
                 Browse Properties
               </Link>
-              <Link 
-                to="/how-it-works" 
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setIsMenuOpen(false)}
+              <a
+                href="/#how-it-works"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection("how-it-works");
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors py-2 cursor-pointer"
               >
                 How It Works
-              </Link>
+              </a>
               <Link 
                 to="/for-landlords" 
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
