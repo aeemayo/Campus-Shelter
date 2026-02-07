@@ -82,8 +82,4 @@ Here's a quick map of the project files:
 - **`src/hooks`**: Custom React hooks.
 - **`public`**: Static assets like `robots.txt`.
 
-## Contributing 🤝
 
-Found a bug? Want to add a shiny new feature? We love contributions! Feel free to open an issue or submit a pull request.
-
-Happy Coding! ✨
