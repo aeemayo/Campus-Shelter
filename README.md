@@ -72,14 +72,6 @@ Here are some helpful commands you can run:
 - **`npm run test`**: Run the test suite to ensure everything is working correctly.
 - **`npm run lint`**: Check your code for style issues and potential bugs.
 
-## Project Structure 
 
-Here's a quick map of the project files:
-
-- **`src/components`**: Where all the UI magic happens (Landing page sections, Layouts, UI primitives).
-- **`src/pages`**: The main page views (currently `Index` and `NotFound`).
-- **`src/lib`**: Helper utilities and configurations.
-- **`src/hooks`**: Custom React hooks.
-- **`public`**: Static assets like `robots.txt`.
 
 
