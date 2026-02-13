@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import NotFound from "./pages/NotFound";
+import SignUp from "./pages/signUp";
+import SignIn from "./pages/signIn";
+import ScrollToTop from "./pages/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -15,11 +18,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/properties" element={<Properties />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
+          <Route path="/register" element={<SignUp />}></Route>
+          <Route path="/login" element={<SignIn />}></Route>
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
