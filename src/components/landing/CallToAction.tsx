@@ -11,7 +11,7 @@ const benefits = [
 
 const CallToAction = () => {
   return (
-    <section className="py-20 bg-muted/50">
+    <section id="call-to-action" className="py-20 bg-muted/50">
       <div className="container mx-auto px-4">
         <div className="relative rounded-3xl overflow-hidden">
           {/* Background */}
