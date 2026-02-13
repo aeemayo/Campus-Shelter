@@ -117,7 +117,7 @@ const Header = () => {
                 }}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2 cursor-pointer"
               >
-                For Landlords
+                Join Us
               </a>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Button variant="outline" asChild className="w-full">
