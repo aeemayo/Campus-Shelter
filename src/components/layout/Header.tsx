@@ -57,9 +57,16 @@ const Header = () => {
             >
               How It Works
             </a>
-            <Link to="/for-landlords" className="text-muted-foreground hover:text-foreground transition-colors">
-              For Landlords
-            </Link>
+            <a
+              href="/#call-to-action"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection("call-to-action");
+              }}
+              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              Join Us
+            </a>
           </nav>
 
           {/* Desktop Auth Buttons */}
@@ -102,13 +109,16 @@ const Header = () => {
               >
                 How It Works
               </a>
-              <Link 
-                to="/for-landlords" 
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setIsMenuOpen(false)}
+              <a
+                href="/#call-to-action"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection("call-to-action");
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors py-2 cursor-pointer"
               >
                 For Landlords
-              </Link>
+              </a>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Button variant="outline" asChild className="w-full">
                   <Link to="/login">Sign In</Link>
