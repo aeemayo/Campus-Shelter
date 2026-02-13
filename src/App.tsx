@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import NotFound from "./pages/NotFound";
-import SignUp from "./pages/signUp";
-import SignIn from "./pages/signIn";
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
 import ScrollToTop from "./pages/ScrollToTop";
 
 const queryClient = new QueryClient();
