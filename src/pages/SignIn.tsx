@@ -195,7 +195,7 @@ export default function SignIn() {
           <CardFooter className="flex flex-col items-center justify-center text-sm text-muted-foreground pt-2 pb-8">
             Don&apos;t have an account?{" "}
             <Link
-              to="/sign-up"
+              to="/register"
               className="text-violet-700 hover:text-violet-800 font-medium underline underline-offset-4 ml-1"
             >
               Sign up
