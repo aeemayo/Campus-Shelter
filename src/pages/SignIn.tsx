@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useAuth } from "@/contexts/AuthContext";
+import { ApiError } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +40,8 @@ type SignInFormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignInFormValues>({
@@ -50,15 +55,17 @@ export default function SignIn() {
 
   async function onSubmit(values: SignInFormValues) {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1400));
-
-    console.log("Sign in payload:", values);
-    // Here you would call your auth API (e.g. supabase, firebase, your backend)
-
-    setIsLoading(false);
-    // On success → redirect
-    navigate("/dashboard"); // or wherever after login
+    try {
+      await login({ email: values.email, password: values.password });
+      toast({ title: "Welcome back!", description: "You've signed in successfully." });
+      navigate("/properties");
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      toast({ title: "Sign in failed", description: message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

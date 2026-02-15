@@ -5,7 +5,10 @@ import PropertyCard from "@/components/properties/PropertyCard";
 import PropertyFilters, { FilterState } from "@/components/properties/PropertyFilters";
 import PropertySearch from "@/components/properties/PropertySearch";
 import { mockProperties, priceRanges } from "@/data/mockProperties";
-import { Home } from "lucide-react";
+import { useProperties } from "@/hooks/use-properties";
+import { toFrontendProperty } from "@/lib/propertyAdapter";
+import { Home, Loader2 } from "lucide-react";
+import type { RoomType } from "@/services/properties";
 
 const Properties = () => {
   const [filters, setFilters] = useState<FilterState>({
@@ -20,8 +23,42 @@ const Properties = () => {
     verifiedOnly: false,
   });
 
+  // ─── Build API query params from current filters ───────────
+  const apiParams = useMemo(() => {
+    const p: Record<string, unknown> = { limit: 50 };
+    if (filters.location !== "All Locations") p.location = filters.location;
+    if (filters.furnishedOnly) p.furnished = true;
+    if (filters.amenities.includes("Wi-Fi")) p.wifi = true;
+    if (filters.priceRange !== "all") {
+      const range = priceRanges.find((r) => r.value === filters.priceRange);
+      if (range) {
+        if (range.min > 0) p.minPrice = range.min;
+        if (range.max < Infinity) p.maxPrice = range.max;
+      }
+    }
+    const roomTypeMap: Record<string, RoomType> = {
+      "single-room": "SINGLE",
+      "self-con": "SELF_CON",
+      "mini-flat": "MINI_FLAT",
+    };
+    if (filters.propertyType !== "all" && roomTypeMap[filters.propertyType]) {
+      p.roomType = roomTypeMap[filters.propertyType];
+    }
+    return p;
+  }, [filters]);
+
+  const { data: apiResponse, isLoading: apiLoading, isError } = useProperties(apiParams);
+
+  // Convert API data → frontend shape, or fall back to mock
+  const baseProperties = useMemo(() => {
+    if (apiResponse?.data && apiResponse.data.length > 0) {
+      return apiResponse.data.map(toFrontendProperty);
+    }
+    return mockProperties; // fallback
+  }, [apiResponse]);
+
   const filteredProperties = useMemo(() => {
-    let result = [...mockProperties];
+    let result = [...baseProperties];
 
     // Search filter
     if (filters.search) {
@@ -149,7 +186,12 @@ const Properties = () => {
               </div>
 
               {/* Results Grid */}
-              {filteredProperties.length > 0 ? (
+              {apiLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                  <p className="text-muted-foreground">Loading properties...</p>
+                </div>
+              ) : filteredProperties.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredProperties.map((property) => (
                     <PropertyCard key={property.id} property={property} />

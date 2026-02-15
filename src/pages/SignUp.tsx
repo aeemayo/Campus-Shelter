@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useAuth } from "@/contexts/AuthContext";
+import { ApiError } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +55,8 @@ type SignUpFormValues = z.infer<typeof formSchema>;
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { register: registerUser } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignUpFormValues>({
@@ -68,15 +73,23 @@ export default function SignUp() {
 
   async function onSubmit(values: SignUpFormValues) {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1400));
-
-    console.log("Sign up payload:", values);
-    // Here you would call your auth API (e.g. supabase, firebase, your backend)
-
-    setIsLoading(false);
-    // On success → redirect
-    navigate("/verify-email"); // or '/dashboard' / onboarding flow
+    try {
+      await registerUser({
+        name: values.fullName,
+        email: values.email,
+        password: values.password,
+        phone: values.phone || undefined,
+        role: "STUDENT",
+      });
+      toast({ title: "Account created!", description: "Welcome to CampusShelter." });
+      navigate("/properties");
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Registration failed. Please try again.";
+      toast({ title: "Sign up failed", description: message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
