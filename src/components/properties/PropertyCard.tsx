@@ -4,11 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, MapPin, Star, Bed, Bath, Shield, Wifi, Zap, Droplets } from "lucide-react";
 import { Property } from "@/data/mockProperties";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 
 interface PropertyCardProps {
   property: Property;
+  isFavorite?: boolean;
+  onFavoriteToggle?: () => void;
+  onViewDetails?: () => void;
 }
 
 const amenityIcons: Record<string, React.ReactNode> = {
@@ -18,8 +20,12 @@ const amenityIcons: Record<string, React.ReactNode> = {
   'Security': <Shield className="w-3 h-3" />,
 };
 
-const PropertyCard = ({ property }: PropertyCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+const PropertyCard = ({
+  property,
+  isFavorite = false,
+  onFavoriteToggle,
+  onViewDetails,
+}: PropertyCardProps) => {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -65,7 +71,10 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
 
         {/* Favorite button */}
         <button
-          onClick={() => setIsFavorite(!isFavorite)}
+          type="button"
+          onClick={onFavoriteToggle}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-background hover:scale-110"
         >
           <Heart
@@ -163,7 +172,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             </span>
           </div>
           <Button size="sm" asChild className="gradient-primary hover:opacity-90">
-            <Link to={`/properties/${property.id}`}>
+            <Link to={`/properties/${property.id}`} onClick={onViewDetails}>
               View Details
             </Link>
           </Button>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -6,11 +6,16 @@ import PropertyFilters, { FilterState } from "@/components/properties/PropertyFi
 import PropertySearch from "@/components/properties/PropertySearch";
 import { mockProperties, priceRanges } from "@/data/mockProperties";
 import { useProperties } from "@/hooks/use-properties";
+import { useUserActivity } from "@/hooks/use-user-activity";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
+import { useAuth } from "@/contexts/AuthContext";
+import { Switch } from "@/components/ui/switch";
 import { Home, Loader2 } from "lucide-react";
 import type { RoomType } from "@/services/properties";
 
 const Properties = () => {
+  const { user, isAuthenticated } = useAuth();
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     location: 'All Locations',
@@ -22,6 +27,30 @@ const Properties = () => {
     furnishedOnly: false,
     verifiedOnly: false,
   });
+
+  const {
+    favorites,
+    lastFilters,
+    saveFilters,
+    saveSearch,
+    toggleFavorite,
+    markViewed,
+  } = useUserActivity(isAuthenticated ? user?.id : undefined);
+  const hydratedFiltersRef = useRef(false);
+
+  useEffect(() => {
+    if (hydratedFiltersRef.current) return;
+    if (lastFilters) {
+      setFilters(lastFilters);
+    }
+    hydratedFiltersRef.current = true;
+  }, [lastFilters]);
+
+  useEffect(() => {
+    if (!hydratedFiltersRef.current) return;
+    saveFilters(filters);
+    saveSearch(filters.search);
+  }, [filters, saveFilters, saveSearch]);
 
   // ─── Build API query params from current filters ───────────
   const apiParams = useMemo(() => {
@@ -47,6 +76,8 @@ const Properties = () => {
     return p;
   }, [filters]);
 
+  const firstName = user?.name?.trim().split(" ")[0] ?? "";
+
   const { data: apiResponse, isLoading: apiLoading, isError } = useProperties(apiParams);
 
   // Convert API data → frontend shape, or fall back to mock
@@ -59,6 +90,10 @@ const Properties = () => {
 
   const filteredProperties = useMemo(() => {
     let result = [...baseProperties];
+
+    if (favoritesOnly) {
+      result = result.filter((property) => favorites.includes(property.id));
+    }
 
     // Search filter
     if (filters.search) {
@@ -128,7 +163,7 @@ const Properties = () => {
     }
 
     return result;
-  }, [filters]);
+  }, [baseProperties, favoritesOnly, favorites, filters]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,6 +184,11 @@ const Properties = () => {
           <p className="text-muted-foreground max-w-2xl">
             Browse through verified properties near FUTA. Filter by location, price, and amenities to find your ideal student housing.
           </p>
+          {isAuthenticated && (
+            <p className="text-sm text-primary mt-2">
+              Welcome back{firstName ? `, ${firstName}` : ""}. We saved your last filters and favorites.
+            </p>
+          )}
         </div>
       </section>
 
@@ -174,6 +214,16 @@ const Properties = () => {
                   onSortChange={(sortBy) => setFilters({ ...filters, sortBy })}
                   resultCount={filteredProperties.length}
                 />
+                {isAuthenticated && (
+                  <div className="mt-3 flex items-center justify-end gap-2">
+                    <span className="text-sm text-muted-foreground">Favorites only</span>
+                    <Switch
+                      checked={favoritesOnly}
+                      onCheckedChange={setFavoritesOnly}
+                      aria-label="Show favorites only"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Mobile Filters */}
@@ -194,7 +244,13 @@ const Properties = () => {
               ) : filteredProperties.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredProperties.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      isFavorite={favorites.includes(property.id)}
+                      onFavoriteToggle={() => toggleFavorite(property.id)}
+                      onViewDetails={() => markViewed(property.id)}
+                    />
                   ))}
                 </div>
               ) : (
