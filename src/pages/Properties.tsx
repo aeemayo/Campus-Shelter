@@ -2,7 +2,9 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/properties/PropertyCard";
-import PropertyFilters, { FilterState } from "@/components/properties/PropertyFilters";
+import PropertyFilters, {
+  FilterState,
+} from "@/components/properties/PropertyFilters";
 import PropertySearch from "@/components/properties/PropertySearch";
 import { mockProperties, priceRanges } from "@/data/mockProperties";
 import { useProperties } from "@/hooks/use-properties";
@@ -17,12 +19,12 @@ const Properties = () => {
   const { user, isAuthenticated } = useAuth();
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    location: 'All Locations',
-    propertyType: 'all',
-    priceRange: 'all',
+    search: "",
+    location: "All Locations",
+    propertyType: "all",
+    priceRange: "all",
     amenities: [],
-    sortBy: 'featured',
+    sortBy: "featured",
     availableOnly: false,
     furnishedOnly: false,
     verifiedOnly: false,
@@ -78,7 +80,11 @@ const Properties = () => {
 
   const firstName = user?.name?.trim().split(" ")[0] ?? "";
 
-  const { data: apiResponse, isLoading: apiLoading, isError } = useProperties(apiParams);
+  const {
+    data: apiResponse,
+    isLoading: apiLoading,
+    isError,
+  } = useProperties(apiParams);
 
   // Convert API data → frontend shape, or fall back to mock
   const baseProperties = useMemo(() => {
@@ -102,32 +108,34 @@ const Properties = () => {
         (p) =>
           p.title.toLowerCase().includes(searchLower) ||
           p.location.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower)
+          p.description.toLowerCase().includes(searchLower),
       );
     }
 
     // Location filter
-    if (filters.location !== 'All Locations') {
+    if (filters.location !== "All Locations") {
       result = result.filter((p) => p.location === filters.location);
     }
 
     // Property type filter
-    if (filters.propertyType !== 'all') {
+    if (filters.propertyType !== "all") {
       result = result.filter((p) => p.type === filters.propertyType);
     }
 
     // Price range filter
-    if (filters.priceRange !== 'all') {
+    if (filters.priceRange !== "all") {
       const range = priceRanges.find((r) => r.value === filters.priceRange);
       if (range) {
-        result = result.filter((p) => p.price >= range.min && p.price <= range.max);
+        result = result.filter(
+          (p) => p.price >= range.min && p.price <= range.max,
+        );
       }
     }
 
     // Amenities filter
     if (filters.amenities.length > 0) {
       result = result.filter((p) =>
-        filters.amenities.every((a) => p.amenities.includes(a))
+        filters.amenities.every((a) => p.amenities.includes(a)),
       );
     }
 
@@ -144,19 +152,19 @@ const Properties = () => {
 
     // Sorting
     switch (filters.sortBy) {
-      case 'price-low':
+      case "price-low":
         result.sort((a, b) => a.price - b.price);
         break;
-      case 'price-high':
+      case "price-high":
         result.sort((a, b) => b.price - a.price);
         break;
-      case 'rating':
+      case "rating":
         result.sort((a, b) => b.rating - a.rating);
         break;
-      case 'newest':
+      case "newest":
         result.sort((a, b) => parseInt(b.id) - parseInt(a.id));
         break;
-      case 'featured':
+      case "featured":
       default:
         result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
         break;
@@ -168,7 +176,7 @@ const Properties = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Page Header */}
       <section className="pt-24 pb-8 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4">
@@ -179,14 +187,17 @@ const Properties = () => {
             <span className="text-foreground">Properties</span>
           </div>
           <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Find Your Perfect <span className="text-primary">Accommodation</span>
+            Find Your Perfect{" "}
+            <span className="text-primary">Accommodation</span>
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Browse through verified properties near FUTA. Filter by location, price, and amenities to find your ideal student housing.
+            Browse through verified properties near FUTA. Filter by location,
+            price, and amenities to find your ideal student housing.
           </p>
           {isAuthenticated && (
             <p className="text-sm text-primary mt-2">
-              Welcome back{firstName ? `, ${firstName}` : ""}. We saved your last filters and favorites.
+              Welcome back{firstName ? `, ${firstName}` : ""}. We saved your
+              last filters and favorites.
             </p>
           )}
         </div>
@@ -210,13 +221,17 @@ const Properties = () => {
                 <PropertySearch
                   search={filters.search}
                   sortBy={filters.sortBy}
-                  onSearchChange={(search) => setFilters({ ...filters, search })}
+                  onSearchChange={(search) =>
+                    setFilters({ ...filters, search })
+                  }
                   onSortChange={(sortBy) => setFilters({ ...filters, sortBy })}
                   resultCount={filteredProperties.length}
                 />
                 {isAuthenticated && (
                   <div className="mt-3 flex items-center justify-end gap-2">
-                    <span className="text-sm text-muted-foreground">Favorites only</span>
+                    <span className="text-sm text-muted-foreground">
+                      Favorites only
+                    </span>
                     <Switch
                       checked={favoritesOnly}
                       onCheckedChange={setFavoritesOnly}

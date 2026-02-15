@@ -1,10 +1,19 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Star, Bed, Bath, Shield, Wifi, Zap, Droplets } from "lucide-react";
+import {
+  Heart,
+  MapPin,
+  Star,
+  Bed,
+  Bath,
+  Shield,
+  Wifi,
+  Zap,
+  Droplets,
+} from "lucide-react";
 import { Property } from "@/data/mockProperties";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface PropertyCardProps {
   property: Property;
@@ -14,10 +23,10 @@ interface PropertyCardProps {
 }
 
 const amenityIcons: Record<string, React.ReactNode> = {
-  'Wi-Fi': <Wifi className="w-3 h-3" />,
-  'Electricity Backup': <Zap className="w-3 h-3" />,
-  'Water Supply': <Droplets className="w-3 h-3" />,
-  'Security': <Shield className="w-3 h-3" />,
+  "Wi-Fi": <Wifi className="w-3 h-3" />,
+  "Electricity Backup": <Zap className="w-3 h-3" />,
+  "Water Supply": <Droplets className="w-3 h-3" />,
+  Security: <Shield className="w-3 h-3" />,
 };
 
 const PropertyCard = ({
@@ -26,24 +35,28 @@ const PropertyCard = ({
   onFavoriteToggle,
   onViewDetails,
 }: PropertyCardProps) => {
-
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      maximumFractionDigits: 0,
     }).format(price);
   };
 
   const typeLabels: Record<string, string> = {
-    'single-room': 'Single Room',
-    'self-con': 'Self-Contained',
-    'mini-flat': 'Mini Flat',
-    'shared': 'Shared Room'
+    "single-room": "Single Room",
+    "self-con": "Self-Contained",
+    "mini-flat": "Mini Flat",
+    shared: "Shared Room",
   };
 
+  const navigate = useNavigate();
+
   return (
-    <Card className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
+    <Card
+      className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer"
+      onClick={() => navigate(`/properties/${property.id}`)}
+    >
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
@@ -51,10 +64,10 @@ const PropertyCard = ({
           alt={property.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        
+
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
+
         {/* Top badges */}
         <div className="absolute top-3 left-3 flex gap-2">
           {property.featured && (
@@ -62,24 +75,23 @@ const PropertyCard = ({
               Featured
             </Badge>
           )}
-          {!property.available && (
-            <Badge variant="destructive">
-              Occupied
-            </Badge>
-          )}
+          {!property.available && <Badge variant="destructive">Occupied</Badge>}
         </div>
 
         {/* Favorite button */}
         <button
           type="button"
-          onClick={onFavoriteToggle}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFavoriteToggle?.();
+          }}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-background hover:scale-110"
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-background hover:scale-110  z-10"
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isFavorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'
+              isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
             }`}
           />
         </button>
@@ -91,7 +103,7 @@ const PropertyCard = ({
               {formatPrice(property.price)}
             </span>
             <span className="text-sm text-muted-foreground">
-              /{property.priceType === 'yearly' ? 'year' : 'month'}
+              /{property.priceType === "yearly" ? "year" : "month"}
             </span>
           </div>
         </div>
@@ -99,7 +111,10 @@ const PropertyCard = ({
         {/* Verified badge */}
         {property.landlord.verified && (
           <div className="absolute bottom-3 right-3">
-            <Badge variant="secondary" className="bg-green-500/90 text-white border-0">
+            <Badge
+              variant="secondary"
+              className="bg-green-500/90 text-white border-0"
+            >
               <Shield className="w-3 h-3 mr-1" />
               Verified
             </Badge>
@@ -118,12 +133,14 @@ const PropertyCard = ({
               {typeLabels[property.type]}
             </Badge>
           </div>
-          
+
           {/* Location */}
           <div className="flex items-center gap-1 mt-1 text-muted-foreground">
             <MapPin className="w-4 h-4 text-primary" />
             <span className="text-sm">{property.location}</span>
-            <span className="text-xs text-muted-foreground/70">• {property.distance}</span>
+            <span className="text-xs text-muted-foreground/70">
+              • {property.distance}
+            </span>
           </div>
         </div>
 
@@ -164,14 +181,11 @@ const PropertyCard = ({
 
         {/* Rating and CTA */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-accent text-accent" />
-            <span className="font-medium text-foreground">{property.rating}</span>
-            <span className="text-sm text-muted-foreground">
-              ({property.reviewCount} reviews)
-            </span>
-          </div>
-          <Button size="sm" asChild className="gradient-primary hover:opacity-90">
+          <Button
+            size="sm"
+            asChild
+            className="gradient-primary hover:opacity-90 w-full"
+          >
             <Link to={`/properties/${property.id}`} onClick={onViewDetails}>
               View Details
             </Link>
