@@ -1,9 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Home, Star } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const [location, setLocation] = useState("");
+  const [roomType, setRoomType] = useState("");
+
+  const handleSearch = () => {
+    const query = new URLSearchParams();
+
+    if (location.trim()) query.set("location", location.trim());
+    if (roomType.trim()) query.set("roomType", roomType.trim());
+
+    const search = query.toString();
+    navigate(search ? `/properties?${search}` : "/properties");
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Gradient */}
@@ -46,6 +61,8 @@ const Hero = () => {
                 <Input 
                   placeholder="Enter location (e.g., Ilesha Road)" 
                   className="pl-10 h-12 border-0 bg-muted/50 focus-visible:ring-primary"
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
                 />
               </div>
               <div className="relative flex-1">
@@ -53,9 +70,14 @@ const Hero = () => {
                 <Input 
                   placeholder="Room type (Self-con, Mini flat...)" 
                   className="pl-10 h-12 border-0 bg-muted/50 focus-visible:ring-primary"
+                  value={roomType}
+                  onChange={(event) => setRoomType(event.target.value)}
                 />
               </div>
-              <Button className="h-12 px-8 gradient-primary hover:opacity-90 transition-opacity">
+              <Button
+                className="h-12 px-8 gradient-primary hover:opacity-90 transition-opacity"
+                onClick={handleSearch}
+              >
                 <Search className="w-5 h-5 mr-2" />
                 Search
               </Button>
@@ -82,9 +104,6 @@ const Hero = () => {
           <div className="flex flex-wrap justify-center gap-4 mt-10 animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
             <Button variant="outline" asChild className="bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/20">
               <Link to="/properties">Browse All Properties</Link>
-            </Button>
-            <Button variant="ghost" asChild className="text-primary-foreground hover:bg-primary-foreground/10">
-              <Link to="/for-landlords">List Your Property →</Link>
             </Button>
           </div>
         </div>

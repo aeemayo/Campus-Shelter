@@ -13,10 +13,12 @@ import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { Home, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
 
 const Properties = () => {
   const { user, isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
@@ -40,13 +42,47 @@ const Properties = () => {
   } = useUserActivity(isAuthenticated ? user?.id : undefined);
   const hydratedFiltersRef = useRef(false);
 
+  const normalizeRoomType = (value: string): FilterState["propertyType"] => {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized.includes("self")) return "self-con";
+    if (normalized.includes("mini")) return "mini-flat";
+    if (normalized.includes("single")) return "single-room";
+
+    return "all";
+  };
+
   useEffect(() => {
     if (hydratedFiltersRef.current) return;
-    if (lastFilters) {
-      setFilters(lastFilters);
-    }
+
+    const locationParam = searchParams.get("location")?.trim() ?? "";
+    const roomTypeParam = searchParams.get("roomType")?.trim() ?? "";
+    const mappedPropertyType = roomTypeParam
+      ? normalizeRoomType(roomTypeParam)
+      : "all";
+
+    setFilters((current) => {
+      const base = lastFilters ?? current;
+      const next = { ...base };
+
+      if (locationParam) {
+        next.location = "All Locations";
+        next.search = locationParam;
+      }
+
+      if (roomTypeParam) {
+        if (mappedPropertyType !== "all") {
+          next.propertyType = mappedPropertyType;
+        } else {
+          next.search = [next.search, roomTypeParam].filter(Boolean).join(" ");
+        }
+      }
+
+      return next;
+    });
+
     hydratedFiltersRef.current = true;
-  }, [lastFilters]);
+  }, [lastFilters, searchParams]);
 
   useEffect(() => {
     if (!hydratedFiltersRef.current) return;
