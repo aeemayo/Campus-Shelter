@@ -11,6 +11,7 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import ScrollToTop from "./pages/ScrollToTop";
 import PropertyDetails from "./pages/PropertyDetails";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/register" element={<SignUp />}></Route>
             <Route path="/login" element={<SignIn />}></Route>
             <Route path="/properties/:id" element={<PropertyDetails />}></Route>
+            <Route path="/profile" element={<Profile />}></Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
