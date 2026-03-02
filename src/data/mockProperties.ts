@@ -86,12 +86,10 @@ export const mockProperties: Property[] = [
     bedrooms: 2,
     bathrooms: 1,
     images: [
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-      "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=800",
-      "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=800",
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=800",
-      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=800",
-      "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?q=80&w=800",
+      "/images/property2/frontyard.jpeg",
+      "/images/property2/living-romm.png",
+      "/images/property2/bedroom.png",
+      "/images/property2/bathroom.png",
     ],
     amenities: [
       "Wi-Fi",
