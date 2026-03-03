@@ -181,6 +181,19 @@ export async function fetchAdminUsers(role?: string) {
   return apiFetch<ApiPaginated<any>>(`/api/admin/users${query}`);
 }
 
+export async function adminFlagUser(id: string, flagged: boolean) {
+  return apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}/flag`, {
+    method: "PATCH",
+    body: JSON.stringify({ flagged }),
+  });
+}
+
+export async function adminDeleteUser(id: string) {
+  return apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}`, {
+    method: "DELETE",
+  });
+}
+
 // ─── Filter Metadata ─────────────────────────────────────────
 
 export const locations = [

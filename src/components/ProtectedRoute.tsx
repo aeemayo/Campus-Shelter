@@ -1,0 +1,87 @@
+import { Navigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import type { UserRole } from "@/services/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Clock, XCircle, LogOut, ShieldCheck } from "lucide-react";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: UserRole[];
+  allowUnverifiedLandlord?: boolean;
+}
+
+const roleHomeMap: Record<UserRole, string> = {
+  STUDENT: "/properties",
+  LANDLORD: "/landlord",
+  ADMIN: "/admin",
+};
+
+export default function ProtectedRoute({ children, allowedRoles, allowUnverifiedLandlord }: ProtectedRouteProps) {
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={roleHomeMap[user.role]} replace />;
+  }
+
+  // Block unverified landlords from all landlord routes except profile
+  if (
+    user.role === "LANDLORD" &&
+    !allowUnverifiedLandlord &&
+    user.landlordStatus !== "VERIFIED"
+  ) {
+    const isRejected = user.landlordStatus === "REJECTED";
+
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className={`max-w-md w-full border-2 ${isRejected ? "border-destructive/30" : "border-warning/30"}`}>
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className={`w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center ${isRejected ? "bg-destructive/10" : "bg-warning/10"}`}>
+              {isRejected ? (
+                <XCircle className="w-8 h-8 text-destructive" />
+              ) : (
+                <Clock className="w-8 h-8 text-warning" />
+              )}
+            </div>
+
+            <h2 className="text-xl font-bold tracking-tight mb-2">
+              {isRejected ? "Verification Rejected" : "Verification Pending"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              {isRejected
+                ? "Your landlord verification was rejected. Please contact support or re-upload your ID to try again."
+                : "Your account is being reviewed by our team. You'll be able to access the dashboard once your identity is verified."}
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/profile">
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  View Profile
+                </Link>
+              </Button>
+              <Button variant="ghost" className="text-destructive" onClick={logout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}

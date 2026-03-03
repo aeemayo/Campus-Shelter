@@ -104,7 +104,7 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-0.5">
-              {user?.role !== "LANDLORD" && (
+              {(!isAuthenticated || user?.role === "STUDENT") && (
                 <Link to="/properties" className={navLinkClass("/properties")}>
                   Properties
                 </Link>
@@ -138,7 +138,7 @@ const Header = () => {
                   Bookings
                 </Link>
               )}
-              {isAuthenticated && (
+              {isAuthenticated && user?.role !== "ADMIN" && (
                 <Link to="/messages" className={navLinkClass("/messages")}>
                   Messages
                 </Link>
@@ -238,7 +238,7 @@ const Header = () => {
 
           <div className="relative mx-4 mt-2 bg-card border border-border rounded-xl shadow-primary-xl overflow-hidden animate-fade-in">
             <nav className="p-3 space-y-0.5">
-              {user?.role !== "LANDLORD" && (
+              {(!isAuthenticated || user?.role === "STUDENT") && (
                 <MobileLink
                   to="/properties"
                   icon={Building2}
@@ -258,7 +258,7 @@ const Header = () => {
                 />
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && user?.role !== "ADMIN" && (
                 <MobileLink
                   to="/messages"
                   icon={MessageSquare}
