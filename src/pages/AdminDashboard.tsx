@@ -43,6 +43,18 @@ import {
   fetchAdminUsers,
 } from "@/services/properties";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  PieChart,
+  Pie,
+} from "recharts";
 
 const AdminDashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -113,10 +125,10 @@ const AdminDashboard = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-display font-bold tracking-tight">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage properties, landlords, and documents for the platform.</p>
+              <p className="text-muted-foreground mt-2">Manage properties, landlords, and documents for the platform.</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button asChild className="gradient-primary">
+              <Button asChild className="gradient-primary rounded-full">
                 <Link to="/admin/properties/new">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Property
@@ -146,7 +158,7 @@ const AdminDashboard = () => {
             </TabsList>
 
             <TabsContent value="properties" className="space-y-6">
-              <Card className="border-border/50 shadow-primary-sm bg-card/50 backdrop-blur-sm">
+              <Card className="border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -173,19 +185,19 @@ const AdminDashboard = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-border/50 text-muted-foreground">
-                          <th className="text-left font-medium py-3 px-2">Property</th>
-                          <th className="text-left font-medium py-3 px-2">Landlord</th>
-                          <th className="text-left font-medium py-3 px-2">Price</th>
-                          <th className="text-left font-medium py-3 px-2">Status</th>
-                          <th className="text-right font-medium py-3 px-2">Actions</th>
+                        <tr className="border-b border-border/60 text-muted-foreground">
+                          <th className="text-left font-medium py-4 px-3">Property</th>
+                          <th className="text-left font-medium py-4 px-3">Landlord</th>
+                          <th className="text-left font-medium py-4 px-3">Price</th>
+                          <th className="text-left font-medium py-4 px-3">Status</th>
+                          <th className="text-right font-medium py-4 px-3">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/50">
+                      <tbody className="divide-y divide-border/60">
                         {filteredProperties.length > 0 ? (
                           filteredProperties.map((property) => (
                             <tr key={property.id} className="group hover:bg-muted/30 transition-colors">
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 <div className="flex items-center gap-3">
                                   <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
                                     <img
@@ -200,22 +212,22 @@ const AdminDashboard = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 <p className="font-medium">{property.landlord?.name || "System"}</p>
                                 <p className="text-xs text-muted-foreground">{property.landlord?.email || ""}</p>
                               </td>
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 <p className="font-semibold">₦{property.priceMonthly?.toLocaleString()}</p>
                                 <p className="text-xs text-muted-foreground">monthly</p>
                               </td>
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 {property.approved ? (
                                   <Badge variant="success">Approved</Badge>
                                 ) : (
                                   <Badge variant="warning">Pending</Badge>
                                 )}
                               </td>
-                              <td className="py-4 px-2 text-right text-xs">
+                              <td className="py-5 px-3 text-right text-xs">
                                 <div className="flex items-center justify-end gap-2">
                                   {property.approved ? (
                                     <Button
@@ -288,16 +300,16 @@ const AdminDashboard = () => {
             </TabsContent>
 
             <TabsContent value="documents">
-               <Card className="border-border/50">
+               <Card className="border-border/60">
                 <CardContent className="py-20 text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
                     <FileText className="w-10 h-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Agent Document Upload</h3>
+                  <h3 className="text-xl font-semibold mb-2 tracking-tight">Agent Document Upload</h3>
                   <p className="text-muted-foreground max-w-md mx-auto mb-6">
                     Upload lease documents, IDs, or utility bills for specific landlords and tenants.
                   </p>
-                  <Button asChild className="gradient-primary">
+                  <Button asChild className="gradient-primary rounded-full">
                     <Link to="/admin/documents/upload">
                       <Plus className="w-4 h-4 mr-2" />
                       New Upload
@@ -334,19 +346,32 @@ function AnalyticsTab() {
   }
 
   const analytics = response?.data || {};
+  const overview = analytics.overview || {};
 
   const stats = [
-    { label: "Total Users", value: analytics.totalUsers ?? 0, icon: Users, color: "text-primary" },
-    { label: "Total Properties", value: analytics.totalProperties ?? 0, icon: Building2, color: "text-success" },
-    { label: "Active Bookings", value: analytics.activeBookings ?? analytics.totalBookings ?? 0, icon: CalendarCheck, color: "text-warning" },
-    { label: "Revenue", value: analytics.revenue ? `₦${Number(analytics.revenue).toLocaleString()}` : "₦0", icon: DollarSign, color: "text-accent" },
+    { label: "Total Users", value: overview.totalUsers ?? 0, icon: Users, color: "text-primary" },
+    { label: "Total Properties", value: overview.totalProperties ?? 0, icon: Building2, color: "text-success" },
+    { label: "Active Bookings", value: overview.totalBookings ?? 0, icon: CalendarCheck, color: "text-warning" },
+    { label: "Revenue", value: overview.totalRevenue ? `₦${Number(overview.totalRevenue).toLocaleString()}` : "₦0", icon: DollarSign, color: "text-accent" },
   ];
+
+  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+  const bookingData = (analytics.bookingsByStatus as Array<{ status: string; count: number }> || []).map(item => ({
+    name: item.status.toLowerCase(),
+    value: item.count
+  }));
+
+  const userData = (analytics.usersByRole as Array<{ role: string; count: number }> || []).map(item => ({
+    name: item.role.toLowerCase(),
+    value: item.count
+  }));
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="border-border/50">
+          <Card key={stat.label} className="border-border/60">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
@@ -359,41 +384,81 @@ function AnalyticsTab() {
         ))}
       </div>
 
-      {analytics.bookingsByStatus && (
-        <Card className="border-border/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-border/60">
           <CardHeader>
-            <CardTitle>Bookings by Status</CardTitle>
+            <CardTitle className="text-lg">Bookings by Status</CardTitle>
+            <CardDescription>Distribution of booking requests</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries(analytics.bookingsByStatus as Record<string, number>).map(([status, count]) => (
-                <div key={status} className="text-center p-4 rounded-lg bg-muted/30">
-                  <p className="text-2xl font-bold">{count}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{status.toLowerCase()}</p>
-                </div>
-              ))}
-            </div>
+          <CardContent className="h-[300px]">
+            {bookingData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={bookingData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {bookingData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                No booking data available
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
 
-      {analytics.usersByRole && (
-        <Card className="border-border/50">
+        <Card className="border-border/60">
           <CardHeader>
-            <CardTitle>Users by Role</CardTitle>
+            <CardTitle className="text-lg">Users by Role</CardTitle>
+            <CardDescription>Platform user distribution</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries(analytics.usersByRole as Record<string, number>).map(([role, count]) => (
-                <div key={role} className="text-center p-4 rounded-lg bg-muted/30">
-                  <p className="text-2xl font-bold">{count}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{role.toLowerCase()}</p>
-                </div>
-              ))}
-            </div>
+          <CardContent className="h-[300px]">
+            {userData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={userData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E2E8F0" />
+                  <XAxis type="number" hide />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    tick={{ fill: "#64748B" }}
+                    width={80}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+                    {userData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                No user data available
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
 }
@@ -415,7 +480,7 @@ function LandlordsTab() {
   const landlords = response?.data || [];
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/60">
       <CardHeader>
         <CardTitle>Registered Landlords</CardTitle>
         <CardDescription>All landlord accounts on the platform.</CardDescription>
@@ -425,20 +490,20 @@ function LandlordsTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/50 text-muted-foreground">
-                  <th className="text-left font-medium py-3 px-2">Name</th>
-                  <th className="text-left font-medium py-3 px-2">Email</th>
-                  <th className="text-left font-medium py-3 px-2">Phone</th>
-                  <th className="text-left font-medium py-3 px-2">Verified</th>
+                <tr className="border-b border-border/60 text-muted-foreground">
+                  <th className="text-left font-medium py-4 px-3">Name</th>
+                  <th className="text-left font-medium py-4 px-3">Email</th>
+                  <th className="text-left font-medium py-4 px-3">Phone</th>
+                  <th className="text-left font-medium py-4 px-3">Verified</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
+              <tbody className="divide-y divide-border/60">
                 {landlords.map((landlord: any) => (
                   <tr key={landlord.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="py-4 px-2 font-medium">{landlord.name}</td>
-                    <td className="py-4 px-2 text-muted-foreground">{landlord.email}</td>
-                    <td className="py-4 px-2 text-muted-foreground">{landlord.phone || "—"}</td>
-                    <td className="py-4 px-2">
+                    <td className="py-5 px-3 font-medium">{landlord.name}</td>
+                    <td className="py-5 px-3 text-muted-foreground">{landlord.email}</td>
+                    <td className="py-5 px-3 text-muted-foreground">{landlord.phone || "—"}</td>
+                    <td className="py-5 px-3">
                       {landlord.verified ? (
                         <Badge variant="success">Verified</Badge>
                       ) : (

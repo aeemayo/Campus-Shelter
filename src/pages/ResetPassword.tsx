@@ -93,14 +93,14 @@ export default function ResetPassword() {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-secondary via-secondary/50 to-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-border/50 shadow-primary-xl">
-          <CardHeader className="space-y-1 pb-6 text-center">
+        <Card className="border-border/50 shadow-primary-lg">
+          <CardHeader className="space-y-1.5 pb-8 text-center">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <KeyRound className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-foreground">
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
               Set new password
             </CardTitle>
             <CardDescription>
@@ -145,7 +145,7 @@ export default function ResetPassword() {
 
                   <Button
                     type="submit"
-                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-2"
+                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-3 rounded-full"
                     disabled={isLoading}
                   >
                     {isLoading ? "Resetting..." : "Reset Password"}
@@ -153,15 +153,15 @@ export default function ResetPassword() {
                 </form>
               </Form>
             ) : (
-              <div className="text-center py-6">
+              <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
                   <CheckCircle2 className="w-12 h-12 text-success" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">Password reset!</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className="text-lg font-medium tracking-tight mb-2">Password reset!</h3>
+                <p className="text-muted-foreground mb-8">
                   Successfully updated. You'll be redirected to login shortly...
                 </p>
-                <Button className="w-full" asChild>
+                <Button className="w-full rounded-full" asChild>
                   <Link to="/login">Go to Login</Link>
                 </Button>
               </div>

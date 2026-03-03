@@ -29,25 +29,25 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-24 lg:py-28 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto text-center mb-14">
-          <p className="text-primary text-sm font-semibold uppercase tracking-wider mb-2">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-primary text-sm font-semibold uppercase tracking-wider mb-3">
             Testimonials
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             Hear from FUTA students
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
           {testimonials.map((t) => (
             <div
               key={t.name}
-              className="bg-card rounded-2xl border border-border p-6 flex flex-col"
+              className="bg-card rounded-xl border border-border/60 p-7 flex flex-col shadow-primary-sm"
             >
               {/* Stars */}
-              <div className="flex gap-0.5 mb-4">
+              <div className="flex gap-0.5 mb-5">
                 {[...Array(t.rating)].map((_, i) => (
                   <Star
                     key={i}
@@ -57,12 +57,12 @@ const Testimonials = () => {
               </div>
 
               {/* Quote */}
-              <p className="text-foreground/80 text-sm leading-relaxed flex-1 mb-6">
+              <p className="text-foreground/70 text-sm leading-relaxed flex-1 mb-7">
                 &ldquo;{t.content}&rdquo;
               </p>
 
               {/* Author */}
-              <div className="flex items-center gap-3 pt-4 border-t border-border">
+              <div className="flex items-center gap-3 pt-5 border-t border-border/60">
                 <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {t.initials}
                 </div>

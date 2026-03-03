@@ -19,7 +19,6 @@ interface PropertyCardProps {
   property: Property;
   isFavorite?: boolean;
   onFavoriteToggle?: () => void;
-  onViewDetails?: () => void;
 }
 
 const amenityIcons: Record<string, React.ReactNode> = {
@@ -33,7 +32,6 @@ const PropertyCard = ({
   property,
   isFavorite = false,
   onFavoriteToggle,
-  onViewDetails,
 }: PropertyCardProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -54,31 +52,30 @@ const PropertyCard = ({
 
   return (
     <Card
-      className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer"
+      className="group overflow-hidden border-border/60 hover:border-border transition-all duration-200 hover:shadow-primary-lg cursor-pointer"
       onClick={() => navigate(`/properties/${property.id}`)}
     >
-      {/* Image Container */}
+      {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={property.images[0]}
           alt={property.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
         {/* Top badges */}
         <div className="absolute top-3 left-3 flex gap-2">
           {property.featured && (
-            <Badge className="bg-accent text-accent-foreground font-semibold">
+            <Badge className="bg-primary text-primary-foreground font-semibold text-[10px] rounded-md">
               Featured
             </Badge>
           )}
-          {!property.available && <Badge variant="destructive">Occupied</Badge>}
+          {!property.available && <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>}
         </div>
 
-        {/* Favorite button */}
+        {/* Favorite */}
         <button
           type="button"
           onClick={(e) => {
@@ -87,31 +84,31 @@ const PropertyCard = ({
           }}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-background hover:scale-110  z-10"
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-white hover:scale-105 z-10"
         >
           <Heart
-            className={`w-5 h-5 transition-colors ${
-              isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"
+            className={`w-4.5 h-4.5 transition-colors ${
+              isFavorite ? "fill-destructive text-destructive" : "text-foreground/40"
             }`}
           />
         </button>
 
-        {/* Price tag */}
+        {/* Price */}
         <div className="absolute bottom-3 left-3">
-          <div className="bg-background/95 backdrop-blur-sm rounded-lg px-3 py-1.5">
-            <span className="text-lg font-bold text-foreground">
+          <div className="bg-white/95 backdrop-blur-sm rounded-md px-3 py-1.5">
+            <span className="text-base font-bold text-foreground">
               {formatPrice(property.price)}
             </span>
-            <span className="text-sm text-muted-foreground">
-              /{property.priceType === "yearly" ? "year" : "month"}
+            <span className="text-xs text-muted-foreground ml-0.5">
+              /{property.priceType === "yearly" ? "yr" : "mo"}
             </span>
           </div>
         </div>
 
-        {/* Verified badge */}
+        {/* Verified */}
         {property.landlord.verified && (
           <div className="absolute bottom-3 right-3">
-            <Badge variant="success">
+            <Badge variant="success" className="text-[10px] rounded-md">
               <Shield className="w-3 h-3 mr-1" />
               Verified
             </Badge>
@@ -120,22 +117,21 @@ const PropertyCard = ({
       </div>
 
       <CardContent className="p-4 space-y-3">
-        {/* Title and type */}
+        {/* Title */}
         <div>
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors text-[15px]">
               {property.title}
             </h3>
-            <Badge variant="outline" className="shrink-0 text-xs">
+            <Badge variant="outline" className="shrink-0 text-[10px] rounded-md font-medium">
               {typeLabels[property.type]}
             </Badge>
           </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-1 mt-1 text-muted-foreground">
-            <MapPin className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-1 mt-1.5 text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5 text-primary" />
             <span className="text-sm">{property.location}</span>
-            <span className="text-xs text-muted-foreground/70">
+            <span className="text-xs text-muted-foreground/60 ml-0.5">
               • {property.distance}
             </span>
           </div>
@@ -143,16 +139,16 @@ const PropertyCard = ({
 
         {/* Room details */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Bed className="w-4 h-4" />
+          <div className="flex items-center gap-1.5">
+            <Bed className="w-3.5 h-3.5" />
             <span>{property.bedrooms} Bed</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Bath className="w-4 h-4" />
+          <div className="flex items-center gap-1.5">
+            <Bath className="w-3.5 h-3.5" />
             <span>{property.bathrooms} Bath</span>
           </div>
           {property.furnished && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-[10px] rounded-md">
               Furnished
             </Badge>
           )}
@@ -163,27 +159,27 @@ const PropertyCard = ({
           {property.amenities.slice(0, 4).map((amenity) => (
             <div
               key={amenity}
-              className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full"
+              className="flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md"
             >
               {amenityIcons[amenity]}
               <span>{amenity}</span>
             </div>
           ))}
           {property.amenities.length > 4 && (
-            <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+            <div className="text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
               +{property.amenities.length - 4} more
             </div>
           )}
         </div>
 
-        {/* Rating and CTA */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+        {/* CTA */}
+        <div className="pt-3 border-t border-border/50">
           <Button
             size="sm"
             asChild
-            className="gradient-primary hover:opacity-90 w-full"
+            className="gradient-primary hover:opacity-90 w-full rounded-lg h-9"
           >
-            <Link to={`/properties/${property.id}`} onClick={onViewDetails}>
+            <Link to={`/properties/${property.id}`}>
               View Details
             </Link>
           </Button>

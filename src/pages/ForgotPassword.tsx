@@ -64,18 +64,18 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-secondary via-secondary/50 to-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-border/50 shadow-primary-xl">
-          <CardHeader className="space-y-1 pb-6 text-center">
-            <Link to="/login" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 self-start">
+        <Card className="border-border/50 shadow-primary-lg">
+          <CardHeader className="space-y-1.5 pb-8 text-center">
+            <Link to="/login" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 self-start">
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to login
             </Link>
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-foreground">
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
               Forgot password?
             </CardTitle>
             <CardDescription>
@@ -110,7 +110,7 @@ export default function ForgotPassword() {
 
                   <Button
                     type="submit"
-                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-2"
+                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-3 rounded-full"
                     disabled={isLoading}
                   >
                     {isLoading ? "Sending..." : "Send Reset Link"}
@@ -118,22 +118,22 @@ export default function ForgotPassword() {
                 </form>
               </Form>
             ) : (
-              <div className="text-center py-6">
+              <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
                   <CheckCircle2 className="w-12 h-12 text-success" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">Check your email</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className="text-lg font-medium tracking-tight mb-2">Check your email</h3>
+                <p className="text-muted-foreground mb-8">
                   We've sent a password reset link to <span className="font-semibold">{form.getValues("email")}</span>.
                 </p>
-                <Button variant="outline" className="w-full" onClick={() => setIsSubmitted(false)}>
+                <Button variant="outline" className="w-full rounded-full" onClick={() => setIsSubmitted(false)}>
                   Resend Email
                 </Button>
               </div>
             )}
           </CardContent>
 
-          <CardFooter className="flex justify-center pb-8 pt-2">
+          <CardFooter className="flex justify-center pb-8 pt-4">
             <Link
               to="/login"
               className="text-sm text-primary hover:text-primary/80 font-medium underline underline-offset-4"

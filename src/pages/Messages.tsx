@@ -135,10 +135,10 @@ const Messages = () => {
 
           {/* Sidebar: Conversation List */}
           <div className={`w-full lg:w-96 flex-col ${partnerId ? 'hidden lg:flex' : 'flex'}`}>
-            <Card className="h-full border-border/50 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
+            <Card className="h-full border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
               <div className="p-4 border-b space-y-4">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-display font-bold">Messages</h1>
+                  <h1 className="text-xl font-display font-bold tracking-tight">Messages</h1>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <MessageSquare className="w-5 h-5" />
                   </Button>
@@ -147,7 +147,7 @@ const Messages = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search conversations..."
-                    className="pl-9 bg-muted/40 border-none rounded-xl"
+                    className="pl-9 bg-muted/40 border-none rounded-lg"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -189,7 +189,7 @@ const Messages = () => {
                   </div>
                 ) : (
                   <div className="p-8 text-center space-y-3">
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
+                    <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto">
                       <MessageSquare className="w-8 h-8 text-primary/40" />
                     </div>
                     <p className="text-sm text-muted-foreground">No conversations yet</p>
@@ -202,7 +202,7 @@ const Messages = () => {
           {/* Chat Window */}
           <div className={`flex-1 flex flex-col ${!partnerId ? 'hidden lg:flex' : 'flex'}`}>
             {partnerId ? (
-              <Card className="flex-1 border-border/50 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col relative">
+              <Card className="flex-1 border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col relative">
 
                 {/* Chat Header */}
                 <div className="p-4 border-b flex items-center justify-between">
@@ -218,7 +218,7 @@ const Messages = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="font-bold leading-none mb-1">{activePartner?.name || "User"}</h2>
+                      <h2 className="font-bold leading-none mb-1 tracking-tight">{activePartner?.name || "User"}</h2>
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-success"></span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Online</span>
@@ -265,14 +265,14 @@ const Messages = () => {
                             <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                               <div className={`max-w-[80%] flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                                 {!isMe && (
-                                  <Avatar className="w-6 h-6 border border-border/50 shrink-0 mb-1">
+                                  <Avatar className="w-6 h-6 border border-border/60 shrink-0 mb-1">
                                     <AvatarFallback className="text-[8px] bg-muted">
                                       {msg.sender?.name?.slice(0, 1) || "U"}
                                     </AvatarFallback>
                                   </Avatar>
                                 )}
                                 <div className="space-y-1">
-                                  <div className={`p-3 rounded-2xl text-sm shadow-primary-sm ${
+                                  <div className={`p-3 rounded-xl text-sm shadow-primary-sm ${
                                     isMe
                                       ? 'gradient-primary text-white rounded-br-none'
                                       : 'bg-muted/80 backdrop-blur-sm text-foreground rounded-bl-none'
@@ -297,7 +297,7 @@ const Messages = () => {
                   <form onSubmit={handleSendMessage} className="flex gap-2">
                     <Input
                       placeholder="Type your message..."
-                      className="flex-1 bg-muted/40 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary"
+                      className="flex-1 bg-muted/40 border-none rounded-lg focus-visible:ring-1 focus-visible:ring-primary"
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
                       disabled={sendMutation.isPending}
@@ -305,7 +305,7 @@ const Messages = () => {
                     <Button
                       type="submit"
                       size="icon"
-                      className="rounded-xl gradient-primary shadow-lg shadow-primary/20 aspect-square h-10 w-10 shrink-0"
+                      className="rounded-lg gradient-primary shadow-lg shadow-primary/20 aspect-square h-10 w-10 shrink-0"
                       disabled={!messageInput.trim() || sendMutation.isPending}
                     >
                       {sendMutation.isPending ? (
@@ -321,10 +321,10 @@ const Messages = () => {
             ) : (
               <div className="flex-1 flex items-center justify-center p-8 text-center">
                 <div className="max-w-xs space-y-4">
-                  <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mx-auto opacity-20 rotate-12">
+                  <div className="w-20 h-20 rounded-xl gradient-primary flex items-center justify-center mx-auto opacity-20 rotate-12">
                     <MessageSquare className="w-10 h-10 text-primary-foreground -rotate-12" />
                   </div>
-                  <h3 className="text-xl font-bold">Select a conversation</h3>
+                  <h3 className="text-xl font-bold tracking-tight">Select a conversation</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Choose a conversation from the left to start chatting with agents or students.
                   </p>

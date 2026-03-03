@@ -31,7 +31,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
@@ -58,18 +57,13 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinkClass = (path: string) =>
-    `relative text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors ${
+    `relative text-sm font-medium px-3.5 py-2 rounded-md transition-colors ${
       isActive(path)
         ? "text-primary bg-primary/8"
         : scrolled || !isHome
-          ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          ? "text-foreground/70 hover:text-foreground hover:bg-muted"
           : "text-white/70 hover:text-white hover:bg-white/10"
     }`;
-
-  const scrollLinkClass =
-    scrolled || !isHome
-      ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-      : "text-white/70 hover:text-white hover:bg-white/10";
 
   const firstName = user?.name?.split(" ")[0];
   const initials = user?.name
@@ -84,42 +78,42 @@ const Header = () => {
       <div
         className={`mx-auto transition-all duration-300 ${
           scrolled || !isHome
-            ? "bg-background/90 backdrop-blur-xl border-b border-border/60 shadow-primary-sm"
+            ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-primary-sm"
             : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 shrink-0">
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
               <span
-                className={`font-display text-lg font-bold transition-colors ${
+                className={`font-display text-lg font-bold tracking-tight transition-colors ${
                   scrolled || !isHome ? "text-foreground" : "text-white"
                 }`}
               >
                 Campus
-                <span className={scrolled || !isHome ? "text-primary" : "text-accent"}>
+                <span className={scrolled || !isHome ? "text-primary" : "text-white/90"}>
                   Shelter
                 </span>
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-0.5">
               <Link to="/properties" className={navLinkClass("/properties")}>
                 Properties
               </Link>
-              <button
-                onClick={() => scrollToSection("how-it-works")}
-                className={`text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${scrollLinkClass}`}
-              >
-                How It Works
-              </button>
-
-              {/* Role-specific links */}
+              {(!isAuthenticated || user?.role === "STUDENT") && (
+                <Link
+                  to="/register?role=LANDLORD"
+                  className={navLinkClass("/register?role=LANDLORD")}
+                >
+                  List your property
+                </Link>
+              )}
               {user?.role === "LANDLORD" && (
                 <Link to="/landlord" className={navLinkClass("/landlord")}>
                   <span className="flex items-center gap-1.5">
@@ -149,14 +143,14 @@ const Header = () => {
             </nav>
 
             {/* Desktop Auth */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-3">
               {isAuthenticated ? (
                 <>
                   <Link
                     to="/profile"
-                    className={`flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-full transition-colors ${
+                    className={`flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full transition-colors ${
                       scrolled || !isHome
-                        ? "hover:bg-muted/60"
+                        ? "hover:bg-muted"
                         : "hover:bg-white/10"
                     }`}
                   >
@@ -164,7 +158,7 @@ const Header = () => {
                       {initials}
                     </div>
                     <span
-                      className={`text-[13px] font-medium ${
+                      className={`text-sm font-medium ${
                         scrolled || !isHome ? "text-foreground" : "text-white"
                       }`}
                     >
@@ -173,9 +167,9 @@ const Header = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-2 rounded-md transition-colors ${
                       scrolled || !isHome
-                        ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        ? "text-muted-foreground hover:text-foreground hover:bg-muted"
                         : "text-white/60 hover:text-white hover:bg-white/10"
                     }`}
                     title="Sign out"
@@ -189,9 +183,9 @@ const Header = () => {
                     variant="ghost"
                     size="sm"
                     asChild
-                    className={`text-[13px] h-9 rounded-lg ${
+                    className={`text-sm h-9 rounded-md ${
                       scrolled || !isHome
-                        ? "text-muted-foreground hover:text-foreground"
+                        ? "text-foreground/70 hover:text-foreground"
                         : "text-white/80 hover:text-white hover:bg-white/10"
                     }`}
                   >
@@ -200,7 +194,7 @@ const Header = () => {
                   <Button
                     asChild
                     size="sm"
-                    className="h-9 text-[13px] gradient-primary hover:opacity-90 rounded-lg"
+                    className="h-9 text-sm gradient-primary hover:opacity-90 rounded-full px-5"
                   >
                     <Link to="/register">
                       Get started
@@ -213,9 +207,9 @@ const Header = () => {
 
             {/* Mobile Menu Toggle */}
             <button
-              className={`lg:hidden p-2 rounded-lg transition-colors ${
+              className={`lg:hidden p-2 rounded-md transition-colors ${
                 scrolled || !isHome
-                  ? "text-foreground hover:bg-muted/60"
+                  ? "text-foreground hover:bg-muted"
                   : "text-white hover:bg-white/10"
               }`}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -234,15 +228,13 @@ const Header = () => {
       {/* Mobile Menu Panel */}
       {isMenuOpen && (
         <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
 
-          {/* Panel */}
-          <div className="relative mx-4 mt-2 bg-card border border-border rounded-2xl shadow-primary-xl overflow-hidden animate-fade-in">
-            <nav className="p-3 space-y-1">
+          <div className="relative mx-4 mt-2 bg-card border border-border rounded-xl shadow-primary-xl overflow-hidden animate-fade-in">
+            <nav className="p-3 space-y-0.5">
               <MobileLink
                 to="/properties"
                 icon={Building2}
@@ -293,21 +285,30 @@ const Header = () => {
 
               <button
                 onClick={() => scrollToSection("how-it-works")}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 <Home className="w-4 h-4" />
                 How It Works
               </button>
+
+              {(!isAuthenticated || user?.role === "STUDENT") && (
+                <MobileLink
+                  to="/register?role=LANDLORD"
+                  icon={Building2}
+                  label="List your property"
+                  active={isActive("/register?role=LANDLORD")}
+                  onClick={() => setIsMenuOpen(false)}
+                />
+              )}
             </nav>
 
-            {/* Auth section */}
             <div className="p-3 border-t border-border">
               {isAuthenticated ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Link
                     to="/profile"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-[11px] font-bold text-white">
                       {initials}
@@ -322,7 +323,7 @@ const Header = () => {
                       handleLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-destructive hover:bg-destructive/8 transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/8 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign out
@@ -330,12 +331,12 @@ const Header = () => {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="outline" asChild className="flex-1 h-10 rounded-xl text-sm">
+                  <Button variant="outline" asChild className="flex-1 h-10 rounded-lg text-sm">
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                       Sign in
                     </Link>
                   </Button>
-                  <Button asChild className="flex-1 h-10 gradient-primary rounded-xl text-sm">
+                  <Button asChild className="flex-1 h-10 gradient-primary rounded-lg text-sm">
                     <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                       Get started
                     </Link>
@@ -367,10 +368,10 @@ function MobileLink({
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
         active
           ? "bg-primary/8 text-primary font-medium"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       <Icon className="w-4 h-4" />

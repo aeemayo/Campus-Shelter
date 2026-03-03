@@ -33,26 +33,24 @@ const PropertySearch = ({
 }: PropertySearchProps) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-      {/* Search Input */}
       <div className="relative flex-1 w-full sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search properties..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 bg-background border-border"
+          className="pl-10 bg-background border-border/60 rounded-lg"
         />
       </div>
 
-      {/* Results count and Sort */}
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {resultCount} {resultCount === 1 ? 'property' : 'properties'} found
+          {resultCount} {resultCount === 1 ? 'property' : 'properties'}
         </span>
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+          <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
           <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px] rounded-lg">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

@@ -133,7 +133,7 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center shadow-xl">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-xl bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center shadow-xl">
                   <span className="text-3xl md:text-4xl font-bold text-white">
                     {initials}
                   </span>
@@ -148,7 +148,7 @@ const Profile = () => {
               {/* User Info */}
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-display font-bold text-white">
+                  <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
                     {user?.name}
                   </h1>
                   <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm">
@@ -242,7 +242,7 @@ const Profile = () => {
       </section>
 
       {/* Tab Content */}
-      <section className="py-8 md:py-12">
+      <section className="py-10 md:py-12">
         <div className="container mx-auto px-4">
           <Tabs
             value={activeTab}
@@ -313,7 +313,6 @@ const Profile = () => {
                       property={property}
                       isFavorite={true}
                       onFavoriteToggle={() => toggleFavorite(property.id)}
-                      onViewDetails={() => markViewed(property.id)}
                     />
                   ))}
                 </div>
@@ -338,7 +337,6 @@ const Profile = () => {
                       property={property}
                       isFavorite={favorites.includes(property.id)}
                       onFavoriteToggle={() => toggleFavorite(property.id)}
-                      onViewDetails={() => markViewed(property.id)}
                     />
                   ))}
                 </div>
@@ -357,7 +355,7 @@ const Profile = () => {
             <TabsContent value="settings" className="mt-0">
               <div className="max-w-2xl space-y-6">
                 {/* Profile Info Card */}
-                <Card className="border-border/50 shadow-primary-sm">
+                <Card className="border-border/60 shadow-primary-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <User className="w-5 h-5 text-primary" />
@@ -366,19 +364,19 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <InfoRow label="Full Name" value={user?.name ?? "—"} />
-                    <Separator className="bg-border/50" />
+                    <Separator className="bg-border/60" />
                     <InfoRow label="Email Address" value={user?.email ?? "—"} />
-                    <Separator className="bg-border/50" />
+                    <Separator className="bg-border/60" />
                     <InfoRow
                       label="Phone Number"
                       value={user?.phone ?? "Not provided"}
                     />
-                    <Separator className="bg-border/50" />
+                    <Separator className="bg-border/60" />
                     <InfoRow
                       label="Account Type"
                       value={roleLabel[user?.role ?? "STUDENT"]}
                     />
-                    <Separator className="bg-border/50" />
+                    <Separator className="bg-border/60" />
                     <InfoRow
                       label="Verification Status"
                       value={
@@ -396,13 +394,13 @@ const Profile = () => {
                         </Badge>
                       }
                     />
-                    <Separator className="bg-border/50" />
+                    <Separator className="bg-border/60" />
                     <InfoRow label="Member Since" value={memberSince} />
                   </CardContent>
                 </Card>
 
                 {/* Activity Summary Card */}
-                <Card className="border-border/50 shadow-primary-sm">
+                <Card className="border-border/60 shadow-primary-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <TrendingUp className="w-5 h-5 text-primary" />
@@ -510,12 +508,12 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-5">
+      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-5">
         <Icon className="w-10 h-10 text-primary/60" />
       </div>
-      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-2 tracking-tight">{title}</h3>
       <p className="text-muted-foreground max-w-md mb-6">{description}</p>
-      <Button asChild className="gradient-primary hover:opacity-90 gap-2">
+      <Button asChild className="gradient-primary hover:opacity-90 gap-2 rounded-full">
         <Link to={actionHref}>
           <MapPin className="w-4 h-4" />
           {actionLabel}
@@ -577,7 +575,7 @@ function SecuritySettings() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Card className="border-border/50 shadow-primary-sm">
+      <Card className="border-border/60 shadow-primary-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <KeyRound className="w-5 h-5 text-primary" />
@@ -633,7 +631,7 @@ function SecuritySettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/50 shadow-primary-sm bg-muted/30">
+      <Card className="border-border/60 shadow-primary-sm bg-muted/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-warning">
             <ShieldAlert className="w-5 h-5" />
@@ -703,7 +701,7 @@ function MaintenanceRequests() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold">Maintenance Requests</h3>
+          <h3 className="text-xl font-bold tracking-tight">Maintenance Requests</h3>
           <p className="text-sm text-muted-foreground">Report and track issues in your accommodation.</p>
         </div>
         <Button className="gradient-primary gap-2" onClick={() => setIsFormOpen(!isFormOpen)}>
@@ -725,7 +723,7 @@ function MaintenanceRequests() {
                   <select
                     name="propertyId"
                     required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <option value="">Select a property</option>
                     {approvedBookings.map((b) => (
@@ -744,7 +742,7 @@ function MaintenanceRequests() {
                 <Label>Description</Label>
                 <textarea
                   name="description"
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Describe the issue in detail..."
                   required
                 />
@@ -766,7 +764,7 @@ function MaintenanceRequests() {
       ) : requests.length > 0 ? (
         <div className="space-y-4">
           {requests.map(req => (
-            <Card key={req.id} className="border-border/50 shadow-primary-sm overflow-hidden">
+            <Card key={req.id} className="border-border/60 shadow-primary-sm overflow-hidden">
               <div className="flex items-center justify-between p-4 bg-muted/30 border-b">
                 <span className="font-semibold">{req.description.slice(0, 60)}{req.description.length > 60 ? "…" : ""}</span>
                 <Badge variant="outline">{req.status.replace('_', ' ')}</Badge>

@@ -39,15 +39,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage on mount & refresh profile
   useEffect(() => {
-    const savedUser = getSavedUser();
-    const savedToken = getSavedToken();
-    if (savedUser && savedToken) {
-      setUser(savedUser);
-      setToken(savedToken);
-    }
-    setIsLoading(false);
+    const hydrateAndRefresh = async () => {
+      const savedUser = getSavedUser();
+      const savedToken = getSavedToken();
+
+      if (savedToken) {
+        // Optimistically set saved user
+        if (savedUser) setUser(savedUser);
+        setToken(savedToken);
+
+        try {
+          // Refresh from DB to get latest role/status
+          const { user: freshUser } = await import("@/services/auth").then(m => m.fetchProfile());
+          setUser(freshUser);
+          localStorage.setItem("cs_user", JSON.stringify(freshUser));
+        } catch (err) {
+          console.error("[Auth Profile Refresh Failed]", err);
+          // If profile fetch fails (e.g. token expired), sign out
+          clearAuth();
+          setUser(null);
+          setToken(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    hydrateAndRefresh();
   }, []);
 
   const login = useCallback(async (payload: LoginPayload) => {

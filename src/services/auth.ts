@@ -45,6 +45,11 @@ export async function login(payload: LoginPayload) {
   return res.data;
 }
 
+export async function fetchProfile() {
+  const res = await apiFetch<ApiSuccess<{ user: User }>>("/api/auth/me");
+  return res.data;
+}
+
 export async function register(payload: RegisterPayload) {
   const res = await apiFetch<ApiSuccess<AuthResponse>>(
     "/api/auth/register",

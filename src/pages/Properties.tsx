@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Home, Loader2, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
+import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
 
 const Properties = () => {
   const { user, isAuthenticated } = useAuth();
@@ -211,24 +212,24 @@ const Properties = () => {
       <Header />
 
       {/* Page Header */}
-      <section className="pt-24 pb-8 bg-gradient-to-b from-primary/5 to-background">
+      <section className="pt-24 pb-8 border-b border-border/40">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Home className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
+            <Home className="w-3.5 h-3.5" />
             <span>Home</span>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-foreground">Properties</span>
+            <span className="text-foreground font-medium">Properties</span>
           </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-2">
             Find Your Perfect{" "}
             <span className="text-primary">Accommodation</span>
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl text-[15px]">
             Browse through verified properties near FUTA. Filter by location,
             price, and amenities to find your ideal student housing.
           </p>
           {isAuthenticated && (
-            <p className="text-sm text-primary mt-2">
+            <p className="text-sm text-primary/80 mt-3">
               Welcome back{firstName ? `, ${firstName}` : ""}. We saved your
               last filters and favorites.
             </p>
@@ -237,9 +238,9 @@ const Properties = () => {
       </section>
 
       {/* Main Content */}
-      <section className="py-8">
+      <section className="py-10">
         <div className="container mx-auto px-4">
-          <div className="flex gap-8">
+          <div className="flex gap-10">
             {/* Filters Sidebar */}
             <PropertyFilters
               filters={filters}
@@ -285,9 +286,10 @@ const Properties = () => {
 
               {/* Results Grid */}
               {apiLoading ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-                  <p className="text-muted-foreground">Loading properties...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <PropertyCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : filteredProperties.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -297,7 +299,6 @@ const Properties = () => {
                       property={property}
                       isFavorite={favorites.includes(property.id)}
                       onFavoriteToggle={() => toggleFavorite(property.id)}
-                      onViewDetails={() => markViewed(property.id)}
                     />
                   ))}
                 </div>

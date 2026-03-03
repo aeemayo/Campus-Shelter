@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 import { fetchProperties } from "@/services/properties";
 import { fetchMyBookings, updateBookingStatus, type Booking } from "@/services/bookings";
 import {
@@ -30,9 +31,22 @@ import {
   MapPin,
   ExternalLink,
   Upload,
+  TrendingUp,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  PieChart,
+  Pie,
+} from "recharts";
 
 const LandlordDashboard = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -101,6 +115,28 @@ const LandlordDashboard = () => {
     },
   });
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalProperties = myProperties.length;
+    const pendingBookings = bookings.filter(b => b.status === "PENDING").length;
+    const totalRevenue = bookings
+      .filter(b => b.status === "APPROVED")
+      .reduce((sum, b) => sum + (b.property?.priceMonthly || 0), 0);
+    const activeMaintenance = maintenanceRequests.filter(r => r.status !== "RESOLVED").length;
+
+    return { totalProperties, pendingBookings, totalRevenue, activeMaintenance };
+  }, [myProperties, bookings, maintenanceRequests]);
+
+  const bookingDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    bookings.forEach(b => {
+      counts[b.status] = (counts[b.status] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [bookings]);
+
+  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"];
+
   // Lease upload state
   const [leaseUploadBookingId, setLeaseUploadBookingId] = useState<string | null>(null);
   const [leaseFile, setLeaseFile] = useState<File | null>(null);
@@ -143,12 +179,165 @@ const LandlordDashboard = () => {
 
       <main className="flex-1 pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your properties, bookings, and maintenance requests.
-            </p>
-          </div>
+            <div className="mb-8">
+              <h1 className="text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your properties, bookings, and maintenance requests.
+              </p>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="border-border/60 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                  <CardHeader className="pb-1">
+                    <CardDescription>Total Properties</CardDescription>
+                    <CardTitle className="text-2xl">{stats.totalProperties}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 text-success" />
+                      <span>Active listings</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="border-border/60 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
+                  <CardHeader className="pb-1">
+                    <CardDescription>Pending Bookings</CardDescription>
+                    <CardTitle className="text-2xl">{stats.pendingBookings}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground">Requires your attention</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="border-border/60 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-success" />
+                  <CardHeader className="pb-1">
+                    <CardDescription>Est. Monthly Revenue</CardDescription>
+                    <CardTitle className="text-2xl">₦{stats.totalRevenue.toLocaleString()}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground">From approved bookings</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="border-border/60 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
+                  <CardHeader className="pb-1">
+                    <CardDescription>Maintenance</CardDescription>
+                    <CardTitle className="text-2xl">{stats.activeMaintenance}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground">Active requests</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <Card className="lg:col-span-2 border-border/60">
+                <CardHeader>
+                  <CardTitle className="text-lg">Bookings Overview</CardTitle>
+                  <CardDescription>Status distribution of all requests</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[240px]">
+                  {bookings.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={bookingDistribution}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          fontSize={12}
+                          tick={{ fill: "#64748B" }}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          fontSize={12}
+                          tick={{ fill: "#64748B" }}
+                        />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {bookingDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                      <p>No booking data available</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/60">
+                <CardHeader>
+                  <CardTitle className="text-lg">Recent Activities</CardTitle>
+                  <CardDescription>Latest updates on your account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {bookings.slice(0, 3).map((b, i) => (
+                      <div key={i} className="flex items-start gap-3 text-sm">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <CalendarCheck className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">New booking request</p>
+                          <p className="text-xs text-muted-foreground">For {b.property?.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {maintenanceRequests.slice(0, 2).map((r, i) => (
+                      <div key={i} className="flex items-start gap-3 text-sm">
+                        <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                          <Wrench className="w-4 h-4 text-destructive" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Maintenance request</p>
+                          <p className="text-xs text-muted-foreground">{r.description.slice(0, 30)}...</p>
+                        </div>
+                      </div>
+                    ))}
+                    {bookings.length === 0 && maintenanceRequests.length === 0 && (
+                      <p className="text-center py-4 text-muted-foreground">No recent activity</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 p-1">
@@ -168,7 +357,7 @@ const LandlordDashboard = () => {
 
             {/* ── Properties Tab ── */}
             <TabsContent value="properties" className="space-y-6">
-              <Card className="border-border/50">
+              <Card className="border-border/60">
                 <CardHeader>
                   <CardTitle>My Properties</CardTitle>
                   <CardDescription>Properties you've listed on the platform.</CardDescription>
@@ -182,17 +371,17 @@ const LandlordDashboard = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-border/50 text-muted-foreground">
-                            <th className="text-left font-medium py-3 px-2">Property</th>
-                            <th className="text-left font-medium py-3 px-2">Price</th>
-                            <th className="text-left font-medium py-3 px-2">Status</th>
-                            <th className="text-right font-medium py-3 px-2">Actions</th>
+                          <tr className="border-b border-border/60 text-muted-foreground">
+                            <th className="text-left font-medium py-4 px-3">Property</th>
+                            <th className="text-left font-medium py-4 px-3">Price</th>
+                            <th className="text-left font-medium py-4 px-3">Status</th>
+                            <th className="text-right font-medium py-4 px-3">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/50">
+                        <tbody className="divide-y divide-border/60">
                           {myProperties.map((property) => (
                             <tr key={property.id} className="hover:bg-muted/30 transition-colors">
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 <div className="flex items-center gap-3">
                                   <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
                                     <img
@@ -210,18 +399,18 @@ const LandlordDashboard = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 <p className="font-semibold">₦{property.priceMonthly?.toLocaleString()}</p>
                                 <p className="text-xs text-muted-foreground">monthly</p>
                               </td>
-                              <td className="py-4 px-2">
+                              <td className="py-5 px-3">
                                 {property.approved ? (
                                   <Badge variant="success">Approved</Badge>
                                 ) : (
                                   <Badge variant="warning">Pending</Badge>
                                 )}
                               </td>
-                              <td className="py-4 px-2 text-right">
+                              <td className="py-5 px-3 text-right">
                                 <Button variant="ghost" size="sm" asChild>
                                   <Link to={`/properties/${property.id}`}>
                                     <ExternalLink className="w-4 h-4 mr-1" />
@@ -246,7 +435,7 @@ const LandlordDashboard = () => {
 
             {/* ── Bookings Tab ── */}
             <TabsContent value="bookings" className="space-y-6">
-              <Card className="border-border/50">
+              <Card className="border-border/60">
                 <CardHeader>
                   <CardTitle>Booking Requests</CardTitle>
                   <CardDescription>Review and manage booking requests from students.</CardDescription>
@@ -261,7 +450,7 @@ const LandlordDashboard = () => {
                       {bookings.map((booking) => (
                         <div
                           key={booking.id}
-                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/50 hover:border-primary/20 transition-all"
+                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/60 hover:border-primary/20 transition-all"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -358,7 +547,7 @@ const LandlordDashboard = () => {
 
             {/* ── Maintenance Tab ── */}
             <TabsContent value="maintenance" className="space-y-6">
-              <Card className="border-border/50">
+              <Card className="border-border/60">
                 <CardHeader>
                   <CardTitle>Maintenance Requests</CardTitle>
                   <CardDescription>View and update maintenance requests from tenants.</CardDescription>
@@ -373,7 +562,7 @@ const LandlordDashboard = () => {
                       {maintenanceRequests.map((req) => (
                         <div
                           key={req.id}
-                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/50"
+                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/60"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -398,7 +587,7 @@ const LandlordDashboard = () => {
                                 })
                               }
                               disabled={maintenanceMutation.isPending}
-                              className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="flex h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               <option value="OPEN">Open</option>
                               <option value="IN_PROGRESS">In Progress</option>
