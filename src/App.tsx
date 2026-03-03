@@ -101,17 +101,17 @@ const App = () => (
 
             {/* Shared authenticated routes */}
             <Route path="/profile" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowUnverifiedLandlord>
                 <Profile />
               </ProtectedRoute>
             } />
             <Route path="/messages" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD"]}>
                 <Messages />
               </ProtectedRoute>
             } />
             <Route path="/messages/:partnerId" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD"]}>
                 <Messages />
               </ProtectedRoute>
             } />

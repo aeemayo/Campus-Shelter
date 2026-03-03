@@ -81,6 +81,12 @@ export async function changePassword(payload: any) {
   });
 }
 
+export async function deleteAccount() {
+  return apiFetch<ApiSuccess<any>>("/api/auth/delete-account", {
+    method: "DELETE",
+  });
+}
+
 // ─── Token helpers ───────────────────────────────────────────
 
 const TOKEN_KEY = "cs_token";

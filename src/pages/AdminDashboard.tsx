@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -29,6 +29,9 @@ import {
   DollarSign,
   TrendingUp,
   CalendarCheck,
+  Flag,
+  ShieldAlert,
+  UserX,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -43,6 +46,8 @@ import {
   adminApproveProperty,
   adminDeleteProperty,
   adminVerifyLandlord,
+  adminFlagUser,
+  adminDeleteUser,
   fetchAdminAnalytics,
   fetchAdminUsers,
 } from "@/services/properties";
@@ -61,7 +66,7 @@ import {
 } from "recharts";
 
 const AdminDashboard = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("properties");
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,18 +131,28 @@ const AdminDashboard = () => {
     }
   };
 
-  // Auth Guard
-  if (!isLoading && (!isAuthenticated || user?.role !== "ADMIN")) {
-    return <Navigate to="/" replace />;
-  }
+  const handleFlagUser = async (id: string, flagged: boolean) => {
+    try {
+      await adminFlagUser(id, flagged);
+      toast({
+        title: flagged ? "Account Flagged" : "Flag Removed",
+        description: `The user account has been ${flagged ? "flagged" : "unflagged"}.`,
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update user.", variant: "destructive" });
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  const handleDeleteUser = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this user account? This action cannot be undone.")) return;
+    try {
+      await adminDeleteUser(id);
+      toast({ title: "Account Deleted", description: "The user account has been removed." });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete user.", variant: "destructive" });
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -178,6 +193,11 @@ const AdminDashboard = () => {
                 <TabsTrigger value="landlords" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
                   <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   Landlords
+                </TabsTrigger>
+                <TabsTrigger value="users" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <ShieldAlert className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Users</span>
+                  <span className="sm:hidden">Users</span>
                 </TabsTrigger>
                 <TabsTrigger value="documents" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
                   <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -363,6 +383,18 @@ const AdminDashboard = () => {
                 </motion.div>
               </TabsContent>
 
+              <TabsContent value="users" className="mt-0 outline-none">
+                <motion.div
+                  key="users-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <UsersTab onFlag={handleFlagUser} onDelete={handleDeleteUser} onVerify={handleVerifyLandlord} />
+                </motion.div>
+              </TabsContent>
+
               <TabsContent value="documents" className="mt-0 outline-none">
                 <motion.div
                   key="documents-tab"
@@ -372,19 +404,18 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-                    <CardContent className="py-24 text-center">
-                      <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-8 text-primary shadow-lg shadow-primary/5">
-                        <FileText className="w-12 h-12" />
+                    <CardContent className="py-20 text-center">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                        <FileText className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <h3 className="text-2xl font-bold font-display tracking-tight mb-3">Compliance Repository</h3>
-                      <p className="text-muted-foreground font-medium max-w-md mx-auto mb-10 leading-relaxed">
-                        Verify agency documents, lease agreements, and KYC records for platform participants.
+                      <h3 className="text-xl font-semibold tracking-tight mb-2">Documents</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                        Manage lease agreements, ID verifications, and compliance documents.
                       </p>
-                      <Button asChild className="gradient-primary rounded-xl px-10 h-14 shadow-xl shadow-primary/20 font-bold text-lg">
+                      <Button asChild className="gradient-primary">
                         <Link to="/admin/documents/upload">
-                          <Plus className="w-6 h-6 mr-2" />
-                          Ingest Document
+                          <Plus className="w-4 h-4 mr-2" />
+                          Upload Document
                         </Link>
                       </Button>
                     </CardContent>
@@ -722,6 +753,227 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
           <div className="py-12 text-center text-muted-foreground">
             <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
             <p className="font-medium">No landlords registered yet.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UsersTab({
+  onFlag,
+  onDelete,
+  onVerify,
+}: {
+  onFlag: (id: string, flagged: boolean) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onVerify: (id: string, status: "VERIFIED" | "REJECTED") => Promise<void>;
+}) {
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+
+  const { data: allUsersRes, isLoading: allLoading, refetch } = useQuery({
+    queryKey: ["admin-all-users"],
+    queryFn: () => fetchAdminUsers(),
+  });
+
+  if (allLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const allUsers: any[] = allUsersRes?.data || [];
+  const filteredUsers = roleFilter === "ALL"
+    ? allUsers
+    : allUsers.filter((u: any) => u.role === roleFilter);
+
+  return (
+    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+      <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">User Management</CardTitle>
+            <CardDescription className="font-medium text-muted-foreground/70 text-sm">
+              View, flag, or remove user accounts.
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            {["ALL", "STUDENT", "LANDLORD"].map((role) => (
+              <Button
+                key={role}
+                variant={roleFilter === role ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+                onClick={() => setRoleFilter(role)}
+              >
+                {role === "ALL" ? "All" : role === "STUDENT" ? "Students" : "Landlords"}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {filteredUsers.length > 0 ? (
+          <>
+            {/* Mobile card layout */}
+            <div className="md:hidden divide-y divide-border/40">
+              {filteredUsers.map((u: any) => (
+                <div key={u.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="font-bold text-sm truncate">{u.name}</p>
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                          {u.role}
+                        </Badge>
+                        {u.flagged && (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 shrink-0">
+                            <Flag className="w-2.5 h-2.5 mr-0.5" />
+                            Flagged
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                      {u.role === "LANDLORD" && (
+                        <div className="mt-1">
+                          <Badge
+                            variant={u.landlordStatus === "VERIFIED" || u.verified ? "success" : u.landlordStatus === "REJECTED" ? "destructive" : "warning"}
+                            className="text-[9px]"
+                          >
+                            {u.landlordStatus || "PENDING"}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && !u.verified && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-success border-success/20 hover:bg-success/10"
+                        onClick={async () => { await onVerify(u.id, "VERIFIED"); refetch(); }}
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Verify
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`h-8 text-xs ${u.flagged ? "text-warning border-warning/20 hover:bg-warning/10" : "text-orange-500 border-orange-200 hover:bg-orange-50"}`}
+                      onClick={async () => { await onFlag(u.id, !u.flagged); refetch(); }}
+                    >
+                      <Flag className="w-3 h-3 mr-1" />
+                      {u.flagged ? "Unflag" : "Flag"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
+                      onClick={async () => { await onDelete(u.id); refetch(); }}
+                    >
+                      <UserX className="w-3 h-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60 text-muted-foreground">
+                    <th className="text-left font-medium py-4 px-4">Name</th>
+                    <th className="text-left font-medium py-4 px-4">Email</th>
+                    <th className="text-left font-medium py-4 px-4">Role</th>
+                    <th className="text-left font-medium py-4 px-4">Status</th>
+                    <th className="text-right font-medium py-4 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredUsers.map((u: any) => (
+                    <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{u.name}</span>
+                          {u.flagged && (
+                            <Badge variant="destructive" className="text-[9px] px-1.5 py-0">
+                              <Flag className="w-2.5 h-2.5 mr-0.5" />
+                              Flagged
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-muted-foreground">{u.email}</td>
+                      <td className="py-4 px-4">
+                        <Badge variant="outline">{u.role}</Badge>
+                      </td>
+                      <td className="py-4 px-4">
+                        {u.role === "LANDLORD" ? (
+                          <Badge
+                            variant={u.landlordStatus === "VERIFIED" || u.verified ? "success" : u.landlordStatus === "REJECTED" ? "destructive" : "warning"}
+                          >
+                            {u.landlordStatus || "PENDING"}
+                          </Badge>
+                        ) : (
+                          <Badge variant={u.verified ? "success" : "outline"}>
+                            {u.verified ? "Verified" : "Active"}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && !u.verified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-success border-success/20 hover:bg-success/10"
+                              onClick={async () => { await onVerify(u.id, "VERIFIED"); refetch(); }}
+                            >
+                              Verify
+                            </Button>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[150px]">
+                              <DropdownMenuItem
+                                onClick={async () => { await onFlag(u.id, !u.flagged); refetch(); }}
+                                className="cursor-pointer"
+                              >
+                                <Flag className="w-4 h-4 mr-2 text-orange-500" />
+                                {u.flagged ? "Remove Flag" : "Flag Account"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive cursor-pointer"
+                                onClick={async () => { await onDelete(u.id); refetch(); }}
+                              >
+                                <UserX className="w-4 h-4 mr-2" />
+                                Delete Account
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+            <p className="font-medium">No users found.</p>
           </div>
         )}
       </CardContent>
