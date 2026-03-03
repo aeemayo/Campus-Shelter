@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -26,11 +26,23 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChevronLeft, Loader2, Save } from "lucide-react";
+import { ChevronLeft, Loader2, Save, ImagePlus, X, GripVertical } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchProperty, createProperty, updateProperty, fetchAdminUsers } from "@/services/properties";
+import { uploadDocument } from "@/services/documents";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+
+const MAX_IMAGES = 8;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const MAX_FILE_SIZE_MB = 5;
+
+interface ImageItem {
+  id: string;
+  url: string;       // preview data-url or existing remote url
+  file?: File;       // only set for new uploads
+  uploaded: boolean; // true when already on the server
+}
 
 const propertyFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -60,6 +72,58 @@ const AdminPropertyForm = () => {
   const [landlords, setLandlords] = useState<any[]>([]);
   const isEditMode = !!id;
   const isLandlord = user?.role === "LANDLORD";
+
+  // ── Image upload state ──
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addImageFiles = useCallback((files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      toast({ title: "Limit Reached", description: `You can upload a maximum of ${MAX_IMAGES} images.`, variant: "destructive" });
+      return;
+    }
+    const toAdd = fileArray.slice(0, remaining);
+    const invalid = toAdd.filter(f => !ACCEPTED_IMAGE_TYPES.includes(f.type) || f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+    if (invalid.length > 0) {
+      toast({ title: "Invalid Files", description: `Some files were skipped. Only JPEG/PNG/WebP under ${MAX_FILE_SIZE_MB}MB are accepted.`, variant: "destructive" });
+    }
+    const valid = toAdd.filter(f => ACCEPTED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+    const newItems: ImageItem[] = valid.map(file => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: URL.createObjectURL(file),
+      file,
+      uploaded: false,
+    }));
+    setImages(prev => [...prev, ...newItems]);
+  }, [images.length, toast]);
+
+  const removeImage = useCallback((imageId: string) => {
+    setImages(prev => {
+      const item = prev.find(i => i.id === imageId);
+      if (item && !item.uploaded) URL.revokeObjectURL(item.url);
+      return prev.filter(i => i.id !== imageId);
+    });
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files) addImageFiles(e.dataTransfer.files);
+  }, [addImageFiles]);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -115,6 +179,14 @@ const AdminPropertyForm = () => {
             electricityBackup: p.electricityBackup,
             availableFrom: new Date(p.availableFrom).toISOString().split("T")[0],
           });
+          // Load existing images
+          if (p.images && p.images.length > 0) {
+            setImages(p.images.map((url, idx) => ({
+              id: `existing-${idx}`,
+              url,
+              uploaded: true,
+            })));
+          }
         }
       } catch (error) {
         toast({ title: "Error", description: "Failed to load property details.", variant: "destructive" });
@@ -130,12 +202,34 @@ const AdminPropertyForm = () => {
     loadProperty();
   }, [id, form, toast, isLandlord, user?.id]);
 
+  const uploadAllImages = async (): Promise<string[]> => {
+    const urls: string[] = [];
+    const total = images.length;
+    for (let i = 0; i < total; i++) {
+      const img = images[i];
+      if (img.uploaded) {
+        // Already on the server
+        urls.push(img.url);
+      } else if (img.file) {
+        setImageUploadProgress(`Uploading image ${i + 1} of ${total}...`);
+        const res = await uploadDocument(img.file, "PROPERTY_IMAGE");
+        urls.push(res.data.url);
+      }
+    }
+    setImageUploadProgress(null);
+    return urls;
+  };
+
   const onSubmit = async (values: PropertyFormValues) => {
     setIsLoading(true);
     try {
+      // Upload images first
+      const imageUrls = await uploadAllImages();
+
       const payload = {
         ...values,
         availableFrom: new Date(values.availableFrom).toISOString(),
+        images: imageUrls,
       };
 
       if (isEditMode) {
@@ -150,6 +244,7 @@ const AdminPropertyForm = () => {
       toast({ title: "Error", description: "Failed to save property.", variant: "destructive" });
     } finally {
       setIsLoading(false);
+      setImageUploadProgress(null);
     }
   };
 
@@ -371,6 +466,124 @@ const AdminPropertyForm = () => {
                         ))}
                       </div>
                     </div>
+
+                    {/* ── Section: Property Images ── */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-6 w-1 bg-primary rounded-full" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Property Images</h3>
+                        <span className="text-xs font-medium text-muted-foreground bg-muted/50 rounded-full px-2.5 py-0.5">
+                          {images.length} / {MAX_IMAGES}
+                        </span>
+                      </div>
+                      <div className="p-6 rounded-2xl bg-muted/30 border border-border/40 transition-all hover:border-primary/20 space-y-5">
+                        <p className="text-xs text-muted-foreground font-medium">
+                          Upload high-quality images of your property. The first image will be used as the cover photo. Accepted formats: JPEG, PNG, WebP (max {MAX_FILE_SIZE_MB}MB each).
+                        </p>
+
+                        {/* Image previews grid */}
+                        {images.length > 0 && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <AnimatePresence mode="popLayout">
+                              {images.map((img, index) => (
+                                <motion.div
+                                  key={img.id}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.8 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="relative group aspect-[4/3] rounded-xl overflow-hidden border-2 border-border/40 hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-md"
+                                >
+                                  <img
+                                    src={img.url}
+                                    alt={`Property image ${index + 1}`}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  {/* Cover badge for first image */}
+                                  {index === 0 && (
+                                    <div className="absolute top-1.5 left-1.5 bg-primary/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
+                                      Cover
+                                    </div>
+                                  )}
+                                  {/* Remove button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImage(img.id)}
+                                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-destructive/90 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-destructive hover:scale-110 shadow-lg"
+                                    aria-label={`Remove image ${index + 1}`}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                  {/* Overlay gradient */}
+                                  <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </motion.div>
+                              ))}
+                            </AnimatePresence>
+                          </div>
+                        )}
+
+                        {/* Drop zone */}
+                        {images.length < MAX_IMAGES && (
+                          <div
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-300 ${
+                              isDragging
+                                ? "border-primary bg-primary/5 scale-[1.01] shadow-lg shadow-primary/10"
+                                : "border-border/50 hover:border-primary/40 hover:bg-muted/30"
+                            } ${images.length > 0 ? "py-8" : "py-14"}`}
+                          >
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files) addImageFiles(e.target.files);
+                                e.target.value = "";
+                              }}
+                            />
+                            <div className="flex flex-col items-center gap-3 text-center px-4">
+                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                                isDragging ? "bg-primary/10 text-primary scale-110" : "bg-muted/50 text-muted-foreground/50"
+                              }`}>
+                                <ImagePlus className="w-7 h-7" />
+                              </div>
+                              <div>
+                                <p className={`font-bold text-sm transition-colors ${
+                                  isDragging ? "text-primary" : "text-foreground"
+                                }`}>
+                                  {isDragging
+                                    ? "Drop images here"
+                                    : images.length > 0
+                                      ? "Add more images"
+                                      : "Drag & drop your property images"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1 font-medium">
+                                  or <span className="text-primary">click to browse</span> · up to {MAX_IMAGES - images.length} more
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Upload progress indicator */}
+                        {imageUploadProgress && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20"
+                          >
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-sm font-medium text-primary">{imageUploadProgress}</span>
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+
                   </motion.div>
 
                   <div className="flex items-center justify-end gap-5 pt-8 border-t border-border/40">
