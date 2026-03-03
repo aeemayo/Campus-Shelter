@@ -104,15 +104,17 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-0.5">
-              <Link to="/properties" className={navLinkClass("/properties")}>
-                Properties
-              </Link>
-              {(!isAuthenticated || user?.role === "STUDENT") && (
+              {user?.role !== "LANDLORD" && (
+                <Link to="/properties" className={navLinkClass("/properties")}>
+                  Properties
+                </Link>
+              )}
+              {!isAuthenticated && (
                 <Link
                   to="/register?role=LANDLORD"
                   className={navLinkClass("/register?role=LANDLORD")}
                 >
-                  List your property
+                  Get Onboarded
                 </Link>
               )}
               {user?.role === "LANDLORD" && (
@@ -236,13 +238,15 @@ const Header = () => {
 
           <div className="relative mx-4 mt-2 bg-card border border-border rounded-xl shadow-primary-xl overflow-hidden animate-fade-in">
             <nav className="p-3 space-y-0.5">
-              <MobileLink
-                to="/properties"
-                icon={Building2}
-                label="Browse Properties"
-                active={isActive("/properties")}
-                onClick={() => setIsMenuOpen(false)}
-              />
+              {user?.role !== "LANDLORD" && (
+                <MobileLink
+                  to="/properties"
+                  icon={Building2}
+                  label="Browse Properties"
+                  active={isActive("/properties")}
+                  onClick={() => setIsMenuOpen(false)}
+                />
+              )}
 
               {isAuthenticated && user?.role === "STUDENT" && (
                 <MobileLink
@@ -302,7 +306,7 @@ const Header = () => {
                 How It Works
               </button>
 
-              {(!isAuthenticated || user?.role === "STUDENT") && (
+              {!isAuthenticated && (
                 <MobileLink
                   to="/register?role=LANDLORD"
                   icon={Building2}

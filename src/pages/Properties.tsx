@@ -13,14 +13,20 @@ import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { Home, Loader2, ChevronRight } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
 import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const Properties = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Block landlords from the properties browsing page
+  if (!authLoading && isAuthenticated && user?.role === "LANDLORD") {
+    return <Navigate to="/landlord" replace />;
+  }
+
   const [searchParams] = useSearchParams();
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [filters, setFilters] = useState<FilterState>({

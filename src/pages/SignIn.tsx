@@ -59,8 +59,21 @@ export default function SignIn() {
     setIsLoading(true);
     try {
       await login({ email: values.email, password: values.password });
+
+      // Read the user role from localStorage (populated by saveAuth inside login)
+      const savedRaw = localStorage.getItem("cs_user");
+      const savedUser = savedRaw ? JSON.parse(savedRaw) : null;
+      const role = savedUser?.role;
+
       toast({ title: "Welcome back!", description: "You've signed in successfully." });
-      navigate("/properties");
+
+      if (role === "LANDLORD") {
+        navigate("/landlord");
+      } else if (role === "ADMIN") {
+        navigate("/admin");
+      } else {
+        navigate("/properties");
+      }
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : "Something went wrong. Please try again.";

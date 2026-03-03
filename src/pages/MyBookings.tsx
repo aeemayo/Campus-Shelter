@@ -16,17 +16,32 @@ import {
   FileText,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MyBookings = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
   const { data: response, isLoading, isError } = useQuery({
     queryKey: ["my-bookings"],
     queryFn: fetchMyBookings,
+    enabled: isAuthenticated,
   });
 
   const bookings = response?.data || [];
 
+  // Auth guard
+  if (!authLoading && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
