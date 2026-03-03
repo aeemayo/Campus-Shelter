@@ -11,21 +11,17 @@ import { useProperties } from "@/hooks/use-properties";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Home, Loader2, ChevronRight } from "lucide-react";
-import { useSearchParams, Navigate } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
 import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+
 
 const Properties = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-
-  // Block landlords from the properties browsing page
-  if (!authLoading && isAuthenticated && user?.role === "LANDLORD") {
-    return <Navigate to="/landlord" replace />;
-  }
 
   const [searchParams] = useSearchParams();
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -222,45 +218,28 @@ const Properties = () => {
       {/* Page Header */}
       <section className="pt-28 pb-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -mr-32 -mt-32 blur-[100px] opacity-50" />
 
         <div className="container mx-auto px-4 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 mb-6">
-              <Home className="w-3.5 h-3.5 text-primary/60" />
-              <span>Sanctuary</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-primary font-black">Archive</span>
-            </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Home className="w-4 h-4" />
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-foreground">Properties</span>
+          </div>
 
-            <h1 className="font-display text-4xl md:text-6xl font-black text-foreground tracking-tight mb-4 leading-[1.1]">
-              Discover Your <br />
-              <span className="gradient-primary bg-clip-text text-transparent">Elite Residence</span>
-            </h1>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-3">
+            Find Your <span className="text-primary">Perfect Home</span>
+          </h1>
 
-            <p className="text-muted-foreground max-w-2xl text-lg font-medium leading-relaxed mb-6">
-              Curated verified properties in the FUTA ecosystem.
-              Precision filtering for the modern student lifestyle.
+          <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
+            Browse verified student accommodation near FUTA. Filter by location, price, and amenities.
+          </p>
+
+          {isAuthenticated && firstName && (
+            <p className="text-sm text-primary mt-3 font-medium">
+              Welcome back, {firstName}
             </p>
-
-            {isAuthenticated && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="inline-flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl"
-              >
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <p className="text-xs font-bold text-primary/80 uppercase tracking-widest">
-                  Welcome back, {firstName || 'Resident'} — Preferences Synchronized
-                </p>
-              </motion.div>
-            )}
-          </motion.div>
+          )}
         </div>
       </section>
 
@@ -348,21 +327,20 @@ const Properties = () => {
                   </motion.div>
                 ) : (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-32 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 backdrop-blur-sm"
+                    className="text-center py-20 bg-muted/20 rounded-xl border-2 border-dashed border-border/60"
                   >
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
-                      <Home className="w-10 h-10 text-primary/40" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                      <Home className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">
-                      Zero Matches Found
+                    <h3 className="text-xl font-semibold text-foreground mb-2 tracking-tight">
+                      No properties found
                     </h3>
-                    <p className="text-muted-foreground font-medium mb-8 max-w-sm mx-auto">
-                      Our intelligence reveals no properties matching your specific criteria.
-                      Consider expanding your search parameters.
+                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                      No properties match your current filters. Try adjusting your search criteria.
                     </p>
-                    <button
+                    <Button
                       onClick={() => setFilters({
                         search: "",
                         location: "All Locations",
@@ -374,10 +352,9 @@ const Properties = () => {
                         furnishedOnly: false,
                         verifiedOnly: false,
                       })}
-                      className="px-8 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform"
                     >
-                      Reset Intelligence
-                    </button>
+                      Clear filters
+                    </Button>
                   </motion.div>
                 )}
               </AnimatePresence>
