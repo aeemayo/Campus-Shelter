@@ -12,7 +12,7 @@ import {
   Zap,
   Droplets,
 } from "lucide-react";
-import { Property } from "@/data/mockProperties";
+import { Property } from "@/services/properties";
 import { Link, useNavigate } from "react-router-dom";
 
 interface PropertyCardProps {

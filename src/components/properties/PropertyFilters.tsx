@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
-import { locations, propertyTypes, amenitiesList, priceRanges } from "@/data/mockProperties";
+import { locations, propertyTypes, amenitiesList, priceRanges } from "@/services/properties";
 
 export interface FilterState {
   search: string;

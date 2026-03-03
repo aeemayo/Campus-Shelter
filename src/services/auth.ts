@@ -53,6 +53,27 @@ export async function register(payload: RegisterPayload) {
   return res.data;
 }
 
+export async function forgotPassword(email: string) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(payload: any) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function changePassword(payload: any) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // ─── Token helpers ───────────────────────────────────────────
 
 const TOKEN_KEY = "cs_token";

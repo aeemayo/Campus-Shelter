@@ -1,6 +1,5 @@
 // ─── Adapter: Backend API property → Frontend Property shape ─
-import type { ApiProperty } from "@/services/properties";
-import type { Property } from "@/data/mockProperties";
+import { Property, ApiProperty, RoomType } from "@/services/properties";
 
 const roomTypeMap: Record<string, Property["type"]> = {
   SINGLE: "single-room",
@@ -38,20 +37,29 @@ export function toFrontendProperty(p: ApiProperty): Property {
     type: roomTypeMap[p.roomType] ?? "single-room",
     location: p.location,
     price: p.priceMonthly,
+    priceMonthly: p.priceMonthly,
+    priceWeekly: p.priceWeekly,
     priceType: "monthly",
     bedrooms: p.rooms,
     bathrooms: p.bathrooms,
-    images: [
-      // Backend doesn't return image URLs yet; use a placeholder
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
-    ],
+    images: p.images && p.images.length > 0
+      ? p.images
+      : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"],
     amenities,
     distance: `${p.distanceFromFUTA} km from FUTA`,
     rating: avgRating,
     reviewCount,
-    landlord: {
-      name: p.landlord?.name ?? "Landlord",
-      verified: true, // approved properties have verified landlords
+    availableFrom: p.availableFrom,
+    approved: p.approved,
+    landlord: p.landlord ? {
+      id: p.landlord.id,
+      name: p.landlord.name,
+      email: p.landlord.email,
+      phone: p.landlord.phone,
+      verified: true,
+    } : {
+      name: "Landlord",
+      verified: true
     },
     available: new Date(p.availableFrom) <= new Date(),
     featured: false,

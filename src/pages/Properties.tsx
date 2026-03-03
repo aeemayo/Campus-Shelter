@@ -6,7 +6,7 @@ import PropertyFilters, {
   FilterState,
 } from "@/components/properties/PropertyFilters";
 import PropertySearch from "@/components/properties/PropertySearch";
-import { mockProperties, priceRanges } from "@/data/mockProperties";
+import { priceRanges } from "@/services/properties";
 import { useProperties } from "@/hooks/use-properties";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
@@ -122,12 +122,9 @@ const Properties = () => {
     isError,
   } = useProperties(apiParams);
 
-  // Convert API data → frontend shape, or fall back to mock
+  // Convert API data → frontend shape
   const baseProperties = useMemo(() => {
-    if (apiResponse?.data && apiResponse.data.length > 0) {
-      return apiResponse.data.map(toFrontendProperty);
-    }
-    return mockProperties; // fallback
+    return apiResponse?.data?.map(toFrontendProperty) || [];
   }, [apiResponse]);
 
   const filteredProperties = useMemo(() => {
@@ -198,7 +195,7 @@ const Properties = () => {
         result.sort((a, b) => b.rating - a.rating);
         break;
       case "newest":
-        result.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        result.sort((a, b) => b.id.localeCompare(a.id));
         break;
       case "featured":
       default:
