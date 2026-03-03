@@ -69,12 +69,12 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-purple-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-secondary via-secondary/50 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-br from-violet-600 to-purple-600 text-white p-2.5 rounded-xl shadow-lg">
+            <div className="gradient-primary text-white p-2.5 rounded-xl shadow-lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -85,7 +85,7 @@ export default function SignIn() {
                 <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15.75a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198c.03-.028.061-.056.091-.085L12 5.432z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-700 to-purple-700 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gradient-primary">
               CampusShelter
             </h1>
           </div>
@@ -94,9 +94,9 @@ export default function SignIn() {
           </p>
         </div>
 
-        <Card className="border-violet-200/60 shadow-xl shadow-violet-100/40">
+        <Card className="border-border/50 shadow-primary-xl">
           <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center font-semibold text-violet-950">
+            <CardTitle className="text-2xl text-center font-semibold text-foreground">
               Sign in to your account
             </CardTitle>
             <CardDescription className="text-center">
@@ -137,7 +137,7 @@ export default function SignIn() {
                         <FormLabel>Password</FormLabel>
                         <Link
                           to="/forgot-password"
-                          className="text-sm text-violet-700 hover:text-violet-800 underline underline-offset-2"
+                          className="text-sm text-primary hover:text-primary/80 underline underline-offset-2"
                         >
                           Forgot password?
                         </Link>
@@ -172,7 +172,7 @@ export default function SignIn() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium py-6 mt-2"
+                  className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-2"
                   disabled={isLoading}
                 >
                   {isLoading ? "Signing in..." : "Sign In"}
@@ -190,10 +190,10 @@ export default function SignIn() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="border-violet-200">
+              <Button variant="outline" className="border-border">
                 Google
               </Button>
-              <Button variant="outline" className="border-violet-200">
+              <Button variant="outline" className="border-border">
                 Phone
               </Button>
             </div>
@@ -203,7 +203,7 @@ export default function SignIn() {
             Don&apos;t have an account?{" "}
             <Link
               to="/register"
-              className="text-violet-700 hover:text-violet-800 font-medium underline underline-offset-4 ml-1"
+              className="text-primary hover:text-primary/80 font-medium underline underline-offset-4 ml-1"
             >
               Sign up
             </Link>

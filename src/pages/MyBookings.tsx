@@ -9,14 +9,13 @@ import {
   Calendar,
   MapPin,
   Clock,
-  CheckCircle2,
-  XCircle,
   Loader2,
   Home,
   ChevronRight,
   Phone,
   FileText,
 } from "lucide-react";
+import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
 
 const MyBookings = () => {
@@ -27,16 +26,6 @@ const MyBookings = () => {
 
   const bookings = response?.data || [];
 
-  const getStatusBadge = (status: Booking["status"]) => {
-    switch (status) {
-      case "APPROVED":
-        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle2 className="w-3 h-3 mr-1" /> Approved</Badge>;
-      case "REJECTED":
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-      default:
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -84,7 +73,7 @@ const MyBookings = () => {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-2">
-                            {getStatusBadge(booking.status)}
+                            <StatusBadge status={booking.status} />
                             <p className="text-xs text-muted-foreground">Requested on {new Date(booking.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
@@ -128,7 +117,7 @@ const MyBookings = () => {
                                 </a>
                               </Button>
                             ) : (
-                              <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200">
+                              <Badge variant="warning">
                                 <Clock className="w-3 h-3 mr-1" />
                                 Lease Pending
                               </Badge>

@@ -64,18 +64,18 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-purple-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-secondary via-secondary/50 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-violet-200/60 shadow-xl shadow-violet-100/40">
+        <Card className="border-border/50 shadow-primary-xl">
           <CardHeader className="space-y-1 pb-6 text-center">
             <Link to="/login" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 self-start">
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to login
             </Link>
-            <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-6 h-6 text-violet-600" />
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-violet-950">
+            <CardTitle className="text-2xl font-semibold text-foreground">
               Forgot password?
             </CardTitle>
             <CardDescription>
@@ -110,7 +110,7 @@ export default function ForgotPassword() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium py-6 mt-2"
+                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-2"
                     disabled={isLoading}
                   >
                     {isLoading ? "Sending..." : "Send Reset Link"}
@@ -120,7 +120,7 @@ export default function ForgotPassword() {
             ) : (
               <div className="text-center py-6">
                 <div className="flex justify-center mb-4">
-                  <CheckCircle2 className="w-12 h-12 text-green-500" />
+                  <CheckCircle2 className="w-12 h-12 text-success" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">Check your email</h3>
                 <p className="text-muted-foreground mb-6">
@@ -136,7 +136,7 @@ export default function ForgotPassword() {
           <CardFooter className="flex justify-center pb-8 pt-2">
             <Link
               to="/login"
-              className="text-sm text-violet-700 hover:text-violet-800 font-medium underline underline-offset-4"
+              className="text-sm text-primary hover:text-primary/80 font-medium underline underline-offset-4"
             >
               Back to login
             </Link>

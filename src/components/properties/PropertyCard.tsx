@@ -91,7 +91,7 @@ const PropertyCard = ({
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
+              isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"
             }`}
           />
         </button>
@@ -111,10 +111,7 @@ const PropertyCard = ({
         {/* Verified badge */}
         {property.landlord.verified && (
           <div className="absolute bottom-3 right-3">
-            <Badge
-              variant="secondary"
-              className="bg-green-500/90 text-white border-0"
-            >
+            <Badge variant="success">
               <Shield className="w-3 h-3 mr-1" />
               Verified
             </Badge>

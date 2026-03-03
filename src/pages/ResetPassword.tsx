@@ -93,14 +93,14 @@ export default function ResetPassword() {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-purple-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-secondary via-secondary/50 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-violet-200/60 shadow-xl shadow-violet-100/40">
+        <Card className="border-border/50 shadow-primary-xl">
           <CardHeader className="space-y-1 pb-6 text-center">
-            <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <KeyRound className="w-6 h-6 text-violet-600" />
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <KeyRound className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-violet-950">
+            <CardTitle className="text-2xl font-semibold text-foreground">
               Set new password
             </CardTitle>
             <CardDescription>
@@ -145,7 +145,7 @@ export default function ResetPassword() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium py-6 mt-2"
+                    className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-2"
                     disabled={isLoading}
                   >
                     {isLoading ? "Resetting..." : "Reset Password"}
@@ -155,7 +155,7 @@ export default function ResetPassword() {
             ) : (
               <div className="text-center py-6">
                 <div className="flex justify-center mb-4">
-                  <CheckCircle2 className="w-12 h-12 text-green-500" />
+                  <CheckCircle2 className="w-12 h-12 text-success" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">Password reset!</h3>
                 <p className="text-muted-foreground mb-6">

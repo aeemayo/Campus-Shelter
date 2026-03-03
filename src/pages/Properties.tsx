@@ -12,7 +12,7 @@ import { useUserActivity } from "@/hooks/use-user-activity";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
-import { Home, Loader2 } from "lucide-react";
+import { Home, Loader2, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
 
@@ -216,7 +216,7 @@ const Properties = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Home className="w-4 h-4" />
             <span>Home</span>
-            <span>/</span>
+            <ChevronRight className="w-3 h-3" />
             <span className="text-foreground">Properties</span>
           </div>
           <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">

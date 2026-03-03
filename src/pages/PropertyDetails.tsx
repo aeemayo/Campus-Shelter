@@ -276,10 +276,7 @@ export default function RentalDetailsPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {property.landlord.verified && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-500/90 text-white border-0"
-                        >
+                        <Badge variant="success">
                           <ShieldCheck className="w-3 h-3 mr-1" />
                           Verified Agent
                         </Badge>
@@ -293,6 +290,16 @@ export default function RentalDetailsPage() {
                 >
                   <Phone className="w-4 h-4" />
                   Call Agent
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl gap-2 border-primary/20 text-primary hover:bg-primary/5"
+                  asChild
+                >
+                  <Link to={`/messages/${property.landlord.id}`}>
+                    <MessageSquare className="w-4 h-4" />
+                    Message Agent
+                  </Link>
                 </Button>
                 <p className="text-[10px] text-center text-muted-foreground">
                   Typical response time: <span className="font-semibold text-foreground">&lt; 2 hours</span>
@@ -384,7 +391,7 @@ export default function RentalDetailsPage() {
                 </Dialog>
 
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground justify-center">
-                  <ShieldCheck className="w-3 h-3 text-green-500" />
+                  <ShieldCheck className="w-3 h-3 text-success" />
                   Secure & Protected Transaction
                 </div>
               </CardContent>
@@ -433,7 +440,7 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
           <CardTitle className="text-lg">Student Reviews</CardTitle>
           <CardDescription>What others say about this place.</CardDescription>
         </div>
-        <div className="flex items-center gap-1 text-amber-500">
+        <div className="flex items-center gap-1 text-warning">
           <Star className="w-5 h-5 fill-current" />
           <span className="font-bold text-xl">{reviews.length > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1) : "0.0"}</span>
         </div>
@@ -449,7 +456,7 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
                   <span className="font-semibold text-sm">{review.student?.name || "Student"}</span>
                   <div className="flex items-center gap-0.5">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-amber-500 text-amber-500" : "text-muted-foreground"}`} />
+                      <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-warning text-warning" : "text-muted-foreground"}`} />
                     ))}
                   </div>
                 </div>

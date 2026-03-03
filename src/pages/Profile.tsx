@@ -139,7 +139,7 @@ const Profile = () => {
                   </span>
                 </div>
                 {user?.verified && (
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-green-500 border-2 border-white flex items-center justify-center">
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-success border-2 border-white flex items-center justify-center">
                     <Shield className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -148,14 +148,14 @@ const Profile = () => {
               {/* User Info */}
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">
+                  <h1 className="text-2xl md:text-3xl font-display font-bold text-white">
                     {user?.name}
                   </h1>
                   <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm">
                     {roleLabel[user?.role ?? "STUDENT"]}
                   </Badge>
                   {user?.verified && (
-                    <Badge className="bg-green-500/80 text-white border-0">
+                    <Badge variant="success">
                       <Shield className="w-3 h-3 mr-1" />
                       Verified
                     </Badge>
@@ -203,19 +203,19 @@ const Profile = () => {
                   label: "Saved Properties",
                   value: savedProperties.length,
                   icon: Heart,
-                  color: "text-red-300",
+                  color: "text-destructive/70",
                 },
                 {
                   label: "Recently Viewed",
                   value: viewedProperties.length,
                   icon: Eye,
-                  color: "text-blue-300",
+                  color: "text-primary/70",
                 },
                 {
                   label: "Total Listings",
                   value: allProperties.length,
                   icon: TrendingUp,
-                  color: "text-green-300",
+                  color: "text-success/70",
                 },
                 {
                   label: "Activity Score",
@@ -224,7 +224,7 @@ const Profile = () => {
                       ? "Active"
                       : "New",
                   icon: Sparkles,
-                  color: "text-yellow-300",
+                  color: "text-warning/70",
                 },
               ].map((stat) => (
                 <div
@@ -383,12 +383,7 @@ const Profile = () => {
                       label="Verification Status"
                       value={
                         <Badge
-                          variant={user?.verified ? "default" : "secondary"}
-                          className={
-                            user?.verified
-                              ? "bg-green-500/90 text-white border-0"
-                              : ""
-                          }
+                          variant={user?.verified ? "success" : "secondary"}
                         >
                           {user?.verified ? (
                             <>
@@ -416,8 +411,8 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-xl bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30 p-4 text-center">
-                        <Heart className="w-6 h-6 text-red-500 mx-auto mb-1" />
+                      <div className="rounded-xl bg-destructive/5 p-4 text-center">
+                        <Heart className="w-6 h-6 text-destructive mx-auto mb-1" />
                         <p className="text-2xl font-bold text-foreground">
                           {savedProperties.length}
                         </p>
@@ -425,8 +420,8 @@ const Profile = () => {
                           Favorites
                         </p>
                       </div>
-                      <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-4 text-center">
-                        <Eye className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+                      <div className="rounded-xl bg-primary/5 p-4 text-center">
+                        <Eye className="w-6 h-6 text-primary mx-auto mb-1" />
                         <p className="text-2xl font-bold text-foreground">
                           {viewedProperties.length}
                         </p>
@@ -640,7 +635,7 @@ function SecuritySettings() {
 
       <Card className="border-border/50 shadow-primary-sm bg-muted/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-amber-600">
+          <CardTitle className="flex items-center gap-2 text-lg text-warning">
             <ShieldAlert className="w-5 h-5" />
             Two-Factor Authentication
           </CardTitle>

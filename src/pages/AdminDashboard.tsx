@@ -112,7 +112,7 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+              <h1 className="text-3xl font-display font-bold tracking-tight">Admin Dashboard</h1>
               <p className="text-muted-foreground mt-1">Manage properties, landlords, and documents for the platform.</p>
             </div>
             <div className="flex items-center gap-3">
@@ -210,13 +210,9 @@ const AdminDashboard = () => {
                               </td>
                               <td className="py-4 px-2">
                                 {property.approved ? (
-                                  <Badge variant="default" className="bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/10">
-                                    Approved
-                                  </Badge>
+                                  <Badge variant="success">Approved</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/10">
-                                    Pending
-                                  </Badge>
+                                  <Badge variant="warning">Pending</Badge>
                                 )}
                               </td>
                               <td className="py-4 px-2 text-right text-xs">
@@ -234,7 +230,7 @@ const AdminDashboard = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-8 text-green-500 border-green-500/20 hover:bg-green-500/10"
+                                      className="h-8 text-success border-success/20 hover:bg-success/10"
                                       onClick={() => handleApprove(property.id, true)}
                                     >
                                       Approve
@@ -340,10 +336,10 @@ function AnalyticsTab() {
   const analytics = response?.data || {};
 
   const stats = [
-    { label: "Total Users", value: analytics.totalUsers ?? 0, icon: Users, color: "text-blue-500" },
-    { label: "Total Properties", value: analytics.totalProperties ?? 0, icon: Building2, color: "text-green-500" },
-    { label: "Active Bookings", value: analytics.activeBookings ?? analytics.totalBookings ?? 0, icon: CalendarCheck, color: "text-amber-500" },
-    { label: "Revenue", value: analytics.revenue ? `₦${Number(analytics.revenue).toLocaleString()}` : "₦0", icon: DollarSign, color: "text-purple-500" },
+    { label: "Total Users", value: analytics.totalUsers ?? 0, icon: Users, color: "text-primary" },
+    { label: "Total Properties", value: analytics.totalProperties ?? 0, icon: Building2, color: "text-success" },
+    { label: "Active Bookings", value: analytics.activeBookings ?? analytics.totalBookings ?? 0, icon: CalendarCheck, color: "text-warning" },
+    { label: "Revenue", value: analytics.revenue ? `₦${Number(analytics.revenue).toLocaleString()}` : "₦0", icon: DollarSign, color: "text-accent" },
   ];
 
   return (
@@ -444,9 +440,9 @@ function LandlordsTab() {
                     <td className="py-4 px-2 text-muted-foreground">{landlord.phone || "—"}</td>
                     <td className="py-4 px-2">
                       {landlord.verified ? (
-                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Verified</Badge>
+                        <Badge variant="success">Verified</Badge>
                       ) : (
-                        <Badge variant="secondary">Pending</Badge>
+                        <Badge variant="warning">Pending</Badge>
                       )}
                     </td>
                   </tr>

@@ -26,12 +26,12 @@ import {
   Wrench,
   CheckCircle2,
   XCircle,
-  Clock,
   Loader2,
   MapPin,
   ExternalLink,
   Upload,
 } from "lucide-react";
+import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
 
 const LandlordDashboard = () => {
@@ -136,16 +136,6 @@ const LandlordDashboard = () => {
     );
   }
 
-  const getBookingStatusBadge = (status: Booking["status"]) => {
-    switch (status) {
-      case "APPROVED":
-        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle2 className="w-3 h-3 mr-1" /> Approved</Badge>;
-      case "REJECTED":
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-      default:
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -154,7 +144,7 @@ const LandlordDashboard = () => {
       <main className="flex-1 pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Landlord Dashboard</h1>
+            <h1 className="text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
             <p className="text-muted-foreground mt-1">
               Manage your properties, bookings, and maintenance requests.
             </p>
@@ -226,9 +216,9 @@ const LandlordDashboard = () => {
                               </td>
                               <td className="py-4 px-2">
                                 {property.approved ? (
-                                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Approved</Badge>
+                                  <Badge variant="success">Approved</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>
+                                  <Badge variant="warning">Pending</Badge>
                                 )}
                               </td>
                               <td className="py-4 px-2 text-right">
@@ -276,7 +266,7 @@ const LandlordDashboard = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <p className="font-semibold">{booking.property?.title || "Property"}</p>
-                              {getBookingStatusBadge(booking.status)}
+                              <StatusBadge status={booking.status} />
                             </div>
                             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                               <span>Student: {booking.studentId.slice(0, 8)}…</span>
@@ -292,7 +282,7 @@ const LandlordDashboard = () => {
                               <>
                                 <Button
                                   size="sm"
-                                  className="bg-green-500 hover:bg-green-600 text-white"
+                                  className="bg-success hover:bg-success/90 text-success-foreground"
                                   disabled={bookingMutation.isPending}
                                   onClick={() => bookingMutation.mutate({ id: booking.id, status: "APPROVED" })}
                                 >
