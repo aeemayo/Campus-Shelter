@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import NotFound from "./pages/NotFound";
@@ -36,27 +37,85 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/register" element={<SignUp />}></Route>
-            <Route path="/login" element={<SignIn />}></Route>
-            <Route path="/forgot-password" element={<ForgotPassword />}></Route>
-            <Route path="/reset-password" element={<ResetPassword />}></Route>
-            <Route path="/my-bookings" element={<MyBookings />}></Route>
-            <Route path="/properties/:id" element={<PropertyDetails />}></Route>
-            <Route path="/profile" element={<Profile />}></Route>
-            <Route path="/landlord" element={<LandlordDashboard />}></Route>
-            <Route path="/properties/add" element={<AdminPropertyForm />}></Route>
-            <Route path="/admin" element={<AdminDashboard />}></Route>
-            <Route path="/admin/properties/new" element={<AdminPropertyForm />}></Route>
-            <Route path="/admin/properties/edit/:id" element={<AdminPropertyForm />}></Route>
-            <Route path="/admin/documents/upload" element={<AdminDocumentUpload />}></Route>
-            <Route path="/messages" element={<Messages />}></Route>
-            <Route path="/messages/:partnerId" element={<Messages />}></Route>
-            <Route path="/faq" element={<FAQ />}></Route>
-            <Route path="/contact" element={<Contact />}></Route>
-            <Route path="/terms" element={<Terms />}></Route>
-            <Route path="/privacy" element={<Privacy />}></Route>
+            <Route path="/register" element={<SignUp />} />
+            <Route path="/login" element={<SignIn />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+
+            {/* Student routes */}
+            <Route path="/properties" element={
+              <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <Properties />
+              </ProtectedRoute>
+            } />
+            <Route path="/properties/:id" element={
+              <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <PropertyDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bookings" element={
+              <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <MyBookings />
+              </ProtectedRoute>
+            } />
+
+            {/* Landlord routes */}
+            <Route path="/landlord" element={
+              <ProtectedRoute allowedRoles={["LANDLORD"]}>
+                <LandlordDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/properties/add" element={
+              <ProtectedRoute allowedRoles={["LANDLORD"]}>
+                <AdminPropertyForm />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/properties/new" element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AdminPropertyForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/properties/edit/:id" element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AdminPropertyForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/documents/upload" element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AdminDocumentUpload />
+              </ProtectedRoute>
+            } />
+
+            {/* Shared authenticated routes */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages/:partnerId" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
