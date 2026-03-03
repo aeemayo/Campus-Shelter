@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -43,7 +43,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const {
     favorites,
     viewedPropertyIds,
@@ -73,18 +73,6 @@ const Profile = () => {
     [allProperties, viewedPropertyIds],
   );
 
-  // Redirect to login if not authenticated
-  if (!isLoading && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
 
   const firstName = user?.name?.trim().split(" ")[0] ?? "";
   const initials =
@@ -368,52 +356,55 @@ const Profile = () => {
                       <CardHeader className="pb-6 border-b border-border/40">
                         <CardTitle className="flex items-center gap-3 text-xl font-bold font-display tracking-tight text-primary">
                           <User className="w-6 h-6" />
-                          Master Profile Records
+                          Profile Details
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-8 space-y-6">
-                        <InfoRow label="Legal Name" value={user?.name ?? "—"} />
+                        <InfoRow label="Name" value={user?.name ?? "—"} />
                         <Separator className="bg-border/30" />
-                        <InfoRow label="Primary Email" value={user?.email ?? "—"} />
+                        <InfoRow label="Email" value={user?.email ?? "—"} />
                         <Separator className="bg-border/30" />
-                        <InfoRow label="Phone Contact" value={user?.phone ?? "Not provided"} />
+                        <InfoRow label="Phone" value={user?.phone ?? "Not provided"} />
                         <Separator className="bg-border/30" />
-                        <InfoRow label="User Role" value={roleLabel[user?.role ?? "STUDENT"]} />
+                        <InfoRow label="Role" value={roleLabel[user?.role ?? "STUDENT"]} />
                         <Separator className="bg-border/30" />
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Verification Status</span>
                           {user?.role === "LANDLORD" ? (
                             <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.landlordStatus === "VERIFIED" ? 'bg-success text-white' : 'bg-warning text-white'}`}>
-                              {user?.landlordStatus === "VERIFIED" ? "Elite Provider" : "Audit Pending"}
+                              {user?.landlordStatus === "VERIFIED" ? "Verified" : "Pending"}
                             </Badge>
                           ) : (
                             <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verified ? 'bg-success text-white' : 'bg-muted text-muted-foreground'}`}>
-                              {user?.verified ? "Verified Citizen" : "Self-Unverified"}
+                              {user?.verified ? "Verified" : "Unverified"}
                             </Badge>
                           )}
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Danger Zone */}
-                    <Card className="border-destructive/20 bg-destructive/5 shadow-destructive/5 overflow-hidden">
-                      <CardContent className="p-8">
+                    {/* Sign Out */}
+                    <Card className="border-border/40">
+                      <CardContent className="p-6">
                         <div className="flex items-start gap-4">
-                          <div className="p-3 rounded-2xl bg-destructive/10 text-destructive">
-                            <LogOut className="w-6 h-6" />
+                          <div className="p-2.5 rounded-xl bg-muted text-muted-foreground">
+                            <LogOut className="w-5 h-5" />
                           </div>
-                          <div className="flex-1 space-y-2">
-                            <h3 className="text-lg font-bold">Disconnect Session</h3>
-                            <p className="text-sm text-muted-foreground mb-6 font-medium leading-relaxed">
-                              Securely sign out of your account on this device. Your favorites and preferences are synced to the cloud.
+                          <div className="flex-1">
+                            <h3 className="text-base font-semibold mb-1">Sign out</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Sign out of your account on this device.
                             </p>
-                            <Button variant="destructive" onClick={logout} className="rounded-xl px-8 h-12 font-bold shadow-lg shadow-destructive/20">
-                              Terminate Session
+                            <Button variant="outline" onClick={logout}>
+                              Sign out
                             </Button>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
+
+                    {/* Delete Account */}
+                    <DeleteAccountSection />
                   </div>
                 </motion.div>
               </TabsContent>
@@ -502,6 +493,71 @@ function EmptyState({
 
 export default Profile;
 
+function DeleteAccountSection() {
+  const { logout } = useAuth();
+  const { toast } = useToast();
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const { deleteAccount } = await import("@/services/auth");
+      await deleteAccount();
+      toast({ title: "Account deleted", description: "Your account has been permanently removed." });
+      logout();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to delete account.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+      setIsConfirming(false);
+    }
+  };
+
+  return (
+    <Card className="border-destructive/20 bg-destructive/5">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2.5 rounded-xl bg-destructive/10 text-destructive">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-destructive mb-1">Delete Account</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            {!isConfirming ? (
+              <Button variant="destructive" onClick={() => setIsConfirming(true)}>
+                Delete my account
+              </Button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </div>
+                  ) : (
+                    "Yes, delete permanently"
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setIsConfirming(false)} disabled={isDeleting}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SecuritySettings() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -557,17 +613,17 @@ function SecuritySettings() {
         <CardHeader className="pb-6 border-b border-border/40">
           <CardTitle className="flex items-center gap-3 text-xl font-bold font-display tracking-tight text-primary">
             <KeyRound className="w-6 h-6" />
-            Security Protocol
+            Change Password
           </CardTitle>
           <CardDescription className="font-medium">
-            Rotate your password regularly to maintain account integrity.
+            Update your password to keep your account secure.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
           <form onSubmit={handleUpdatePassword} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Current Key</Label>
+                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Current Password</Label>
                 <Input
                   id="currentPassword"
                   name="currentPassword"
@@ -579,7 +635,7 @@ function SecuritySettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">New Secure Key</Label>
+                <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">New Password</Label>
                 <Input
                   id="newPassword"
                   name="newPassword"
@@ -591,7 +647,7 @@ function SecuritySettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Repeat New Key</Label>
+                <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Confirm New Password</Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -613,7 +669,7 @@ function SecuritySettings() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Syncing...</span>
                 </div>
-              ) : "Update Credentials"}
+              ) : "Update Password"}
             </Button>
           </form>
         </CardContent>
@@ -623,16 +679,16 @@ function SecuritySettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg text-warning font-bold">
             <ShieldAlert className="w-5 h-5" />
-            Advanced Shield (2FA)
+            Two-Factor Authentication
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-6 font-medium leading-relaxed">
-            Biometric and TOTP authentication are currently in early-access staging.
+            Two-factor authentication is coming soon.
           </p>
           <Button variant="outline" disabled className="gap-2 rounded-xl h-12 px-6 border-warning/20 text-warning opacity-60">
-            Provision 2FA
-            <Badge className="ml-1 text-[9px] bg-warning shadow-none border-none text-white italic">LABS</Badge>
+            Enable 2FA
+            <Badge className="ml-1 text-[9px] bg-warning shadow-none border-none text-white">Soon</Badge>
           </Button>
         </CardContent>
       </Card>
