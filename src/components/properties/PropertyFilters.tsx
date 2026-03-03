@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -17,9 +16,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
-import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
-import { locations, propertyTypes, amenitiesList, priceRanges } from "@/data/mockProperties";
+import { SlidersHorizontal, RotateCcw } from "lucide-react";
+import { locations, propertyTypes, amenitiesList, priceRanges } from "@/services/properties";
 
 export interface FilterState {
   search: string;
@@ -79,12 +77,12 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
     <div className="space-y-6">
       {/* Location */}
       <div className="space-y-2">
-        <Label className="text-foreground font-medium">Location</Label>
+        <Label className="text-foreground text-sm font-medium">Location</Label>
         <Select
           value={filters.location}
           onValueChange={(value) => updateFilter('location', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-lg">
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
           <SelectContent>
@@ -99,12 +97,12 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
 
       {/* Property Type */}
       <div className="space-y-2">
-        <Label className="text-foreground font-medium">Property Type</Label>
+        <Label className="text-foreground text-sm font-medium">Property Type</Label>
         <Select
           value={filters.propertyType}
           onValueChange={(value) => updateFilter('propertyType', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-lg">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
@@ -119,12 +117,12 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
 
       {/* Price Range */}
       <div className="space-y-2">
-        <Label className="text-foreground font-medium">Budget (per year)</Label>
+        <Label className="text-foreground text-sm font-medium">Budget (per year)</Label>
         <Select
           value={filters.priceRange}
           onValueChange={(value) => updateFilter('priceRange', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-lg">
             <SelectValue placeholder="Select budget" />
           </SelectTrigger>
           <SelectContent>
@@ -139,8 +137,8 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
 
       {/* Quick Filters */}
       <div className="space-y-3">
-        <Label className="text-foreground font-medium">Quick Filters</Label>
-        <div className="space-y-2">
+        <Label className="text-foreground text-sm font-medium">Quick Filters</Label>
+        <div className="space-y-2.5">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="available"
@@ -176,8 +174,8 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
 
       {/* Amenities */}
       <div className="space-y-3">
-        <Label className="text-foreground font-medium">Amenities</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <Label className="text-foreground text-sm font-medium">Amenities</Label>
+        <div className="grid grid-cols-2 gap-2.5">
           {amenitiesList.map((amenity) => (
             <div key={amenity} className="flex items-center space-x-2">
               <Checkbox
@@ -197,7 +195,7 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
       {activeFilterCount > 0 && (
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full rounded-lg"
           onClick={resetFilters}
         >
           <RotateCcw className="w-4 h-4 mr-2" />
@@ -211,11 +209,11 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block w-72 shrink-0">
-        <div className="sticky top-24 bg-card rounded-xl border border-border p-6">
+        <div className="sticky top-24 bg-card rounded-xl border border-border/60 p-6 shadow-primary-sm">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-foreground">Filters</h3>
+            <h3 className="font-semibold text-foreground text-sm">Filters</h3>
             {activeFilterCount > 0 && (
-              <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+              <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">
                 {activeFilterCount} active
               </span>
             )}
@@ -228,11 +226,11 @@ const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFilte
       <div className="lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 rounded-lg">
               <SlidersHorizontal className="w-4 h-4" />
               Filters
               {activeFilterCount > 0 && (
-                <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                <span className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
                   {activeFilterCount}
                 </span>
               )}

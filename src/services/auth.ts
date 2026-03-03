@@ -45,12 +45,38 @@ export async function login(payload: LoginPayload) {
   return res.data;
 }
 
+export async function fetchProfile() {
+  const res = await apiFetch<ApiSuccess<{ user: User }>>("/api/auth/me");
+  return res.data;
+}
+
 export async function register(payload: RegisterPayload) {
   const res = await apiFetch<ApiSuccess<AuthResponse>>(
     "/api/auth/register",
     { method: "POST", body: JSON.stringify(payload) }
   );
   return res.data;
+}
+
+export async function forgotPassword(email: string) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(payload: any) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function changePassword(payload: any) {
+  return apiFetch<ApiSuccess<any>>("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // ─── Token helpers ───────────────────────────────────────────

@@ -85,10 +85,11 @@ export function useUserActivity(userId?: string) {
   const markViewed = useCallback(
     (propertyId: string) => {
       update((prev) => {
-        if (prev.viewedPropertyIds.includes(propertyId)) return prev;
+        // Remove if already exists to move to front, then slice to 20
+        const filtered = prev.viewedPropertyIds.filter((id) => id !== propertyId);
         return {
           ...prev,
-          viewedPropertyIds: [propertyId, ...prev.viewedPropertyIds].slice(0, 20),
+          viewedPropertyIds: [propertyId, ...filtered].slice(0, 20),
         };
       });
     },
