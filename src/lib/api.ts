@@ -3,7 +3,7 @@
 
 // In development the Vite dev-server proxies /api requests to the real
 // backend, avoiding CORS issues. In production use the full URL.
-const API_BASE_URL = "https://campus-shelter.vercel.app";
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://campus-shelter.vercel.app");
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? "";
 
@@ -34,11 +34,20 @@ export async function apiFetch<T = unknown>(
     headers,
   });
 
-  const json = await res.json();
+  let json: any = null;
+  const contentType = res.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      json = await res.json();
+    } catch (e) {
+      console.error("[API JSON Parse Error]", e);
+    }
+  }
 
   if (!res.ok) {
     const message =
-      json?.message ?? json?.error ?? `Request failed (${res.status})`;
+      json?.message ?? json?.error ?? `Request failed with status ${res.status}`;
     const err = new ApiError(message, res.status, json?.errors);
     throw err;
   }

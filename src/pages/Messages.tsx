@@ -134,7 +134,7 @@ const Messages = () => {
         <div className="container mx-auto h-full px-4 flex gap-6">
 
           {/* Sidebar: Conversation List */}
-          <div className={`w-full lg:w-96 flex-col ${partnerId ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`w-full lg:w-96 h-full flex-col ${partnerId ? 'hidden lg:flex' : 'flex'}`}>
             <Card className="h-full border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
               <div className="p-4 border-b space-y-4">
                 <div className="flex items-center justify-between">
@@ -200,7 +200,7 @@ const Messages = () => {
           </div>
 
           {/* Chat Window */}
-          <div className={`flex-1 flex flex-col ${!partnerId ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`flex-1 h-full flex flex-col ${!partnerId ? 'hidden lg:flex' : 'flex'}`}>
             {partnerId ? (
               <Card className="flex-1 border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col relative">
 

@@ -55,12 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { user: freshUser } = await import("@/services/auth").then(m => m.fetchProfile());
           setUser(freshUser);
           localStorage.setItem("cs_user", JSON.stringify(freshUser));
-        } catch (err) {
+        } catch (err: any) {
           console.error("[Auth Profile Refresh Failed]", err);
-          // If profile fetch fails (e.g. token expired), sign out
-          clearAuth();
-          setUser(null);
-          setToken(null);
+          // Only clear auth if it's explicitly an unauthorized error (token expired)
+          // If it's a 404 (endpoint not found) or network error, keep the saved session
+          if (err.status === 401) {
+            clearAuth();
+            setUser(null);
+            setToken(null);
+          }
         }
       }
       setIsLoading(false);

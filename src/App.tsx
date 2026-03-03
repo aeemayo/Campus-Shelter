@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import LandlordDashboard from "./pages/LandlordDashboard";
 import AdminPropertyForm from "./components/admin/AdminPropertyForm";
 import AdminDocumentUpload from "./components/admin/AdminDocumentUpload";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,8 @@ const App = () => (
             <Route path="/admin/properties/new" element={<AdminPropertyForm />}></Route>
             <Route path="/admin/properties/edit/:id" element={<AdminPropertyForm />}></Route>
             <Route path="/admin/documents/upload" element={<AdminDocumentUpload />}></Route>
+            <Route path="/messages" element={<Messages />}></Route>
+            <Route path="/messages/:partnerId" element={<Messages />}></Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
