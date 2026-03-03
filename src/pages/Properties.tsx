@@ -16,6 +16,8 @@ import { Home, Loader2, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { RoomType } from "@/services/properties";
 import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const Properties = () => {
   const { user, isAuthenticated } = useAuth();
@@ -212,28 +214,47 @@ const Properties = () => {
       <Header />
 
       {/* Page Header */}
-      <section className="pt-24 pb-8 border-b border-border/40">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
-            <Home className="w-3.5 h-3.5" />
-            <span>Home</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-foreground font-medium">Properties</span>
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-2">
-            Find Your Perfect{" "}
-            <span className="text-primary">Accommodation</span>
-          </h1>
-          <p className="text-muted-foreground max-w-2xl text-[15px]">
-            Browse through verified properties near FUTA. Filter by location,
-            price, and amenities to find your ideal student housing.
-          </p>
-          {isAuthenticated && (
-            <p className="text-sm text-primary/80 mt-3">
-              Welcome back{firstName ? `, ${firstName}` : ""}. We saved your
-              last filters and favorites.
+      <section className="pt-28 pb-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -mr-32 -mt-32 blur-[100px] opacity-50" />
+
+        <div className="container mx-auto px-4 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 mb-6">
+              <Home className="w-3.5 h-3.5 text-primary/60" />
+              <span>Sanctuary</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-primary font-black">Archive</span>
+            </div>
+
+            <h1 className="font-display text-4xl md:text-6xl font-black text-foreground tracking-tight mb-4 leading-[1.1]">
+              Discover Your <br />
+              <span className="gradient-primary bg-clip-text text-transparent">Elite Residence</span>
+            </h1>
+
+            <p className="text-muted-foreground max-w-2xl text-lg font-medium leading-relaxed mb-6">
+              Curated verified properties in the FUTA ecosystem.
+              Precision filtering for the modern student lifestyle.
             </p>
-          )}
+
+            {isAuthenticated && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="inline-flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl"
+              >
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <p className="text-xs font-bold text-primary/80 uppercase tracking-widest">
+                  Welcome back, {firstName || 'Resident'} — Preferences Synchronized
+                </p>
+              </motion.div>
+            )}
+          </motion.div>
         </div>
       </section>
 
@@ -285,36 +306,75 @@ const Properties = () => {
               </div>
 
               {/* Results Grid */}
-              {apiLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <PropertyCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : filteredProperties.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredProperties.map((property) => (
-                    <PropertyCard
-                      key={property.id}
-                      property={property}
-                      isFavorite={favorites.includes(property.id)}
-                      onFavoriteToggle={() => toggleFavorite(property.id)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                    <Home className="w-10 h-10 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    No properties found
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Try adjusting your filters or search criteria
-                  </p>
-                </div>
-              )}
+              <AnimatePresence mode="popLayout">
+                {apiLoading ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
+                  >
+                    {[...Array(6)].map((_, i) => (
+                      <PropertyCardSkeleton key={i} />
+                    ))}
+                  </motion.div>
+                ) : filteredProperties.length > 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
+                  >
+                    {filteredProperties.map((property, idx) => (
+                      <motion.div
+                        key={property.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        <PropertyCard
+                          property={property}
+                          isFavorite={favorites.includes(property.id)}
+                          onFavoriteToggle={() => toggleFavorite(property.id)}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-32 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 backdrop-blur-sm"
+                  >
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
+                      <Home className="w-10 h-10 text-primary/40" />
+                    </div>
+                    <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">
+                      Zero Matches Found
+                    </h3>
+                    <p className="text-muted-foreground font-medium mb-8 max-w-sm mx-auto">
+                      Our intelligence reveals no properties matching your specific criteria.
+                      Consider expanding your search parameters.
+                    </p>
+                    <button
+                      onClick={() => setFilters({
+                        search: "",
+                        location: "All Locations",
+                        propertyType: "all",
+                        priceRange: "all",
+                        amenities: [],
+                        sortBy: "featured",
+                        availableOnly: false,
+                        furnishedOnly: false,
+                        verifiedOnly: false,
+                      })}
+                      className="px-8 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform"
+                    >
+                      Reset Intelligence
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

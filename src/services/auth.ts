@@ -12,6 +12,8 @@ export interface User {
   phone?: string;
   role: UserRole;
   verified: boolean;
+  landlordStatus?: string;
+  idCardUrl?: string;
   createdAt: string;
 }
 

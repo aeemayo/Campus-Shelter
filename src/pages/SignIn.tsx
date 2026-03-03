@@ -27,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
+import { Mail, Lock, Heart, Shield, Sparkles } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -69,146 +71,175 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="flex items-center gap-2.5">
-            <div className="gradient-primary text-white p-2 rounded-lg shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
-                <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15.75a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198c.03-.028.061-.056.091-.085L12 5.432z" />
-              </svg>
+    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center p-4">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+
+      <div className="w-full max-w-md relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="flex flex-col items-center mb-10"
+        >
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="gradient-primary text-white p-2.5 rounded-2xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-gradient-primary">
+            <h1 className="text-3xl font-black tracking-tight font-display text-gradient-primary">
               CampusShelter
             </h1>
-          </div>
-          <p className="text-muted-foreground mt-1.5 text-sm text-center">
+          </Link>
+          <p className="text-muted-foreground mt-3 text-sm font-medium tracking-wide uppercase opacity-70">
             Find your perfect home near FUTA
           </p>
-        </div>
+        </motion.div>
 
-        <Card className="border-border/50 shadow-primary-lg">
-          <CardHeader className="space-y-1.5 pb-8">
-            <CardTitle className="text-2xl text-center font-semibold tracking-tight text-foreground">
-              Sign in to your account
-            </CardTitle>
-            <CardDescription className="text-center">
-              Access your dashboard and continue your housing search
-            </CardDescription>
-          </CardHeader>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl opacity-50" />
 
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-5"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="you@futa.edu.ng"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <CardHeader className="space-y-2 pb-8 pt-8">
+              <CardTitle className="text-3xl text-center font-bold tracking-tight font-display">
+                Welcome Back
+              </CardTitle>
+              <CardDescription className="text-center font-medium text-muted-foreground/70">
+                Continue your premium housing search
+              </CardDescription>
+            </CardHeader>
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel>Password</FormLabel>
-                        <Link
-                          to="/forgot-password"
-                          className="text-sm text-primary hover:text-primary/80 underline underline-offset-2"
-                        >
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-1">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-medium leading-none cursor-pointer">
-                          Remember me
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full gradient-primary hover:opacity-90 text-white font-medium py-6 mt-3 rounded-full"
-                  disabled={isLoading}
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
-            </Form>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Email Protocol</FormLabel>
+                        <FormControl>
+                          <div className="relative group">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                            <Input
+                              type="email"
+                              placeholder="you@futa.edu.ng"
+                              className="h-14 pl-12 rounded-2xl bg-white/5 border-white/10 focus:bg-white/10 focus:border-primary/30 transition-all font-medium"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="relative my-8">
-              <Separator className="bg-border/60" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-card px-3 text-xs text-muted-foreground/70">
-                  or continue with
-                </span>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between mb-1 ml-1">
+                          <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Security Key</FormLabel>
+                          <Link
+                            to="/forgot-password"
+                            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                          >
+                            Reset Key?
+                          </Link>
+                        </div>
+                        <FormControl>
+                          <div className="relative group">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                            <Input
+                              type="password"
+                              className="h-14 pl-12 rounded-2xl bg-white/5 border-white/10 focus:bg-white/10 focus:border-primary/30 transition-all font-medium"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="rememberMe"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-1 ml-1">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="rounded-md border-white/20 data-[state=checked]:bg-primary"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-xs font-bold text-muted-foreground/80 cursor-pointer">
+                            Persistent Session
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full gradient-primary hover:opacity-95 text-white font-black py-7 mt-4 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Authorizing...</span>
+                      </div>
+                    ) : (
+                      "Initiate Session"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+
+              <div className="relative my-10">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="bg-white/10" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-background/20 backdrop-blur-xl px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                    Neural Bridge
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="border-border rounded-full">
-                Google
-              </Button>
-              <Button variant="outline" className="border-border rounded-full">
-                Phone
-              </Button>
-            </div>
-          </CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" className="h-12 border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors font-bold text-xs uppercase tracking-wider">
+                  Google
+                </Button>
+                <Button variant="outline" className="h-12 border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors font-bold text-xs uppercase tracking-wider">
+                  Phone
+                </Button>
+              </div>
+            </CardContent>
 
-          <CardFooter className="flex flex-col items-center justify-center text-sm text-muted-foreground pt-4 pb-8">
-            Don&apos;t have an account?{" "}
-            <Link
-              to="/register"
-              className="text-primary hover:text-primary/80 font-medium underline underline-offset-4 ml-1"
-            >
-              Sign up
-            </Link>
-          </CardFooter>
-        </Card>
+            <CardFooter className="flex flex-col items-center justify-center text-xs font-bold pt-4 pb-10">
+              <span className="text-muted-foreground/60 uppercase tracking-widest">Awaiting access?</span>
+              <Link
+                to="/register"
+                className="text-primary hover:text-primary/80 transition-colors underline underline-offset-8 decoration-primary/30 mt-2 uppercase tracking-[0.2em]"
+              >
+                Create Account
+              </Link>
+            </CardFooter>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

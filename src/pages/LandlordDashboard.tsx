@@ -32,6 +32,10 @@ import {
   ExternalLink,
   Upload,
   TrendingUp,
+  Plus,
+  AlertCircle,
+  Clock,
+  ChevronRight,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
@@ -56,17 +60,15 @@ const LandlordDashboard = () => {
 
   // Fetch landlord's properties
   const { data: propertiesResponse, isLoading: propsLoading } = useQuery({
-    queryKey: ["landlord-properties"],
-    queryFn: () => fetchProperties({ limit: 100 }),
+    queryKey: ["landlord-properties", user?.id],
+    queryFn: () => fetchProperties({ landlordId: user?.id, limit: 100 }),
     enabled: isAuthenticated && user?.role === "LANDLORD",
   });
 
   const myProperties = useMemo(() => {
-    if (!propertiesResponse?.data || !user) return [];
-    return propertiesResponse.data
-      .filter((p) => p.landlordId === user.id)
-      .map(toFrontendProperty);
-  }, [propertiesResponse, user]);
+    if (!propertiesResponse?.data) return [];
+    return propertiesResponse.data.map(toFrontendProperty);
+  }, [propertiesResponse]);
 
   // Fetch bookings (role-aware — returns bookings on landlord's properties)
   const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
@@ -179,30 +181,76 @@ const LandlordDashboard = () => {
 
       <main className="flex-1 pt-24 pb-12">
         <div className="container mx-auto px-4">
-            <div className="mb-8">
-              <h1 className="text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
-              <p className="text-muted-foreground mt-2">
-                Manage your properties, bookings, and maintenance requests.
-              </p>
+            <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
+                  {user?.landlordStatus && (
+                    <Badge
+                      variant={(user.landlordStatus as any) === "VERIFIED" ? "success" : (user.landlordStatus as any) === "REJECTED" ? "destructive" : "warning"}
+                      className="h-6"
+                    >
+                      {user.landlordStatus}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-sm md:text-base">
+                  Manage your properties, bookings, and maintenance requests.
+                </p>
+              </div>
+              <Button asChild disabled={(user?.landlordStatus as any) !== "VERIFIED"} className="gradient-primary hidden md:inline-flex">
+                <Link to="/properties/add">
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Add Property
+                </Link>
+              </Button>
             </div>
 
+            {(user?.landlordStatus as any) !== "VERIFIED" && (
+              <Card className={`mb-6 md:mb-8 border-2 ${(user?.landlordStatus as any) === "REJECTED" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}`}>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-xl shrink-0 ${(user?.landlordStatus as any) === "REJECTED" ? "bg-destructive/10" : "bg-warning/10"}`}>
+                      {(user?.landlordStatus as any) === "REJECTED" ? (
+                        <AlertCircle className="w-5 h-5 text-destructive" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-warning" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm md:text-base mb-1">
+                        Account {(user?.landlordStatus as any) === "REJECTED" ? "Verification Rejected" : "Pending Verification"}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        {(user?.landlordStatus as any) === "REJECTED"
+                          ? "Your verification was rejected. Please contact support."
+                          : "Your account is being reviewed. You can list properties once verified."}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="border-border/60 overflow-hidden relative">
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative group hover:shadow-primary-lg transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                  <CardHeader className="pb-1">
-                    <CardDescription>Total Properties</CardDescription>
-                    <CardTitle className="text-2xl">{stats.totalProperties}</CardTitle>
+                  <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
+                    <CardDescription className="font-medium text-xs md:text-sm">Total Properties</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl font-bold font-display">{stats.totalProperties}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 text-success" />
-                      <span>Active listings</span>
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                    <div className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1.5 py-1">
+                      <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-success" />
+                      </div>
+                      <span className="font-medium text-success">Active</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -213,14 +261,14 @@ const LandlordDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className="border-border/60 overflow-hidden relative">
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative group hover:shadow-primary-lg transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
-                  <CardHeader className="pb-1">
-                    <CardDescription>Pending Bookings</CardDescription>
-                    <CardTitle className="text-2xl">{stats.pendingBookings}</CardTitle>
+                  <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
+                    <CardDescription className="font-medium text-xs md:text-sm">Pending Bookings</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl font-bold font-display">{stats.pendingBookings}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-xs text-muted-foreground">Requires your attention</div>
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                    <div className="text-[10px] md:text-xs text-muted-foreground font-medium py-1">Needs attention</div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -230,14 +278,14 @@ const LandlordDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Card className="border-border/60 overflow-hidden relative">
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative group hover:shadow-primary-lg transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-success" />
-                  <CardHeader className="pb-1">
-                    <CardDescription>Est. Monthly Revenue</CardDescription>
-                    <CardTitle className="text-2xl">₦{stats.totalRevenue.toLocaleString()}</CardTitle>
+                  <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
+                    <CardDescription className="font-medium text-xs md:text-sm">Monthly Revenue</CardDescription>
+                    <CardTitle className="text-xl md:text-3xl font-bold font-display text-success">₦{stats.totalRevenue.toLocaleString()}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-xs text-muted-foreground">From approved bookings</div>
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                    <div className="text-[10px] md:text-xs text-muted-foreground font-medium py-1">Approved bookings</div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -247,29 +295,29 @@ const LandlordDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <Card className="border-border/60 overflow-hidden relative">
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative group hover:shadow-primary-lg transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
-                  <CardHeader className="pb-1">
-                    <CardDescription>Maintenance</CardDescription>
-                    <CardTitle className="text-2xl">{stats.activeMaintenance}</CardTitle>
+                  <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
+                    <CardDescription className="font-medium text-xs md:text-sm">Maintenance</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl font-bold font-display">{stats.activeMaintenance}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-xs text-muted-foreground">Active requests</div>
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                    <div className="text-[10px] md:text-xs text-muted-foreground font-medium py-1">Active requests</div>
                   </CardContent>
                 </Card>
               </motion.div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              <Card className="lg:col-span-2 border-border/60">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+              <Card className="lg:col-span-2 border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
                 <CardHeader>
-                  <CardTitle className="text-lg">Bookings Overview</CardTitle>
+                  <CardTitle className="text-xl font-bold font-display tracking-tight">Bookings Overview</CardTitle>
                   <CardDescription>Status distribution of all requests</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[240px]">
+                <CardContent className="h-[300px] pt-4">
                   {bookings.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={bookingDistribution}>
+                      <BarChart data={bookingDistribution} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                         <XAxis
                           dataKey="name"
@@ -277,6 +325,7 @@ const LandlordDashboard = () => {
                           tickLine={false}
                           fontSize={12}
                           tick={{ fill: "#64748B" }}
+                          dy={10}
                         />
                         <YAxis
                           axisLine={false}
@@ -285,9 +334,16 @@ const LandlordDashboard = () => {
                           tick={{ fill: "#64748B" }}
                         />
                         <Tooltip
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          cursor={{ fill: 'rgba(136, 132, 216, 0.05)' }}
+                          contentStyle={{
+                            borderRadius: '12px',
+                            border: '1px solid rgba(226, 232, 240, 0.4)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(8px)',
+                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                          }}
                         />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
                           {bookingDistribution.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
@@ -295,322 +351,512 @@ const LandlordDashboard = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                      <p>No booking data available</p>
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-xl">
+                      <CalendarCheck className="w-12 h-12 mb-3 opacity-20" />
+                      <p className="font-medium">No booking data available</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              <Card className="border-border/60">
+              <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
                 <CardHeader>
-                  <CardTitle className="text-lg">Recent Activities</CardTitle>
+                  <CardTitle className="text-xl font-bold font-display tracking-tight">Recent Activities</CardTitle>
                   <CardDescription>Latest updates on your account</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {bookings.slice(0, 3).map((b, i) => (
-                      <div key={i} className="flex items-start gap-3 text-sm">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <CalendarCheck className="w-4 h-4 text-primary" />
+                      <div key={i} className="flex items-start gap-4 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                          <CalendarCheck className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <p className="font-medium">New booking request</p>
+                        <div className="flex-1 space-y-1">
+                          <p className="font-semibold text-sm leading-none">New booking request</p>
                           <p className="text-xs text-muted-foreground">For {b.property?.title}</p>
                         </div>
                       </div>
                     ))}
                     {maintenanceRequests.slice(0, 2).map((r, i) => (
-                      <div key={i} className="flex items-start gap-3 text-sm">
-                        <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                          <Wrench className="w-4 h-4 text-destructive" />
+                      <div key={i} className="flex items-start gap-4 p-2 rounded-xl hover:bg-muted/30 transition-colors group">
+                        <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0 group-hover:bg-destructive/20 transition-colors">
+                          <Wrench className="w-5 h-5 text-destructive" />
                         </div>
-                        <div>
-                          <p className="font-medium">Maintenance request</p>
-                          <p className="text-xs text-muted-foreground">{r.description.slice(0, 30)}...</p>
+                        <div className="flex-1 space-y-1">
+                          <p className="font-semibold text-sm leading-none">Maintenance request</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{r.description}</p>
                         </div>
                       </div>
                     ))}
                     {bookings.length === 0 && maintenanceRequests.length === 0 && (
-                      <p className="text-center py-4 text-muted-foreground">No recent activity</p>
+                      <div className="text-center py-12 flex flex-col items-center">
+                        <TrendingUp className="w-10 h-10 mb-2 opacity-10" />
+                        <p className="text-sm text-muted-foreground">No recent activity</p>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-muted/50 p-1">
-              <TabsTrigger value="properties" className="gap-2">
-                <Building2 className="w-4 h-4" />
-                Properties
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-3 md:inline-flex">
+              <TabsTrigger value="properties" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Properties</span>
               </TabsTrigger>
-              <TabsTrigger value="bookings" className="gap-2">
-                <CalendarCheck className="w-4 h-4" />
-                Bookings
+              <TabsTrigger value="bookings" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                <CalendarCheck className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Bookings</span>
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="gap-2">
-                <Wrench className="w-4 h-4" />
-                Maintenance
+              <TabsTrigger value="maintenance" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                <Wrench className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Repairs</span>
               </TabsTrigger>
             </TabsList>
 
             {/* ── Properties Tab ── */}
-            <TabsContent value="properties" className="space-y-6">
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle>My Properties</CardTitle>
-                  <CardDescription>Properties you've listed on the platform.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {propsLoading ? (
-                    <div className="py-12 flex justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                  ) : myProperties.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border/60 text-muted-foreground">
-                            <th className="text-left font-medium py-4 px-3">Property</th>
-                            <th className="text-left font-medium py-4 px-3">Price</th>
-                            <th className="text-left font-medium py-4 px-3">Status</th>
-                            <th className="text-right font-medium py-4 px-3">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/60">
+            <TabsContent value="properties" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl font-bold font-display tracking-tight">My Properties</CardTitle>
+                    <CardDescription>View and manage your active property listings.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0">
+                    {propsLoading ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+                        <p className="text-sm font-medium text-muted-foreground">Loading properties...</p>
+                      </div>
+                    ) : myProperties.length > 0 ? (
+                      <>
+                        {/* Mobile card layout */}
+                        <div className="md:hidden divide-y divide-border/40">
                           {myProperties.map((property) => (
-                            <tr key={property.id} className="hover:bg-muted/30 transition-colors">
-                              <td className="py-5 px-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
-                                    <img
-                                      src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=100&q=80"}
-                                      alt={property.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">{property.title}</p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                      <MapPin className="w-3 h-3" />
-                                      {property.location}
-                                    </p>
-                                  </div>
+                            <Link
+                              key={property.id}
+                              to={`/properties/${property.id}`}
+                              className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors active:bg-muted/50"
+                            >
+                              <div className="w-14 h-14 rounded-xl bg-muted overflow-hidden shadow-sm ring-1 ring-border/50 shrink-0">
+                                <img
+                                  src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=100&q=80"}
+                                  alt={property.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <p className="font-bold text-sm tracking-tight truncate">{property.title}</p>
+                                  {property.status === "APPROVED" || property.approved ? (
+                                    <Badge variant="success" className="px-1.5 py-0 font-bold text-[9px] uppercase shrink-0">Live</Badge>
+                                  ) : property.status === "REJECTED" ? (
+                                    <Badge variant="destructive" className="px-1.5 py-0 font-bold text-[9px] uppercase shrink-0">Rejected</Badge>
+                                  ) : (
+                                    <Badge variant="warning" className="px-1.5 py-0 font-bold text-[9px] uppercase shrink-0">Pending</Badge>
+                                  )}
                                 </div>
-                              </td>
-                              <td className="py-5 px-3">
-                                <p className="font-semibold">₦{property.priceMonthly?.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">monthly</p>
-                              </td>
-                              <td className="py-5 px-3">
-                                {property.approved ? (
-                                  <Badge variant="success">Approved</Badge>
-                                ) : (
-                                  <Badge variant="warning">Pending</Badge>
-                                )}
-                              </td>
-                              <td className="py-5 px-3 text-right">
-                                <Button variant="ghost" size="sm" asChild>
-                                  <Link to={`/properties/${property.id}`}>
-                                    <ExternalLink className="w-4 h-4 mr-1" />
-                                    View
-                                  </Link>
-                                </Button>
-                              </td>
-                            </tr>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                                  <MapPin className="w-3 h-3 text-primary" />
+                                  {property.location}
+                                </p>
+                                <p className="font-bold text-sm text-primary">₦{property.priceMonthly?.toLocaleString()}<span className="text-[10px] text-muted-foreground font-normal">/mo</span></p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                            </Link>
                           ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground">
-                      <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                      <p className="font-medium">No properties listed yet.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        </div>
+
+                        {/* Desktop table layout */}
+                        <div className="hidden md:block overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-border/40 text-muted-foreground/70 bg-muted/30">
+                                <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">Property Details</th>
+                                <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">Monthly Price</th>
+                                <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">Status</th>
+                                <th className="text-right font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/40">
+                              {myProperties.map((property) => (
+                                <tr key={property.id} className="hover:bg-muted/40 transition-all duration-200 group">
+                                  <td className="py-4 px-6">
+                                    <div className="flex items-center gap-4">
+                                      <div className="w-14 h-14 rounded-xl bg-muted overflow-hidden shadow-sm group-hover:shadow-md transition-shadow ring-1 ring-border/50">
+                                        <img
+                                          src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=100&q=80"}
+                                          alt={property.title}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                      </div>
+                                      <div className="space-y-0.5">
+                                        <p className="font-bold text-base tracking-tight">{property.title}</p>
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                                          {property.location}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-6">
+                                    <div className="space-y-0.5">
+                                      <p className="font-bold text-foreground">₦{property.priceMonthly?.toLocaleString()}</p>
+                                      <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Per Month</p>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-6">
+                                    {property.status === "APPROVED" || property.approved ? (
+                                      <Badge variant="success" className="px-3 py-1 font-bold text-[10px] uppercase tracking-wide">Approved</Badge>
+                                    ) : property.status === "REJECTED" ? (
+                                      <Badge variant="destructive" className="px-3 py-1 font-bold text-[10px] uppercase tracking-wide">Rejected</Badge>
+                                    ) : (
+                                      <Badge variant="warning" className="px-3 py-1 font-bold text-[10px] uppercase tracking-wide">Pending Review</Badge>
+                                    )}
+                                  </td>
+                                  <td className="py-4 px-6 text-right">
+                                    <Button variant="outline" size="sm" asChild className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5">
+                                      <Link to={`/properties/${property.id}`}>
+                                        <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                                        Details
+                                      </Link>
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-16 md:py-24 text-center px-4">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
+                          <Building2 className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground/40" />
+                        </div>
+                        <p className="font-bold text-lg md:text-xl font-display mb-1">No properties yet</p>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-6">Start listing your properties to receive booking requests.</p>
+                        <Button asChild className="gradient-primary rounded-full px-6 md:px-8 h-11">
+                          <Link to="/properties/add">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Your First Property
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
 
             {/* ── Bookings Tab ── */}
-            <TabsContent value="bookings" className="space-y-6">
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle>Booking Requests</CardTitle>
-                  <CardDescription>Review and manage booking requests from students.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {bookingsLoading ? (
-                    <div className="py-12 flex justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                  ) : bookings.length > 0 ? (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div
-                          key={booking.id}
-                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/60 hover:border-primary/20 transition-all"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <p className="font-semibold">{booking.property?.title || "Property"}</p>
-                              <StatusBadge status={booking.status} />
+            <TabsContent value="bookings" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold font-display tracking-tight">Booking Requests</CardTitle>
+                    <CardDescription>Review and manage booking requests from students.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {bookingsLoading ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+                        <p className="text-sm font-medium text-muted-foreground">Loading requests...</p>
+                      </div>
+                    ) : bookings.length > 0 ? (
+                      <div className="space-y-3 md:space-y-4">
+                        {bookings.map((booking) => (
+                          <div
+                            key={booking.id}
+                            className="group flex flex-col gap-4 md:gap-6 p-4 md:p-6 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300"
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                              <div className="flex-1 space-y-2 md:space-y-3">
+                                <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                                  <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/5 text-primary">
+                                    <Building2 className="w-4 h-4 md:w-5 md:h-5" />
+                                  </div>
+                                  <p className="font-bold text-base md:text-lg tracking-tight">{booking.property?.title || "Property"}</p>
+                                  <StatusBadge status={booking.status} />
+                                </div>
+                                <div className="flex flex-wrap gap-x-4 md:gap-x-6 gap-y-1.5 md:gap-y-2 text-xs md:text-sm text-muted-foreground font-medium">
+                                  <div className="flex items-center gap-1.5">
+                                    <CalendarCheck className="w-3.5 h-3.5 text-primary/60" />
+                                    <span>
+                                      {new Date(booking.leaseStart).toLocaleDateString()} – {new Date(booking.leaseEnd).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/60">Requested</span>
+                                    <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Desktop actions */}
+                              <div className="hidden md:flex items-center gap-3">
+                                {booking.status === "PENDING" && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="bg-success hover:bg-success/90 text-success-foreground rounded-xl px-5 h-11"
+                                      disabled={bookingMutation.isPending}
+                                      onClick={() => bookingMutation.mutate({ id: booking.id, status: "APPROVED" })}
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="rounded-xl px-5 h-11"
+                                      disabled={bookingMutation.isPending}
+                                      onClick={() => bookingMutation.mutate({ id: booking.id, status: "REJECTED" })}
+                                    >
+                                      <XCircle className="w-4 h-4 mr-2" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {booking.status === "APPROVED" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="rounded-xl px-5 h-11 border-primary/20 hover:bg-primary/5 text-primary"
+                                    onClick={() => setLeaseUploadBookingId(booking.id)}
+                                  >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Upload Lease
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                              <span>Student: {booking.studentId.slice(0, 8)}…</span>
-                              <span>
-                                {new Date(booking.leaseStart).toLocaleDateString()} –{" "}
-                                {new Date(booking.leaseEnd).toLocaleDateString()}
-                              </span>
-                              <span>Requested: {new Date(booking.createdAt).toLocaleDateString()}</span>
+
+                            {/* Mobile actions - full width */}
+                            <div className="md:hidden">
+                              {booking.status === "PENDING" && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-11 w-full"
+                                    disabled={bookingMutation.isPending}
+                                    onClick={() => bookingMutation.mutate({ id: booking.id, status: "APPROVED" })}
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="rounded-xl h-11 w-full"
+                                    disabled={bookingMutation.isPending}
+                                    onClick={() => bookingMutation.mutate({ id: booking.id, status: "REJECTED" })}
+                                  >
+                                    <XCircle className="w-4 h-4 mr-1.5" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                              {booking.status === "APPROVED" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-xl h-11 w-full border-primary/20 hover:bg-primary/5 text-primary"
+                                  onClick={() => setLeaseUploadBookingId(booking.id)}
+                                >
+                                  <Upload className="w-4 h-4 mr-1.5" />
+                                  Upload Lease
+                                </Button>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {booking.status === "PENDING" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  className="bg-success hover:bg-success/90 text-success-foreground"
-                                  disabled={bookingMutation.isPending}
-                                  onClick={() => bookingMutation.mutate({ id: booking.id, status: "APPROVED" })}
-                                >
-                                  <CheckCircle2 className="w-4 h-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  disabled={bookingMutation.isPending}
-                                  onClick={() => bookingMutation.mutate({ id: booking.id, status: "REJECTED" })}
-                                >
-                                  <XCircle className="w-4 h-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </>
-                            )}
-                            {booking.status === "APPROVED" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setLeaseUploadBookingId(booking.id)}
-                              >
-                                <Upload className="w-4 h-4 mr-1" />
-                                Upload Lease
-                              </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-24 text-center">
+                        <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4 text-muted-foreground/40 font-display text-4xl font-bold">
+                          !
+                        </div>
+                        <p className="font-bold text-xl font-display mb-1">No requests yet</p>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">Booking requests from interested students will appear here.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Lease Upload Dialog - Enhanced */}
+              {leaseUploadBookingId && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card className="border-primary/20 bg-primary/5 backdrop-blur-sm shadow-primary-md overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold font-display tracking-tight text-primary">Upload Lease Document</CardTitle>
+                      <CardDescription>Upload a completed lease agreement for booking #{leaseUploadBookingId.slice(0, 8)}…</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6 relative">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground/80">Lease Document (PDF)</Label>
+                        <div className="group relative">
+                          <Input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            className="h-20 cursor-pointer opacity-0 absolute inset-0 z-10"
+                            onChange={(e) => setLeaseFile(e.target.files?.[0] || null)}
+                          />
+                          <div className={`h-20 border-2 border-dashed rounded-2xl flex items-center justify-center transition-all duration-300 ${leaseFile ? 'bg-success/5 border-success/30' : 'bg-background/50 border-primary/10 group-hover:border-primary/30'}`}>
+                            {leaseFile ? (
+                              <div className="flex items-center gap-3 text-success">
+                                <CheckCircle2 className="w-6 h-6" />
+                                <span className="font-bold">{leaseFile.name}</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                <Upload className="w-6 h-6 opacity-40 mb-1" />
+                                <span className="font-medium">Drop your lease file here or <span className="text-primary">click to browse</span></span>
+                              </div>
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground">
-                      <CalendarCheck className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                      <p className="font-medium">No booking requests yet.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Lease Upload Dialog */}
-              {leaseUploadBookingId && (
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Upload Lease Document</CardTitle>
-                    <CardDescription>Upload a lease document for booking #{leaseUploadBookingId.slice(0, 8)}…</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Lease Document (PDF)</Label>
-                      <Input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => setLeaseFile(e.target.files?.[0] || null)}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        className="gradient-primary"
-                        disabled={!leaseFile || leaseUploading}
-                        onClick={handleLeaseUpload}
-                      >
-                        {leaseUploading ? "Uploading..." : "Upload & Create Lease"}
-                      </Button>
-                      <Button variant="outline" onClick={() => { setLeaseUploadBookingId(null); setLeaseFile(null); }}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          className="gradient-primary rounded-xl px-8 h-12 shadow-md shadow-primary/20"
+                          disabled={!leaseFile || leaseUploading}
+                          onClick={handleLeaseUpload}
+                        >
+                          {leaseUploading ? (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Uploading...</span>
+                            </div>
+                          ) : "Finalize & Send Lease"}
+                        </Button>
+                        <Button variant="ghost" className="rounded-xl px-8 h-12" onClick={() => { setLeaseUploadBookingId(null); setLeaseFile(null); }}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )}
             </TabsContent>
 
             {/* ── Maintenance Tab ── */}
-            <TabsContent value="maintenance" className="space-y-6">
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle>Maintenance Requests</CardTitle>
-                  <CardDescription>View and update maintenance requests from tenants.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {maintenanceLoading ? (
-                    <div className="py-12 flex justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                  ) : maintenanceRequests.length > 0 ? (
-                    <div className="space-y-4">
-                      {maintenanceRequests.map((req) => (
-                        <div
-                          key={req.id}
-                          className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border/60"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <p className="font-semibold">
-                                {req.description.slice(0, 80)}{req.description.length > 80 ? "…" : ""}
-                              </p>
-                              <Badge variant="outline">{req.status.replace("_", " ")}</Badge>
+            <TabsContent value="maintenance" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold font-display tracking-tight">Maintenance Requests</CardTitle>
+                    <CardDescription>View and update maintenance requests from tenants.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {maintenanceLoading ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+                        <p className="text-sm font-medium text-muted-foreground">Loading requests...</p>
+                      </div>
+                    ) : maintenanceRequests.length > 0 ? (
+                      <div className="space-y-3 md:space-y-4">
+                        {maintenanceRequests.map((req) => (
+                          <div
+                            key={req.id}
+                            className="group flex flex-col gap-3 md:gap-6 p-4 md:p-6 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300"
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6">
+                              <div className="flex-1 space-y-2 md:space-y-3">
+                                <div className="flex items-start md:items-center gap-2 md:gap-3">
+                                  <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-destructive/5 text-destructive shrink-0 mt-0.5 md:mt-0">
+                                    <Wrench className="w-4 h-4 md:w-5 md:h-5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-sm md:text-lg tracking-tight leading-tight">
+                                      {req.description.slice(0, 80)}{req.description.length > 80 ? "…" : ""}
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline" className="px-2 md:px-3 py-0.5 md:py-1 font-bold text-[9px] md:text-[10px] uppercase tracking-wide border-primary/20 bg-primary/5 text-primary italic shrink-0">
+                                    {req.status.replace("_", " ")}
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-x-3 md:gap-x-6 gap-y-1 md:gap-y-2 text-xs md:text-sm text-muted-foreground font-medium pl-8 md:pl-0">
+                                  {req.property && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Building2 className="w-3.5 h-3.5 text-primary/60" />
+                                      <span>{req.property.title}</span>
+                                    </div>
+                                  )}
+                                  {req.student && (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-foreground">{req.student.name}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                              {req.property && <span>Property: {req.property.title}</span>}
-                              {req.student && <span>Student: {req.student.name}</span>}
-                              <span>Submitted: {new Date(req.createdAt).toLocaleDateString()}</span>
+                            <div className="md:self-end">
+                              <select
+                                value={req.status}
+                                onChange={(e) =>
+                                  maintenanceMutation.mutate({
+                                    id: req.id,
+                                    status: e.target.value as "OPEN" | "IN_PROGRESS" | "RESOLVED",
+                                  })
+                                }
+                                disabled={maintenanceMutation.isPending}
+                                className="flex h-10 md:h-11 w-full md:w-[160px] rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-3 md:px-4 py-2 text-sm font-bold ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 appearance-none cursor-pointer hover:border-primary/40 transition-all shadow-sm"
+                              >
+                                <option value="OPEN">🔴 Open</option>
+                                <option value="IN_PROGRESS">🟡 In Progress</option>
+                                <option value="RESOLVED">🟢 Resolved</option>
+                              </select>
                             </div>
                           </div>
-                          <div>
-                            <select
-                              value={req.status}
-                              onChange={(e) =>
-                                maintenanceMutation.mutate({
-                                  id: req.id,
-                                  status: e.target.value as "OPEN" | "IN_PROGRESS" | "RESOLVED",
-                                })
-                              }
-                              disabled={maintenanceMutation.isPending}
-                              className="flex h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                              <option value="OPEN">Open</option>
-                              <option value="IN_PROGRESS">In Progress</option>
-                              <option value="RESOLVED">Resolved</option>
-                            </select>
-                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-24 text-center">
+                        <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
+                          <Wrench className="w-10 h-10 text-muted-foreground/40" />
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground">
-                      <Wrench className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                      <p className="font-medium">No maintenance requests.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <p className="font-bold text-xl font-display mb-1">Clear skies!</p>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">No maintenance requests reported for your properties at the moment.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
           </Tabs>
         </div>
       </main>
 
       <Footer />
+
+      {/* Mobile FAB - Add Property */}
+      {(user?.landlordStatus as any) === "VERIFIED" && (
+        <Link
+          to="/properties/add"
+          className="md:hidden fixed bottom-6 right-4 z-40 gradient-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary/30 active:scale-95 transition-transform"
+          aria-label="Add Property"
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      )}
     </div>
   );
 };

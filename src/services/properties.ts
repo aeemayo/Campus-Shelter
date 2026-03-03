@@ -24,6 +24,7 @@ export interface ApiProperty {
   roomType: RoomType;
   distanceFromFUTA: number;
   availableFrom: string;
+  status: string;
   approved: boolean;
   images: string[];
   landlordId: string;
@@ -60,6 +61,7 @@ export interface Property {
   furnished: boolean;
   description: string;
   availableFrom?: string;
+  status?: string;
   approved?: boolean;
   landlordId?: string;
   landlord?: {
@@ -68,6 +70,8 @@ export interface Property {
     email?: string;
     phone?: string;
     verified: boolean;
+    landlordStatus?: string;
+    idCardUrl?: string;
     avatar?: string;
   };
 }
@@ -95,6 +99,7 @@ export interface PropertyQueryParams {
   roomType?: RoomType;
   distanceFromFUTA?: number;
   minRating?: number;
+  landlordId?: string;
 }
 
 // ─── API calls ───────────────────────────────────────────────
@@ -104,6 +109,7 @@ export async function fetchProperties(params: PropertyQueryParams = {}) {
 
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
+  if (params.landlordId) query.set("landlordId", params.landlordId);
   if (params.minPrice) query.set("minPrice", String(params.minPrice));
   if (params.maxPrice) query.set("maxPrice", String(params.maxPrice));
   if (params.location) query.set("location", params.location);
@@ -144,11 +150,20 @@ export async function deleteProperty(id: string) {
   });
 }
 
-export async function adminApproveProperty(id: string, approved: boolean) {
-  return apiFetch<ApiSuccess<ApiProperty>>(`/api/admin/properties/${id}`, {
+export async function adminApproveProperty(id: string, status: string) {
+  const res = await apiFetch<ApiSuccess<Property>>(`/api/admin/properties/${id}/approve`, {
     method: "PATCH",
-    body: JSON.stringify({ approved }),
+    body: JSON.stringify({ status }),
   });
+  return res.data;
+}
+
+export async function adminVerifyLandlord(id: string, status: string) {
+  const res = await apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}/verify`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  return res.data;
 }
 
 export async function adminDeleteProperty(id: string) {

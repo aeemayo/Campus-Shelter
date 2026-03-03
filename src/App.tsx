@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/properties/:id" element={<PropertyDetails />}></Route>
             <Route path="/profile" element={<Profile />}></Route>
             <Route path="/landlord" element={<LandlordDashboard />}></Route>
+            <Route path="/properties/add" element={<AdminPropertyForm />}></Route>
             <Route path="/admin" element={<AdminDashboard />}></Route>
             <Route path="/admin/properties/new" element={<AdminPropertyForm />}></Route>
             <Route path="/admin/properties/edit/:id" element={<AdminPropertyForm />}></Route>

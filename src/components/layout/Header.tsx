@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Building2,
   ArrowRight,
+  Plus,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -264,13 +265,23 @@ const Header = () => {
               )}
 
               {user?.role === "LANDLORD" && (
-                <MobileLink
-                  to="/landlord"
-                  icon={LayoutDashboard}
-                  label="Dashboard"
-                  active={isActive("/landlord")}
-                  onClick={() => setIsMenuOpen(false)}
-                />
+                <>
+                  <MobileLink
+                    to="/landlord"
+                    icon={LayoutDashboard}
+                    label="Dashboard"
+                    active={isActive("/landlord")}
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <Link
+                    to="/properties/add"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 mx-3 my-1 px-3 py-2.5 rounded-xl text-sm font-semibold gradient-primary text-white transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Property
+                  </Link>
+                </>
               )}
 
               {user?.role === "ADMIN" && (

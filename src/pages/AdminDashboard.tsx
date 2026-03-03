@@ -22,12 +22,15 @@ import {
   LayoutDashboard,
   Filter,
   MoreVertical,
-  Loader2,
+  MapPin,
+  Save,
   Trash2,
+  Loader2,
+  DollarSign,
   TrendingUp,
   CalendarCheck,
-  DollarSign,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -39,6 +42,7 @@ import {
 import {
   adminApproveProperty,
   adminDeleteProperty,
+  adminVerifyLandlord,
   fetchAdminAnalytics,
   fetchAdminUsers,
 } from "@/services/properties";
@@ -77,7 +81,8 @@ const AdminDashboard = () => {
 
   const handleApprove = async (id: string, approved: boolean) => {
     try {
-      await adminApproveProperty(id, approved);
+      // Use the new status-based approval
+      await adminApproveProperty(id, approved ? "APPROVED" : "REJECTED");
       toast({
         title: approved ? "Property Approved" : "Property Rejected",
         description: `The property listing has been ${approved ? "approved" : "rejected"} successfully.`,
@@ -87,6 +92,24 @@ const AdminDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to update property status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED") => {
+    try {
+      await adminVerifyLandlord(id, status);
+      toast({
+        title: status === "VERIFIED" ? "Landlord Verified" : "Landlord Rejected",
+        description: `The landlord account has been ${status.toLowerCase()} successfully.`,
+      });
+      // Invalidate the landlords query (handled by react-query if we use useQueryClient)
+      // For now, simpler to just rely on the next refresh or use queryClient if available
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify landlord.",
         variant: "destructive",
       });
     }
@@ -122,206 +145,265 @@ const AdminDashboard = () => {
 
       <main className="flex-1 pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-2">Manage properties, landlords, and documents for the platform.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button asChild className="gradient-primary rounded-full">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <h1 className="text-2xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1 md:mt-2 font-medium text-sm md:text-base">Manage properties, landlords, and platform integrity.</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3"
+            >
+              <Button asChild className="gradient-primary rounded-xl px-4 md:px-6 h-10 md:h-12 shadow-lg shadow-primary/20 font-bold text-sm md:text-base">
                 <Link to="/admin/properties/new">
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
                   Add Property
                 </Link>
               </Button>
-            </div>
+            </motion.div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-muted/50 p-1">
-              <TabsTrigger value="properties" className="gap-2">
-                <Building2 className="w-4 h-4" />
-                Properties
-              </TabsTrigger>
-              <TabsTrigger value="landlords" className="gap-2">
-                <Users className="w-4 h-4" />
-                Landlords
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Documents
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <LayoutDashboard className="w-4 h-4" />
-                Analytics
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+              <TabsList className="bg-muted/50 backdrop-blur-md p-1 md:p-1.5 rounded-xl md:rounded-2xl h-auto border border-border/40 inline-flex w-full md:w-auto">
+                <TabsTrigger value="properties" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Properties</span>
+                  <span className="sm:hidden">Props</span>
+                </TabsTrigger>
+                <TabsTrigger value="landlords" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  Landlords
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  Docs
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <LayoutDashboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Analytics</span>
+                  <span className="sm:hidden">Stats</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="properties" className="space-y-6">
-              <Card className="border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle>All Listings</CardTitle>
-                      <CardDescription>View and manage all property listings on the platform.</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search listings..."
-                          className="pl-9 h-9"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+            <AnimatePresence mode="wait">
+              <TabsContent value="properties" className="mt-0 outline-none">
+                <motion.div
+                  key="properties-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+                    <CardHeader className="pb-6 border-b border-border/40">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                          <CardTitle className="text-xl font-bold font-display tracking-tight">Global Listings</CardTitle>
+                          <CardDescription className="font-medium text-muted-foreground/70">Audit and manage every property on the platform.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Input
+                              placeholder="Search by title or location..."
+                              className="pl-10 h-11 w-full md:w-72 bg-muted/20 border-border/40 rounded-xl focus:bg-background/80 transition-all font-medium"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+                          <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border/40 hover:bg-muted/50">
+                            <Filter className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <Button variant="outline" size="icon" className="h-9 w-9">
-                        <Filter className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border/60 text-muted-foreground">
-                          <th className="text-left font-medium py-4 px-3">Property</th>
-                          <th className="text-left font-medium py-4 px-3">Landlord</th>
-                          <th className="text-left font-medium py-4 px-3">Price</th>
-                          <th className="text-left font-medium py-4 px-3">Status</th>
-                          <th className="text-right font-medium py-4 px-3">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/60">
-                        {filteredProperties.length > 0 ? (
-                          filteredProperties.map((property) => (
-                            <tr key={property.id} className="group hover:bg-muted/30 transition-colors">
-                              <td className="py-5 px-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
-                                    <img
-                                      src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=100&q=80"}
-                                      alt={property.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">{property.title}</p>
-                                    <p className="text-xs text-muted-foreground">{property.location}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-5 px-3">
-                                <p className="font-medium">{property.landlord?.name || "System"}</p>
-                                <p className="text-xs text-muted-foreground">{property.landlord?.email || ""}</p>
-                              </td>
-                              <td className="py-5 px-3">
-                                <p className="font-semibold">₦{property.priceMonthly?.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">monthly</p>
-                              </td>
-                              <td className="py-5 px-3">
-                                {property.approved ? (
-                                  <Badge variant="success">Approved</Badge>
-                                ) : (
-                                  <Badge variant="warning">Pending</Badge>
-                                )}
-                              </td>
-                              <td className="py-5 px-3 text-right text-xs">
-                                <div className="flex items-center justify-end gap-2">
-                                  {property.approved ? (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
-                                      onClick={() => handleApprove(property.id, false)}
-                                    >
-                                      Reject
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-success border-success/20 hover:bg-success/10"
-                                      onClick={() => handleApprove(property.id, true)}
-                                    >
-                                      Approve
-                                    </Button>
-                                  )}
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                        <MoreVertical className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem asChild>
-                                        <Link to={`/properties/${property.id}`} className="flex items-center">
-                                          <ExternalLink className="w-4 h-4 mr-2" />
-                                          View Public
-                                        </Link>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem asChild>
-                                        <Link to={`/admin/properties/edit/${property.id}`} className="flex items-center">
-                                          <Plus className="w-4 h-4 mr-2 rotate-45" />
-                                          Edit Details
-                                        </Link>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => handleDelete(property.id)}
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Property
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </td>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-muted/20 text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">
+                              <th className="text-left py-4 px-6">Property Details</th>
+                              <th className="text-left py-4 px-6">Landlord / Owner</th>
+                              <th className="text-left py-4 px-6">Base Rent</th>
+                              <th className="text-left py-4 px-6">Status</th>
+                              <th className="text-right py-4 px-6">Actions</th>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                              No properties found matching your criteria.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                          </thead>
+                          <tbody className="divide-y divide-border/40">
+                            {filteredProperties.length > 0 ? (
+                              filteredProperties.map((property) => (
+                                <tr key={property.id} className="group hover:bg-muted/10 transition-colors">
+                                  <td className="py-6 px-6">
+                                    <div className="flex items-center gap-4">
+                                      <div className="relative w-16 h-16 rounded-2xl bg-muted overflow-hidden border border-border/40 group-hover:scale-105 transition-transform duration-500 shadow-sm">
+                                        <img
+                                          src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=200&q=80"}
+                                          alt={property.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <p className="font-bold text-base tracking-tight leading-tight">{property.title}</p>
+                                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                          <MapPin className="w-3 h-3 text-primary/60" />
+                                          {property.location}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-6 px-6">
+                                    <div className="space-y-1">
+                                      <p className="font-bold text-sm tracking-tight">{property.landlord?.name || "System Base"}</p>
+                                      <p className="text-xs font-medium text-muted-foreground/70">{property.landlord?.email || "internal@app.com"}</p>
+                                    </div>
+                                  </td>
+                                  <td className="py-6 px-6">
+                                    <div className="space-y-1">
+                                      <p className="font-bold text-sm text-primary">₦{property.priceMonthly?.toLocaleString()}</p>
+                                      <div className="flex gap-1">
+                                        {[1,2,3].map((_, i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/20" />)}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-6 px-6">
+                                    {property.status === "APPROVED" || property.approved ? (
+                                      <Badge variant="success" className="px-3 py-1 font-bold text-[10px] uppercase border-success/20 bg-success/5 italic">Live Listing</Badge>
+                                    ) : property.status === "REJECTED" ? (
+                                      <Badge variant="destructive" className="px-3 py-1 font-bold text-[10px] uppercase border-destructive/20 bg-destructive/5">Rejected</Badge>
+                                    ) : (
+                                      <Badge variant="warning" className="px-3 py-1 font-bold text-[10px] uppercase border-warning/20 bg-warning/5 animate-pulse">Audit Needed</Badge>
+                                    )}
+                                  </td>
+                                  <td className="py-6 px-6 text-right">
+                                    <div className="flex items-center justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                      {property.status === "APPROVED" ? (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="rounded-xl h-10 px-4 text-destructive hover:bg-destructive/5 font-bold text-xs"
+                                          onClick={() => handleApprove(property.id, false)}
+                                        >
+                                          Deactivate
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="rounded-xl h-10 px-4 text-success hover:bg-success/5 font-bold text-xs"
+                                          onClick={() => handleApprove(property.id, true)}
+                                        >
+                                          Activate
+                                        </Button>
+                                      )}
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="h-10 w-10 rounded-xl hover:bg-muted/50">
+                                            <MoreVertical className="w-4 h-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="rounded-xl border-border/40 backdrop-blur-xl p-1.5 min-w-[160px]">
+                                          <DropdownMenuItem asChild className="rounded-lg h-10 px-3 cursor-pointer">
+                                            <Link to={`/properties/${property.id}`} className="flex items-center gap-2 font-medium">
+                                              <ExternalLink className="w-4 h-4 text-primary" />
+                                              Public Preview
+                                            </Link>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem asChild className="rounded-lg h-10 px-3 cursor-pointer">
+                                            <Link to={`/admin/properties/edit/${property.id}`} className="flex items-center gap-2 font-medium">
+                                              <Save className="w-4 h-4 text-primary" />
+                                              Edit Records
+                                            </Link>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator className="bg-border/40" />
+                                          <DropdownMenuItem
+                                            className="rounded-lg h-10 px-3 text-destructive focus:text-destructive cursor-pointer flex items-center gap-2 font-medium"
+                                            onClick={() => handleDelete(property.id)}
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                            Purge Data
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="py-24 text-center">
+                                  <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4 font-display text-4xl font-bold text-muted-foreground/30">?</div>
+                                  <p className="font-bold text-xl text-muted-foreground mb-1">No property matches</p>
+                                  <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Try adjusting your search query or filters.</p>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent value="landlords">
-              <LandlordsTab />
-            </TabsContent>
+              <TabsContent value="landlords" className="mt-0 outline-none">
+                <motion.div
+                  key="landlords-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <LandlordsTab onVerify={handleVerifyLandlord} />
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent value="documents">
-               <Card className="border-border/60">
-                <CardContent className="py-20 text-center">
-                  <div className="w-20 h-20 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                    <FileText className="w-10 h-10 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 tracking-tight">Agent Document Upload</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                    Upload lease documents, IDs, or utility bills for specific landlords and tenants.
-                  </p>
-                  <Button asChild className="gradient-primary rounded-full">
-                    <Link to="/admin/documents/upload">
-                      <Plus className="w-4 h-4 mr-2" />
-                      New Upload
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+              <TabsContent value="documents" className="mt-0 outline-none">
+                <motion.div
+                  key="documents-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                    <CardContent className="py-24 text-center">
+                      <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-8 text-primary shadow-lg shadow-primary/5">
+                        <FileText className="w-12 h-12" />
+                      </div>
+                      <h3 className="text-2xl font-bold font-display tracking-tight mb-3">Compliance Repository</h3>
+                      <p className="text-muted-foreground font-medium max-w-md mx-auto mb-10 leading-relaxed">
+                        Verify agency documents, lease agreements, and KYC records for platform participants.
+                      </p>
+                      <Button asChild className="gradient-primary rounded-xl px-10 h-14 shadow-xl shadow-primary/20 font-bold text-lg">
+                        <Link to="/admin/documents/upload">
+                          <Plus className="w-6 h-6 mr-2" />
+                          Ingest Document
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent value="analytics">
-              <AnalyticsTab />
-            </TabsContent>
+              <TabsContent value="analytics" className="mt-0 outline-none">
+                <motion.div
+                  key="analytics-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AnalyticsTab />
+                </motion.div>
+              </TabsContent>
+            </AnimatePresence>
           </Tabs>
         </div>
       </main>
@@ -369,16 +451,19 @@ function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <Card key={stat.label} className="border-border/60">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                <TrendingUp className="w-4 h-4 text-muted-foreground" />
+          <Card key={stat.label} className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-sm group overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-primary/10 transition-colors" />
+            <CardContent className="p-6 relative">
+              <div className="flex items-center justify-between mb-6">
+                <div className="p-3 rounded-2xl bg-muted/40 group-hover:bg-primary/10 transition-colors">
+                  <stat.icon className={`w-7 h-7 ${stat.color}`} />
+                </div>
+                <TrendingUp className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-3xl font-black font-display tracking-tight leading-none mb-2">{stat.value}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -463,8 +548,8 @@ function AnalyticsTab() {
   );
 }
 
-function LandlordsTab() {
-  const { data: response, isLoading } = useQuery({
+function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED") => void }) {
+  const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["admin-landlords"],
     queryFn: () => fetchAdminUsers("LANDLORD"),
   });
@@ -480,41 +565,159 @@ function LandlordsTab() {
   const landlords = response?.data || [];
 
   return (
-    <Card className="border-border/60">
-      <CardHeader>
-        <CardTitle>Registered Landlords</CardTitle>
-        <CardDescription>All landlord accounts on the platform.</CardDescription>
+    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+      <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
+        <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">Landlord Verification</CardTitle>
+        <CardDescription className="font-medium text-muted-foreground/70 text-sm">Review and verify landlord accounts.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {landlords.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60 text-muted-foreground">
-                  <th className="text-left font-medium py-4 px-3">Name</th>
-                  <th className="text-left font-medium py-4 px-3">Email</th>
-                  <th className="text-left font-medium py-4 px-3">Phone</th>
-                  <th className="text-left font-medium py-4 px-3">Verified</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {landlords.map((landlord: any) => (
-                  <tr key={landlord.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="py-5 px-3 font-medium">{landlord.name}</td>
-                    <td className="py-5 px-3 text-muted-foreground">{landlord.email}</td>
-                    <td className="py-5 px-3 text-muted-foreground">{landlord.phone || "—"}</td>
-                    <td className="py-5 px-3">
-                      {landlord.verified ? (
-                        <Badge variant="success">Verified</Badge>
-                      ) : (
-                        <Badge variant="warning">Pending</Badge>
-                      )}
-                    </td>
+          <>
+            {/* Mobile card layout */}
+            <div className="md:hidden divide-y divide-border/40">
+              {landlords.map((landlord: any) => (
+                <div key={landlord.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-sm truncate">{landlord.name}</p>
+                        {landlord.landlordStatus === "VERIFIED" || landlord.verified ? (
+                          <Badge variant="success" className="text-[9px] px-1.5 py-0 shrink-0">Verified</Badge>
+                        ) : landlord.landlordStatus === "REJECTED" ? (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 shrink-0">Rejected</Badge>
+                        ) : (
+                          <Badge variant="warning" className="text-[9px] px-1.5 py-0 shrink-0">Pending</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{landlord.email}</p>
+                      <div className="mt-1.5">
+                        {landlord.idCardUrl ? (
+                          <a
+                            href={landlord.idCardUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-xs hover:underline flex items-center gap-1 w-fit"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            View ID Card
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">No ID uploaded</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {(landlord.landlordStatus !== "VERIFIED" && !landlord.verified) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1 text-success border-success/20 hover:bg-success/10 rounded-xl"
+                        onClick={async () => {
+                          await onVerify(landlord.id, "VERIFIED");
+                          refetch();
+                        }}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        Approve
+                      </Button>
+                    )}
+                    {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED" || landlord.verified) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
+                        onClick={async () => {
+                          await onVerify(landlord.id, "REJECTED");
+                          refetch();
+                        }}
+                      >
+                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Reject
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60 text-muted-foreground">
+                    <th className="text-left font-medium py-4 px-3">Name</th>
+                    <th className="text-left font-medium py-4 px-3">Email</th>
+                    <th className="text-left font-medium py-4 px-3">ID Card</th>
+                    <th className="text-left font-medium py-4 px-3">Status</th>
+                    <th className="text-right font-medium py-4 px-3">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {landlords.map((landlord: any) => (
+                    <tr key={landlord.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-5 px-3 font-medium">{landlord.name}</td>
+                      <td className="py-5 px-3 text-muted-foreground">{landlord.email}</td>
+                      <td className="py-5 px-3">
+                        {landlord.idCardUrl ? (
+                          <a
+                            href={landlord.idCardUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <FileText className="w-4 h-4" />
+                            View ID
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground italic">No ID uploaded</span>
+                        )}
+                      </td>
+                      <td className="py-5 px-3">
+                        {landlord.landlordStatus === "VERIFIED" || landlord.verified ? (
+                          <Badge variant="success">Verified</Badge>
+                        ) : landlord.landlordStatus === "REJECTED" ? (
+                          <Badge variant="destructive">Rejected</Badge>
+                        ) : (
+                          <Badge variant="warning">Pending</Badge>
+                        )}
+                      </td>
+                      <td className="py-5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {(landlord.landlordStatus !== "VERIFIED" && !landlord.verified) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-success border-success/20 hover:bg-success/10"
+                              onClick={async () => {
+                                await onVerify(landlord.id, "VERIFIED");
+                                refetch();
+                              }}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED" || landlord.verified) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
+                              onClick={async () => {
+                                await onVerify(landlord.id, "REJECTED");
+                                refetch();
+                              }}
+                            >
+                              Reject
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <div className="py-12 text-center text-muted-foreground">
             <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
