@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Menu, X, LogOut, User } from "lucide-react";
+import { Home, Menu, X, LogOut, User, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -74,6 +74,23 @@ const Header = () => {
             >
               Join Us
             </a>
+            {user?.role === "LANDLORD" && (
+              <Link to="/landlord" className="text-primary font-medium hover:opacity-80 transition-opacity flex items-center gap-1.5">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+            )}
+            {user?.role === "ADMIN" && (
+              <Link to="/admin" className="text-primary font-medium hover:opacity-80 transition-opacity flex items-center gap-1.5">
+                <LayoutDashboard className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
+            {isAuthenticated && user?.role === "STUDENT" && (
+              <Link to="/my-bookings" className="text-muted-foreground hover:text-foreground transition-colors">
+                My Bookings
+              </Link>
+            )}
           </nav>
 
           {/* Desktop Auth Buttons */}
@@ -116,13 +133,42 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-4">
-              <Link 
-                to="/properties" 
+              <Link
+                to="/properties"
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Browse Properties
               </Link>
+              {isAuthenticated && user?.role === "STUDENT" && (
+                <Link
+                  to="/my-bookings"
+                  className="text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Bookings
+                </Link>
+              )}
+              {isAuthenticated && user?.role === "LANDLORD" && (
+                <Link
+                  to="/landlord"
+                  className="text-primary font-medium hover:opacity-80 transition-opacity flex items-center gap-1.5 py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              )}
+              {isAuthenticated && user?.role === "ADMIN" && (
+                <Link
+                  to="/admin"
+                  className="text-primary font-medium hover:opacity-80 transition-opacity flex items-center gap-1.5 py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
               <a
                 href="/#how-it-works"
                 onClick={(e) => {

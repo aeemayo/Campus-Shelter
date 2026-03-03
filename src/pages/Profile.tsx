@@ -3,13 +3,14 @@ import { Navigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/properties/PropertyCard";
-import { mockProperties } from "@/data/mockProperties";
 import { useProperties } from "@/hooks/use-properties";
 import { useUserActivity } from "@/hooks/use-user-activity";
 import { useAuth } from "@/contexts/AuthContext";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -30,7 +31,15 @@ import {
   ChevronRight,
   Sparkles,
   TrendingUp,
+  KeyRound,
+  ShieldAlert,
+  Wrench,
+  Plus,
+  Loader2,
+  X,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -47,10 +56,7 @@ const Profile = () => {
   const { data: apiResponse } = useProperties({ limit: 50 });
 
   const allProperties = useMemo(() => {
-    if (apiResponse?.data && apiResponse.data.length > 0) {
-      return apiResponse.data.map(toFrontendProperty);
-    }
-    return mockProperties;
+    return apiResponse?.data?.map(toFrontendProperty) || [];
   }, [apiResponse]);
 
   const savedProperties = useMemo(
@@ -281,6 +287,20 @@ const Profile = () => {
                 <Settings className="w-4 h-4" />
                 <span>Account</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="security"
+                className="gap-2 data-[state=active]:gradient-primary data-[state=active]:text-white rounded-lg px-4 py-2.5"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Security</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="maintenance"
+                className="gap-2 data-[state=active]:gradient-primary data-[state=active]:text-white rounded-lg px-4 py-2.5"
+              >
+                <Wrench className="w-4 h-4" />
+                <span>Maintenance</span>
+              </TabsTrigger>
             </TabsList>
 
             {/* ── Saved Properties ── */}
@@ -442,6 +462,16 @@ const Profile = () => {
                 </Card>
               </div>
             </TabsContent>
+
+            {/* ── Security ── */}
+            <TabsContent value="security" className="mt-0">
+              <SecuritySettings />
+            </TabsContent>
+
+            {/* ── Maintenance ── */}
+            <TabsContent value="maintenance" className="mt-0">
+              <MaintenanceRequests />
+            </TabsContent>
           </Tabs>
         </div>
       </section>
@@ -501,3 +531,268 @@ function EmptyState({
 }
 
 export default Profile;
+
+function SecuritySettings() {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      toast({
+        title: "Validation error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await import("@/services/auth").then((m) =>
+        m.changePassword({
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword,
+        })
+      );
+      toast({
+        title: "Success",
+        description: "Your password has been changed.",
+      });
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to change password.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <Card className="border-border/50 shadow-primary-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <KeyRound className="w-5 h-5 text-primary" />
+            Change Password
+          </CardTitle>
+          <CardDescription>
+            Update your password to keep your account secure.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                value={passwords.currentPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type="password"
+                value={passwords.newPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={passwords.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="gradient-primary w-full sm:w-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? "Updating..." : "Update Password"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50 shadow-primary-sm bg-muted/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-amber-600">
+            <ShieldAlert className="w-5 h-5" />
+            Two-Factor Authentication
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Security enhancement with 2FA is coming soon to CampusShelter.
+          </p>
+          <Button variant="outline" disabled className="gap-2">
+            Enable 2FA
+            <Badge variant="secondary" className="ml-1 text-[10px]">SOON</Badge>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function MaintenanceRequests() {
+  const { toast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { data: response, isLoading: listLoading, refetch } = useQuery({
+    queryKey: ["my-maintenance"],
+    queryFn: () => import("@/services/maintenance").then(m => m.fetchMyMaintenanceRequests()),
+  });
+
+  const { data: bookingsResponse } = useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: () => import("@/services/bookings").then(m => m.fetchMyBookings()),
+  });
+
+  const approvedBookings = (bookingsResponse?.data || []).filter(
+    (b) => b.status === "APPROVED"
+  );
+
+  const requests = response?.data || [];
+
+  const handleCreateRequest = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const propertyId = formData.get("propertyId") as string;
+    const description = formData.get("description") as string;
+
+    if (!propertyId) {
+      toast({ title: "Error", description: "Please select a property.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await import("@/services/maintenance").then(m => m.createMaintenanceRequest({ propertyId, description }));
+      toast({ title: "Request submitted", description: "The maintenance team has been notified." });
+      setIsFormOpen(false);
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-bold">Maintenance Requests</h3>
+          <p className="text-sm text-muted-foreground">Report and track issues in your accommodation.</p>
+        </div>
+        <Button className="gradient-primary gap-2" onClick={() => setIsFormOpen(!isFormOpen)}>
+          {isFormOpen ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {isFormOpen ? "Cancel" : "New Request"}
+        </Button>
+      </div>
+
+      {isFormOpen && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-lg">Submit Repair Request</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateRequest} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Property</Label>
+                {approvedBookings.length > 0 ? (
+                  <select
+                    name="propertyId"
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Select a property</option>
+                    {approvedBookings.map((b) => (
+                      <option key={b.propertyId} value={b.propertyId}>
+                        {b.property?.title || b.propertyId}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-2">
+                    You need an approved booking to submit a maintenance request.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <textarea
+                  name="description"
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Describe the issue in detail..."
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="gradient-primary w-full md:w-auto"
+                disabled={isLoading || approvedBookings.length === 0}
+              >
+                {isLoading ? "Submitting..." : "Submit Request"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {listLoading ? (
+        <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : requests.length > 0 ? (
+        <div className="space-y-4">
+          {requests.map(req => (
+            <Card key={req.id} className="border-border/50 shadow-primary-sm overflow-hidden">
+              <div className="flex items-center justify-between p-4 bg-muted/30 border-b">
+                <span className="font-semibold">{req.description.slice(0, 60)}{req.description.length > 60 ? "…" : ""}</span>
+                <Badge variant="outline">{req.status.replace('_', ' ')}</Badge>
+              </div>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground">{req.description}</p>
+                <div className="mt-4 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>ID: #{req.id.slice(0, 8)}</span>
+                  <span>Submitted: {new Date(req.createdAt).toLocaleDateString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-muted/10 rounded-xl border border-dashed">
+          <Wrench className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <h4 className="font-medium">No maintenance requests</h4>
+          <p className="text-sm text-muted-foreground">When you have issues, they'll appear here.</p>
+        </div>
+      )}
+    </div>
+  );
+}

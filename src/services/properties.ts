@@ -25,6 +25,7 @@ export interface ApiProperty {
   distanceFromFUTA: number;
   availableFrom: string;
   approved: boolean;
+  images: string[];
   landlordId: string;
   createdAt: string;
   updatedAt: string;
@@ -36,6 +37,39 @@ export interface ApiProperty {
   };
   reviews?: ApiReview[];
   _count?: { bookings: number; reviews: number };
+}
+
+export interface Property {
+  id: string;
+  title: string;
+  type: "single-room" | "self-con" | "mini-flat" | "luxury-flat";
+  location: string;
+  price: number;
+  priceMonthly?: number;
+  priceWeekly?: number;
+  priceType?: "monthly" | "weekly" | "yearly";
+  bedrooms: number;
+  bathrooms: number;
+  images: string[];
+  amenities: string[];
+  distance: string;
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  available: boolean;
+  furnished: boolean;
+  description: string;
+  availableFrom?: string;
+  approved?: boolean;
+  landlordId?: string;
+  landlord?: {
+    id?: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    verified: boolean;
+    avatar?: string;
+  };
 }
 
 export interface ApiReview {
@@ -89,3 +123,82 @@ export async function fetchProperties(params: PropertyQueryParams = {}) {
 export async function fetchProperty(id: string) {
   return apiFetch<ApiSuccess<ApiProperty>>(`/api/properties/${id}`);
 }
+
+export async function createProperty(data: any) {
+  return apiFetch<ApiSuccess<ApiProperty>>("/api/properties", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProperty(id: string, data: any) {
+  return apiFetch<ApiSuccess<ApiProperty>>(`/api/properties/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProperty(id: string) {
+  return apiFetch<ApiSuccess<any>>(`/api/properties/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function adminApproveProperty(id: string, approved: boolean) {
+  return apiFetch<ApiSuccess<ApiProperty>>(`/api/admin/properties/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ approved }),
+  });
+}
+
+export async function adminDeleteProperty(id: string) {
+  return apiFetch<ApiSuccess<any>>(`/api/admin/properties/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function fetchAdminAnalytics() {
+  return apiFetch<ApiSuccess<any>>("/api/admin/analytics");
+}
+
+export async function fetchAdminUsers(role?: string) {
+  const query = role ? `?role=${role}` : "";
+  return apiFetch<ApiPaginated<any>>(`/api/admin/users${query}`);
+}
+
+// ─── Filter Metadata ─────────────────────────────────────────
+
+export const locations = [
+  "All Locations",
+  "Ilesha Road",
+  "FUTA South Gate",
+  "North Gate",
+  "Aule",
+  "Odogbo",
+  "Obanla",
+];
+
+export const propertyTypes = [
+  { label: "All Types", value: "all" },
+  { label: "Single Room", value: "single-room" },
+  { label: "Self-Contained", value: "self-con" },
+  { label: "Mini Flat", value: "mini-flat" },
+];
+
+export const amenitiesList = [
+  "Wi-Fi",
+  "Electricity Backup",
+  "Water Supply",
+  "Security",
+  "Gated",
+  "Parking",
+  "Wardrobe",
+];
+
+export const priceRanges = [
+  { label: "Any Price", value: "all", min: 0, max: Infinity },
+  { label: "Under ₦150k", value: "under-150k", min: 0, max: 150000 },
+  { label: "₦150k - ₦250k", value: "150k-250k", min: 150000, max: 250000 },
+  { label: "₦250k - ₦400k", value: "250k-400k", min: 250000, max: 400000 },
+  { label: "Above ₦400k", value: "above-400k", min: 400000, max: Infinity },
+];
