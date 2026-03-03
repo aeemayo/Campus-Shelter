@@ -20,6 +20,10 @@ import LandlordDashboard from "./pages/LandlordDashboard";
 import AdminPropertyForm from "./components/admin/AdminPropertyForm";
 import AdminDocumentUpload from "./components/admin/AdminDocumentUpload";
 import Messages from "./pages/Messages";
+import FAQ from "./pages/FAQ";
+import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +52,10 @@ const App = () => (
             <Route path="/admin/documents/upload" element={<AdminDocumentUpload />}></Route>
             <Route path="/messages" element={<Messages />}></Route>
             <Route path="/messages/:partnerId" element={<Messages />}></Route>
+            <Route path="/faq" element={<FAQ />}></Route>
+            <Route path="/contact" element={<Contact />}></Route>
+            <Route path="/terms" element={<Terms />}></Route>
+            <Route path="/privacy" element={<Privacy />}></Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
