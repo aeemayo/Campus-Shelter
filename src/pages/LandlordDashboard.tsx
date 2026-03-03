@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -53,7 +53,7 @@ import {
 } from "recharts";
 
 const LandlordDashboard = () => {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("properties");
@@ -160,19 +160,6 @@ const LandlordDashboard = () => {
       setLeaseUploading(false);
     }
   };
-
-  // Auth guard
-  if (!authLoading && (!isAuthenticated || user?.role !== "LANDLORD")) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
 
 
   return (
