@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -59,7 +59,7 @@ type SignUpFormValues = z.infer<typeof formSchema>;
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { register: registerUser } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -82,14 +82,6 @@ export default function SignUp() {
 
   const selectedRole = form.watch("role");
 
-  useEffect(() => {
-    if (searchParams.has("role")) {
-      const role = searchParams.get("role")?.toUpperCase();
-      if (role === "STUDENT" || role === "LANDLORD") {
-        form.setValue("role", role);
-      }
-    }
-  }, [searchParams, form]);
 
   async function onSubmit(values: SignUpFormValues) {
     if (values.role === "LANDLORD" && !values.idCard) {
@@ -179,7 +171,10 @@ export default function SignUp() {
                           <button
                             key={role.id}
                             type="button"
-                            onClick={() => field.onChange(role.id)}
+                            onClick={() => {
+                              field.onChange(role.id);
+                              setSearchParams({ role: role.id.toLowerCase() }, { replace: true });
+                            }}
                             className={cn(
                               "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
                               field.value === role.id
@@ -382,7 +377,7 @@ export default function SignUp() {
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
-                to="/login"
+                to={`/login${selectedRole === "LANDLORD" ? "?role=landlord" : ""}`}
                 className="text-primary hover:text-primary/80 font-medium underline underline-offset-4"
               >
                 Sign in
