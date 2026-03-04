@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -40,9 +40,11 @@ type SignInFormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const roleParam = searchParams.get("role");
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(formSchema),
@@ -204,7 +206,7 @@ export default function SignIn() {
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
               <Link
-                to="/register"
+                to={`/register${roleParam ? `?role=${roleParam}` : ""}`}
                 className="text-primary hover:text-primary/80 font-medium underline underline-offset-4"
               >
                 Create account

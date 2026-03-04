@@ -4,6 +4,7 @@ import { Search, MapPin, Home, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import HeroIllustration from "@/components/illustrations/HeroIllustration";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -50,7 +51,8 @@ const Hero = () => {
         initial="hidden"
         animate="visible"
       >
-        <div className="max-w-3xl">
+        <div className="flex items-center justify-between gap-12">
+        <div className="max-w-3xl flex-1">
           {/* Trust signal */}
           <motion.div
             variants={itemVariants}
@@ -131,6 +133,14 @@ const Hero = () => {
               <span><strong className="text-white font-semibold">2,000+</strong> students housed</span>
             </div>
           </motion.div>
+        </div>
+
+        <motion.div
+          variants={itemVariants}
+          className="hidden lg:block flex-shrink-0 w-[400px] xl:w-[480px]"
+        >
+          <HeroIllustration className="w-full h-auto drop-shadow-2xl" />
+        </motion.div>
         </div>
       </motion.div>
     </section>

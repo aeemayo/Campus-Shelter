@@ -109,14 +109,13 @@ const AdminDashboard = () => {
         title: status === "VERIFIED" ? "Landlord Verified" : "Landlord Rejected",
         description: `The landlord account has been ${status.toLowerCase()} successfully.`,
       });
-      // Invalidate the landlords query (handled by react-query if we use useQueryClient)
-      // For now, simpler to just rely on the next refresh or use queryClient if available
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to verify landlord.",
+        description: error?.message || "Failed to verify landlord.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -567,11 +566,24 @@ function AnalyticsTab() {
   );
 }
 
-function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED") => void }) {
+function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED") => Promise<void> }) {
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["admin-landlords"],
     queryFn: () => fetchAdminUsers("LANDLORD"),
   });
+
+  const handleVerify = async (id: string, status: "VERIFIED" | "REJECTED") => {
+    setVerifyingId(id);
+    try {
+      await onVerify(id, status);
+      refetch();
+    } catch {
+      // error toast already shown by parent
+    } finally {
+      setVerifyingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -600,7 +612,7 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-bold text-sm truncate">{landlord.name}</p>
-                        {landlord.landlordStatus === "VERIFIED" || landlord.verified ? (
+                        {landlord.landlordStatus === "VERIFIED" ? (
                           <Badge variant="success" className="text-[9px] px-1.5 py-0 shrink-0">Verified</Badge>
                         ) : landlord.landlordStatus === "REJECTED" ? (
                           <Badge variant="destructive" className="text-[9px] px-1.5 py-0 shrink-0">Rejected</Badge>
@@ -627,31 +639,35 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {(landlord.landlordStatus !== "VERIFIED" && !landlord.verified) && (
+                    {landlord.landlordStatus !== "VERIFIED" && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-9 flex-1 text-success border-success/20 hover:bg-success/10 rounded-xl"
-                        onClick={async () => {
-                          await onVerify(landlord.id, "VERIFIED");
-                          refetch();
-                        }}
+                        disabled={verifyingId === landlord.id}
+                        onClick={() => handleVerify(landlord.id, "VERIFIED")}
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        {verifyingId === landlord.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        )}
                         Approve
                       </Button>
                     )}
-                    {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED" || landlord.verified) && (
+                    {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED") && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-9 flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
-                        onClick={async () => {
-                          await onVerify(landlord.id, "REJECTED");
-                          refetch();
-                        }}
+                        disabled={verifyingId === landlord.id}
+                        onClick={() => handleVerify(landlord.id, "REJECTED")}
                       >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        {verifyingId === landlord.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        )}
                         Reject
                       </Button>
                     )}
@@ -693,7 +709,7 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                         )}
                       </td>
                       <td className="py-5 px-3">
-                        {landlord.landlordStatus === "VERIFIED" || landlord.verified ? (
+                        {landlord.landlordStatus === "VERIFIED" ? (
                           <Badge variant="success">Verified</Badge>
                         ) : landlord.landlordStatus === "REJECTED" ? (
                           <Badge variant="destructive">Rejected</Badge>
@@ -703,29 +719,31 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                       </td>
                       <td className="py-5 px-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {(landlord.landlordStatus !== "VERIFIED" && !landlord.verified) && (
+                          {landlord.landlordStatus !== "VERIFIED" && (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-8 text-success border-success/20 hover:bg-success/10"
-                              onClick={async () => {
-                                await onVerify(landlord.id, "VERIFIED");
-                                refetch();
-                              }}
+                              disabled={verifyingId === landlord.id}
+                              onClick={() => handleVerify(landlord.id, "VERIFIED")}
                             >
+                              {verifyingId === landlord.id ? (
+                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              ) : null}
                               Approve
                             </Button>
                           )}
-                          {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED" || landlord.verified) && (
+                          {(landlord.landlordStatus === "PENDING" || landlord.landlordStatus === "VERIFIED") && (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
-                              onClick={async () => {
-                                await onVerify(landlord.id, "REJECTED");
-                                refetch();
-                              }}
+                              disabled={verifyingId === landlord.id}
+                              onClick={() => handleVerify(landlord.id, "REJECTED")}
                             >
+                              {verifyingId === landlord.id ? (
+                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              ) : null}
                               Reject
                             </Button>
                           )}

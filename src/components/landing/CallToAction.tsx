@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import CtaIllustration from "@/components/illustrations/CtaIllustration";
 
 const benefits = [
   "No agent fees — deal directly with landlords",
@@ -23,7 +24,8 @@ const CallToAction = () => {
           <div className="absolute inset-0 gradient-hero" />
 
           <div className="relative z-10 px-8 py-20 sm:px-14 sm:py-24 lg:px-20">
-            <div className="max-w-2xl mx-auto lg:mx-0">
+            <div className="flex items-center justify-between gap-12">
+            <div className="max-w-2xl mx-auto lg:mx-0 flex-1">
               <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight mb-6">
                 {isAuthenticated ? "Explore your next" : "Ready to find"}
                 <br />
@@ -92,6 +94,11 @@ const CallToAction = () => {
                   </>
                 )}
               </div>
+            </div>
+
+            <div className="hidden lg:block flex-shrink-0 w-[340px] xl:w-[400px]">
+              <CtaIllustration className="w-full h-auto" />
+            </div>
             </div>
           </div>
         </div>
