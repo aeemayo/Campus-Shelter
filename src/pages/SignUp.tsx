@@ -28,8 +28,21 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { User, Building2, Check, Home, Upload, Loader2 } from "lucide-react";
+import {
+  User,
+  Building2,
+  Check,
+  Home,
+  Upload,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
+interface EyeButtonProps {
+  showPassword: boolean;
+  onSetShowPassword: React.Dispatch<React.SetStateAction<boolean>>;
+}
 const formSchema = z
   .object({
     fullName: z
@@ -63,8 +76,12 @@ export default function SignUp() {
   const { register: registerUser } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-  const initialRole = (searchParams.get("role")?.toUpperCase() as "STUDENT" | "LANDLORD") || "STUDENT";
+  const initialRole =
+    (searchParams.get("role")?.toUpperCase() as "STUDENT" | "LANDLORD") ||
+    "STUDENT";
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(formSchema),
@@ -81,7 +98,6 @@ export default function SignUp() {
   });
 
   const selectedRole = form.watch("role");
-
 
   async function onSubmit(values: SignUpFormValues) {
     if (values.role === "LANDLORD" && !values.idCard) {
@@ -111,12 +127,21 @@ export default function SignUp() {
         role: values.role,
         idCardUrl: idCardUrl || undefined,
       } as any);
-      toast({ title: "Account created!", description: "Welcome to CampusShelter." });
+      toast({
+        title: "Account created!",
+        description: "Welcome to CampusShelter.",
+      });
       navigate(values.role === "LANDLORD" ? "/landlord" : "/properties");
     } catch (err) {
       const message =
-        err instanceof ApiError ? err.message : "Registration failed. Please try again.";
-      toast({ title: "Sign up failed", description: message, variant: "destructive" });
+        err instanceof ApiError
+          ? err.message
+          : "Registration failed. Please try again.";
+      toast({
+        title: "Sign up failed",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -165,32 +190,53 @@ export default function SignUp() {
                       <FormLabel>I am a</FormLabel>
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { id: "STUDENT", label: "Student", desc: "Looking for accommodation", icon: User },
-                          { id: "LANDLORD", label: "Landlord", desc: "Listing my property", icon: Building2 }
+                          {
+                            id: "STUDENT",
+                            label: "Student",
+                            desc: "Looking for accommodation",
+                            icon: User,
+                          },
+                          {
+                            id: "LANDLORD",
+                            label: "Landlord",
+                            desc: "Listing my property",
+                            icon: Building2,
+                          },
                         ].map((role) => (
                           <button
                             key={role.id}
                             type="button"
                             onClick={() => {
                               field.onChange(role.id);
-                              setSearchParams({ role: role.id.toLowerCase() }, { replace: true });
+                              setSearchParams(
+                                { role: role.id.toLowerCase() },
+                                { replace: true },
+                              );
                             }}
                             className={cn(
                               "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
                               field.value === role.id
                                 ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/30"
+                                : "border-border hover:border-primary/30",
                             )}
                           >
-                            <div className={cn(
-                              "p-2.5 rounded-lg transition-colors",
-                              field.value === role.id ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                            )}>
+                            <div
+                              className={cn(
+                                "p-2.5 rounded-lg transition-colors",
+                                field.value === role.id
+                                  ? "bg-primary text-white"
+                                  : "bg-muted text-muted-foreground",
+                              )}
+                            >
                               <role.icon className="w-5 h-5" />
                             </div>
                             <div className="text-center">
-                              <p className="font-medium text-sm">{role.label}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{role.desc}</p>
+                              <p className="font-medium text-sm">
+                                {role.label}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {role.desc}
+                              </p>
                             </div>
                             {field.value === role.id && (
                               <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center">
@@ -226,7 +272,11 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="you@futa.edu.ng" {...field} />
+                          <Input
+                            type="email"
+                            placeholder="you@futa.edu.ng"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -240,7 +290,11 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>Phone (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="tel" placeholder="+234 80x xxx xxxx" {...field} />
+                          <Input
+                            type="tel"
+                            placeholder="+234 80x xxx xxxx"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -256,7 +310,16 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <div className="relative">
+                            <Input
+                              type={showPassword === true ? `text` : `password`}
+                              {...field}
+                            />
+                            <EyeComponent
+                              showPassword={showPassword}
+                              onSetShowPassword={setShowPassword}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -270,7 +333,20 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <div className="relative">
+                            <Input
+                              type={
+                                showPasswordConfirm === true
+                                  ? `text`
+                                  : `password`
+                              }
+                              {...field}
+                            />
+                            <EyeComponent
+                              showPassword={showPasswordConfirm}
+                              onSetShowPassword={setShowPasswordConfirm}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -282,7 +358,7 @@ export default function SignUp() {
                   {selectedRole === "LANDLORD" && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
+                      animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
@@ -304,19 +380,27 @@ export default function SignUp() {
                                   }}
                                   {...field}
                                 />
-                                <div className={cn(
-                                  "h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors",
-                                  value ? "bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-700" : "border-border hover:border-primary/40"
-                                )}>
+                                <div
+                                  className={cn(
+                                    "h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors",
+                                    value
+                                      ? "bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-700"
+                                      : "border-border hover:border-primary/40",
+                                  )}
+                                >
                                   {value ? (
                                     <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                                       <Check className="w-4 h-4" />
-                                      <span className="text-sm font-medium">{(value as File).name}</span>
+                                      <span className="text-sm font-medium">
+                                        {(value as File).name}
+                                      </span>
                                     </div>
                                   ) : (
                                     <>
                                       <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                                      <span className="text-xs text-muted-foreground">Upload your ID (image or PDF)</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        Upload your ID (image or PDF)
+                                      </span>
                                     </>
                                   )}
                                 </div>
@@ -345,9 +429,19 @@ export default function SignUp() {
                       <div className="leading-none">
                         <FormLabel className="text-sm text-muted-foreground cursor-pointer leading-relaxed">
                           I agree to the{" "}
-                          <Link to="/terms" className="text-primary hover:text-primary/80 underline underline-offset-2">Terms of Service</Link>
-                          {" "}and{" "}
-                          <Link to="/privacy" className="text-primary hover:text-primary/80 underline underline-offset-2">Privacy Policy</Link>
+                          <Link
+                            to="/terms"
+                            className="text-primary hover:text-primary/80 underline underline-offset-2"
+                          >
+                            Terms of Service
+                          </Link>{" "}
+                          and{" "}
+                          <Link
+                            to="/privacy"
+                            className="text-primary hover:text-primary/80 underline underline-offset-2"
+                          >
+                            Privacy Policy
+                          </Link>
                         </FormLabel>
                         <FormMessage />
                       </div>
@@ -388,4 +482,22 @@ export default function SignUp() {
       </div>
     </div>
   );
+}
+
+function EyeComponent({ showPassword, onSetShowPassword }: EyeButtonProps) {
+  if (showPassword) {
+    return (
+      <Eye
+        className="absolute right-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+        onClick={() => onSetShowPassword((p) => !p)}
+      />
+    );
+  } else {
+    return (
+      <EyeOff
+        className="absolute right-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+        onClick={() => onSetShowPassword((p) => !p)}
+      />
+    );
+  }
 }
