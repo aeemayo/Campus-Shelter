@@ -168,18 +168,6 @@ const AdminDashboard = () => {
               <h1 className="text-2xl md:text-4xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Admin Dashboard</h1>
               <p className="text-muted-foreground mt-1 md:mt-2 font-medium text-sm md:text-base">Manage properties, landlords, and platform integrity.</p>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-3"
-            >
-              <Button asChild className="gradient-primary rounded-xl px-4 md:px-6 h-10 md:h-12 shadow-lg shadow-primary/20 font-bold text-sm md:text-base">
-                <Link to="/admin/properties/new">
-                  <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
-                  Add Property
-                </Link>
-              </Button>
-            </motion.div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
