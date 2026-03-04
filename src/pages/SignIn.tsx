@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home, Mail, Lock, Loader2 } from "lucide-react";
+import { Home, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -44,6 +44,7 @@ export default function SignIn() {
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const roleParam = searchParams.get("role");
 
   const form = useForm<SignInFormValues>({
@@ -64,7 +65,10 @@ export default function SignIn() {
       const savedUser = savedRaw ? JSON.parse(savedRaw) : null;
       const role = savedUser?.role;
 
-      toast({ title: "Welcome back!", description: "You've signed in successfully." });
+      toast({
+        title: "Welcome back!",
+        description: "You've signed in successfully.",
+      });
 
       if (role === "LANDLORD") {
         navigate("/landlord");
@@ -75,8 +79,14 @@ export default function SignIn() {
       }
     } catch (err) {
       const message =
-        err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
-      toast({ title: "Sign in failed", description: message, variant: "destructive" });
+        err instanceof ApiError
+          ? err.message
+          : "Something went wrong. Please try again.";
+      toast({
+        title: "Sign in failed",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -155,10 +165,21 @@ export default function SignIn() {
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
-                            type="password"
+                            type={showPassword === true ? `text` : `password`}
                             className="pl-10"
                             {...field}
                           />
+                          {showPassword ? (
+                            <Eye
+                              className="absolute right-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+                              onClick={() => setShowPassword((p) => !p)}
+                            />
+                          ) : (
+                            <EyeOff
+                              className="absolute right-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+                              onClick={() => setShowPassword((p) => !p)}
+                            />
+                          )}
                         </div>
                       </FormControl>
                       <FormMessage />
