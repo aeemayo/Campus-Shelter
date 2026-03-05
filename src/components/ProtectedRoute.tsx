@@ -43,13 +43,15 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
     user.landlordStatus !== "VERIFIED"
   ) {
     const isRejected = user.landlordStatus === "REJECTED";
+    const isSuspended = user.landlordStatus === "SUSPENDED";
+    const isNegative = isRejected || isSuspended;
 
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className={`max-w-md w-full border-2 ${isRejected ? "border-destructive/30" : "border-warning/30"}`}>
+        <Card className={`max-w-md w-full border-2 ${isNegative ? "border-destructive/30" : "border-warning/30"}`}>
           <CardContent className="pt-8 pb-8 text-center">
-            <div className={`w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center ${isRejected ? "bg-destructive/10" : "bg-warning/10"}`}>
-              {isRejected ? (
+            <div className={`w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center ${isNegative ? "bg-destructive/10" : "bg-warning/10"}`}>
+              {isNegative ? (
                 <XCircle className="w-8 h-8 text-destructive" />
               ) : (
                 <Clock className="w-8 h-8 text-warning" />
@@ -57,10 +59,12 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
             </div>
 
             <h2 className="text-xl font-bold tracking-tight mb-2">
-              {isRejected ? "Verification Rejected" : "Verification Pending"}
+              {isSuspended ? "Account Suspended" : isRejected ? "Verification Rejected" : "Verification Pending"}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              {isRejected
+              {isSuspended
+                ? "Your account has been suspended. You can submit an appeal from your profile page."
+                : isRejected
                 ? "Your landlord verification was rejected. Please contact support or re-upload your ID to try again."
                 : "Your account is being reviewed by our team. You'll be able to access the dashboard once your identity is verified."}
             </p>
@@ -69,7 +73,7 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
               <Button variant="outline" asChild>
                 <Link to="/profile">
                   <ShieldCheck className="w-4 h-4 mr-2" />
-                  View Profile
+                  {isSuspended ? "View Profile & Appeal" : "View Profile"}
                 </Link>
               </Button>
               <Button variant="ghost" className="text-destructive" onClick={logout}>

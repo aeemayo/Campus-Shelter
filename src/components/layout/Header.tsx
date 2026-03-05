@@ -277,14 +277,16 @@ const Header = () => {
                     active={isActive("/landlord")}
                     onClick={() => setIsMenuOpen(false)}
                   />
-                  <Link
-                    to="/properties/add"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 mx-3 my-1 px-3 py-2.5 rounded-xl text-sm font-semibold gradient-primary text-white transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Property
-                  </Link>
+                  {user.landlordStatus === "VERIFIED" && (
+                    <Link
+                      to="/properties/add"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 mx-3 my-1 px-3 py-2.5 rounded-xl text-sm font-semibold gradient-primary text-white transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Property
+                    </Link>
+                  )}
                 </>
               )}
 

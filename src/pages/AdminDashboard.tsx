@@ -102,17 +102,18 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED") => {
+  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => {
     try {
       await adminVerifyLandlord(id, status);
+      const labels: Record<string, string> = { VERIFIED: "Verified", REJECTED: "Rejected", SUSPENDED: "Suspended" };
       toast({
-        title: status === "VERIFIED" ? "Landlord Verified" : "Landlord Rejected",
+        title: `Landlord ${labels[status]}`,
         description: `The landlord account has been ${status.toLowerCase()} successfully.`,
       });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.message || "Failed to verify landlord.",
+        description: error?.message || "Failed to update landlord status.",
         variant: "destructive",
       });
       throw error;
@@ -189,6 +190,10 @@ const AdminDashboard = () => {
                 <TabsTrigger value="documents" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
                   <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   Docs
+                </TabsTrigger>
+                <TabsTrigger value="appeals" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
+                  <ShieldAlert className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  Appeals
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none">
                   <LayoutDashboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -410,6 +415,18 @@ const AdminDashboard = () => {
                 </motion.div>
               </TabsContent>
 
+              <TabsContent value="appeals" className="mt-0 outline-none">
+                <motion.div
+                  key="appeals-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AppealsTab />
+                </motion.div>
+              </TabsContent>
+
               <TabsContent value="analytics" className="mt-0 outline-none">
                 <motion.div
                   key="analytics-tab"
@@ -430,6 +447,118 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+function AppealsTab() {
+  const { toast } = useToast();
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const { data: response, isLoading, refetch } = useQuery({
+    queryKey: ["admin-appeals"],
+    queryFn: () => import("@/services/appeals").then(m => m.fetchAllAppeals()),
+  });
+
+  const appeals = response?.data || [];
+
+  const handleProcess = async (id: string, status: "APPROVED" | "REJECTED", adminNote?: string) => {
+    setProcessingId(id);
+    try {
+      const { processAppeal } = await import("@/services/appeals");
+      await processAppeal(id, status, adminNote);
+      toast({
+        title: status === "APPROVED" ? "Appeal Approved" : "Appeal Rejected",
+        description: status === "APPROVED"
+          ? "The landlord's account has been reinstated."
+          : "The appeal has been rejected.",
+      });
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to process appeal.", variant: "destructive" });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+      <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
+        <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">Suspension Appeals</CardTitle>
+        <CardDescription className="font-medium text-muted-foreground/70 text-sm">Review appeals from suspended landlords.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        {appeals.length > 0 ? (
+          <div className="divide-y divide-border/40">
+            {appeals.map((appeal: any) => (
+              <div key={appeal.id} className="p-4 md:p-6 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-sm">{appeal.user?.name}</p>
+                      <span className="text-xs text-muted-foreground">{appeal.user?.email}</span>
+                      <Badge
+                        variant={appeal.status === "APPROVED" ? "success" : appeal.status === "REJECTED" ? "destructive" : "warning"}
+                        className="text-[9px]"
+                      >
+                        {appeal.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{appeal.reason}</p>
+                    <p className="text-xs text-muted-foreground/60">
+                      Submitted {new Date(appeal.createdAt).toLocaleDateString()}
+                    </p>
+                    {appeal.adminNote && (
+                      <p className="text-xs text-muted-foreground italic">Admin note: {appeal.adminNote}</p>
+                    )}
+                  </div>
+                  {appeal.status === "PENDING" && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-success border-success/20 hover:bg-success/10 rounded-xl"
+                        disabled={processingId === appeal.id}
+                        onClick={() => handleProcess(appeal.id, "APPROVED")}
+                      >
+                        {processingId === appeal.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        Approve & Reinstate
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
+                        disabled={processingId === appeal.id}
+                        onClick={() => handleProcess(appeal.id, "REJECTED")}
+                      >
+                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            <ShieldAlert className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+            <p className="font-medium">No appeals submitted.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function AnalyticsTab() {
   const { data: response, isLoading } = useQuery({
@@ -566,14 +695,14 @@ function AnalyticsTab() {
   );
 }
 
-function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED") => Promise<void> }) {
+function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => Promise<void> }) {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["admin-landlords"],
     queryFn: () => fetchAdminUsers("LANDLORD"),
   });
 
-  const handleVerify = async (id: string, status: "VERIFIED" | "REJECTED") => {
+  const handleVerify = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => {
     setVerifyingId(id);
     try {
       await onVerify(id, status);
@@ -616,6 +745,8 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                           <Badge variant="success" className="text-[9px] px-1.5 py-0 shrink-0">Verified</Badge>
                         ) : landlord.landlordStatus === "REJECTED" ? (
                           <Badge variant="destructive" className="text-[9px] px-1.5 py-0 shrink-0">Rejected</Badge>
+                        ) : landlord.landlordStatus === "SUSPENDED" ? (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 shrink-0">Suspended</Badge>
                         ) : (
                           <Badge variant="warning" className="text-[9px] px-1.5 py-0 shrink-0">Pending</Badge>
                         )}
@@ -671,6 +802,18 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                         Reject
                       </Button>
                     )}
+                    {landlord.landlordStatus === "VERIFIED" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
+                        disabled={verifyingId === landlord.id}
+                        onClick={() => handleVerify(landlord.id, "SUSPENDED")}
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
+                        Suspend
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -713,6 +856,8 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                           <Badge variant="success">Verified</Badge>
                         ) : landlord.landlordStatus === "REJECTED" ? (
                           <Badge variant="destructive">Rejected</Badge>
+                        ) : landlord.landlordStatus === "SUSPENDED" ? (
+                          <Badge variant="destructive">Suspended</Badge>
                         ) : (
                           <Badge variant="warning">Pending</Badge>
                         )}
@@ -747,6 +892,17 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
                               Reject
                             </Button>
                           )}
+                          {landlord.landlordStatus === "VERIFIED" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
+                              disabled={verifyingId === landlord.id}
+                              onClick={() => handleVerify(landlord.id, "SUSPENDED")}
+                            >
+                              Suspend
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -773,7 +929,7 @@ function UsersTab({
 }: {
   onFlag: (id: string, flagged: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onVerify: (id: string, status: "VERIFIED" | "REJECTED") => Promise<void>;
+  onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => Promise<void>;
 }) {
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
@@ -845,7 +1001,7 @@ function UsersTab({
                       {u.role === "LANDLORD" && (
                         <div className="mt-1">
                           <Badge
-                            variant={u.landlordStatus === "VERIFIED" || u.verified ? "success" : u.landlordStatus === "REJECTED" ? "destructive" : "warning"}
+                            variant={u.landlordStatus === "VERIFIED" ? "success" : u.landlordStatus === "REJECTED" || u.landlordStatus === "SUSPENDED" ? "destructive" : "warning"}
                             className="text-[9px]"
                           >
                             {u.landlordStatus || "PENDING"}
@@ -855,7 +1011,7 @@ function UsersTab({
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && !u.verified && (
+                    {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -864,6 +1020,17 @@ function UsersTab({
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Verify
+                      </Button>
+                    )}
+                    {u.role === "LANDLORD" && u.landlordStatus === "VERIFIED" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
+                        onClick={async () => { await onVerify(u.id, "SUSPENDED"); refetch(); }}
+                      >
+                        <ShieldAlert className="w-3 h-3 mr-1" />
+                        Suspend
                       </Button>
                     )}
                     <Button
@@ -922,7 +1089,7 @@ function UsersTab({
                       <td className="py-4 px-4">
                         {u.role === "LANDLORD" ? (
                           <Badge
-                            variant={u.landlordStatus === "VERIFIED" || u.verified ? "success" : u.landlordStatus === "REJECTED" ? "destructive" : "warning"}
+                            variant={u.landlordStatus === "VERIFIED" ? "success" : u.landlordStatus === "REJECTED" || u.landlordStatus === "SUSPENDED" ? "destructive" : "warning"}
                           >
                             {u.landlordStatus || "PENDING"}
                           </Badge>
@@ -934,7 +1101,7 @@ function UsersTab({
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && !u.verified && (
+                          {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -942,6 +1109,16 @@ function UsersTab({
                               onClick={async () => { await onVerify(u.id, "VERIFIED"); refetch(); }}
                             >
                               Verify
+                            </Button>
+                          )}
+                          {u.role === "LANDLORD" && u.landlordStatus === "VERIFIED" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
+                              onClick={async () => { await onVerify(u.id, "SUSPENDED"); refetch(); }}
+                            >
+                              Suspend
                             </Button>
                           )}
                           <DropdownMenu>

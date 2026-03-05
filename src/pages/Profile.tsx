@@ -224,9 +224,15 @@ const Profile = () => {
                 },
                 {
                   label: "Status",
-                  value: user?.verified ? "Verified" : "Active",
+                  value: user?.role === "LANDLORD"
+                    ? (user.landlordStatus === "VERIFIED" ? "Verified" : user.landlordStatus === "SUSPENDED" ? "Suspended" : user.landlordStatus === "REJECTED" ? "Rejected" : "Pending")
+                    : (user?.verified ? "Verified" : "Active"),
                   icon: Shield,
-                  color: "text-success",
+                  color: user?.role === "LANDLORD" && (user.landlordStatus === "SUSPENDED" || user.landlordStatus === "REJECTED")
+                    ? "text-destructive"
+                    : user?.role === "LANDLORD" && user.landlordStatus === "PENDING"
+                    ? "text-warning"
+                    : "text-success",
                 },
               ].map((stat, idx) => (
                 <motion.div
@@ -383,6 +389,11 @@ const Profile = () => {
                       </CardContent>
                     </Card>
 
+                    {/* Suspension Appeal */}
+                    {user?.role === "LANDLORD" && user.landlordStatus === "SUSPENDED" && (
+                      <SuspensionAppealSection />
+                    )}
+
                     {/* Sign Out */}
                     <Card className="border-border/40">
                       <CardContent className="p-6">
@@ -492,6 +503,123 @@ function EmptyState({
 }
 
 export default Profile;
+
+function SuspensionAppealSection() {
+  const { toast } = useToast();
+  const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: appealsRes, isLoading: appealsLoading, refetch } = useQuery({
+    queryKey: ["my-appeals"],
+    queryFn: () => import("@/services/appeals").then(m => m.fetchMyAppeals()),
+  });
+
+  const appeals = appealsRes?.data || [];
+  const hasPendingAppeal = appeals.some(a => a.status === "PENDING");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reason.trim().length < 10) {
+      toast({ title: "Error", description: "Please provide a detailed reason (at least 10 characters).", variant: "destructive" });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await import("@/services/appeals").then(m => m.submitAppeal(reason));
+      toast({ title: "Appeal Submitted", description: "Your appeal has been submitted and is under review." });
+      setReason("");
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to submit appeal.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Card className="border-destructive/20 bg-destructive/5">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-3 text-lg font-bold text-destructive">
+          <ShieldAlert className="w-5 h-5" />
+          Account Suspended
+        </CardTitle>
+        <CardDescription>
+          Your landlord account has been suspended. You can submit an appeal below to request reinstatement.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Existing appeals */}
+        {appealsLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading appeal history...
+          </div>
+        ) : appeals.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Appeal History</p>
+            {appeals.map(appeal => (
+              <div key={appeal.id} className="p-3 rounded-xl bg-background/80 border border-border/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{new Date(appeal.createdAt).toLocaleDateString()}</span>
+                  <Badge
+                    variant={appeal.status === "APPROVED" ? "success" : appeal.status === "REJECTED" ? "destructive" : "warning"}
+                    className="text-[9px]"
+                  >
+                    {appeal.status}
+                  </Badge>
+                </div>
+                <p className="text-sm">{appeal.reason}</p>
+                {appeal.adminNote && (
+                  <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2">
+                    Admin response: {appeal.adminNote}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Submit new appeal */}
+        {!hasPendingAppeal ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold">Reason for Appeal</Label>
+              <textarea
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                placeholder="Explain why you believe your account should be reinstated..."
+                className="flex min-h-[120px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="gradient-primary rounded-xl px-8 h-11"
+              disabled={isSubmitting || reason.trim().length < 10}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Submitting...
+                </div>
+              ) : "Submit Appeal"}
+            </Button>
+          </form>
+        ) : (
+          <div className="p-4 rounded-xl bg-warning/10 border border-warning/20 text-sm text-warning-foreground">
+            <p className="font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-warning" />
+              Appeal Under Review
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Your appeal is currently being reviewed by our team. We'll update your account status once a decision has been made.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function DeleteAccountSection() {
   const { logout } = useAuth();

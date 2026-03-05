@@ -4,6 +4,7 @@ import { apiFetch, type ApiSuccess } from "@/lib/api";
 // ─── Types ───────────────────────────────────────────────────
 
 export type UserRole = "STUDENT" | "LANDLORD" | "ADMIN";
+export type LandlordStatus = "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED";
 
 export interface User {
   id: string;
@@ -12,7 +13,7 @@ export interface User {
   phone?: string;
   role: UserRole;
   verified: boolean;
-  landlordStatus?: string;
+  landlordStatus?: LandlordStatus;
   idCardUrl?: string;
   createdAt: string;
 }

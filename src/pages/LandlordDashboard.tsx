@@ -176,7 +176,7 @@ const LandlordDashboard = () => {
                   <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight">Landlord Dashboard</h1>
                   {user?.landlordStatus && (
                     <Badge
-                      variant={(user.landlordStatus as any) === "VERIFIED" ? "success" : (user.landlordStatus as any) === "REJECTED" ? "destructive" : "warning"}
+                      variant={user.landlordStatus === "VERIFIED" ? "success" : user.landlordStatus === "REJECTED" || user.landlordStatus === "SUSPENDED" ? "destructive" : "warning"}
                       className="h-6"
                     >
                       {user.landlordStatus}
@@ -187,7 +187,7 @@ const LandlordDashboard = () => {
                   Manage your properties, bookings, and maintenance requests.
                 </p>
               </div>
-              <Button asChild disabled={(user?.landlordStatus as any) !== "VERIFIED"} className="gradient-primary hidden md:inline-flex">
+              <Button asChild disabled={user?.landlordStatus !== "VERIFIED"} className="gradient-primary hidden md:inline-flex">
                 <Link to="/properties/add">
                   <Building2 className="w-4 h-4 mr-2" />
                   Add Property
@@ -195,12 +195,12 @@ const LandlordDashboard = () => {
               </Button>
             </div>
 
-            {(user?.landlordStatus as any) !== "VERIFIED" && (
-              <Card className={`mb-6 md:mb-8 border-2 ${(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}`}>
+            {user?.landlordStatus !== "VERIFIED" && (
+              <Card className={`mb-6 md:mb-8 border-2 ${user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}`}>
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl shrink-0 ${(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? "bg-destructive/10" : "bg-warning/10"}`}>
-                      {(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? (
+                    <div className={`p-2 rounded-xl shrink-0 ${user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? "bg-destructive/10" : "bg-warning/10"}`}>
+                      {user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? (
                         <AlertCircle className="w-5 h-5 text-destructive" />
                       ) : (
                         <Clock className="w-5 h-5 text-warning" />
@@ -208,13 +208,13 @@ const LandlordDashboard = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm md:text-base mb-1">
-                        Account {(user?.landlordStatus as any) === "REJECTED" ? "Verification Rejected" : (user?.landlordStatus as any) === "SUSPENDED" ? "Suspended" : "Pending Verification"}
+                        Account {user?.landlordStatus === "REJECTED" ? "Verification Rejected" : user?.landlordStatus === "SUSPENDED" ? "Suspended" : "Pending Verification"}
                       </p>
                       <p className="text-xs md:text-sm text-muted-foreground">
-                        {(user?.landlordStatus as any) === "REJECTED"
+                        {user?.landlordStatus === "REJECTED"
                           ? "Your verification was rejected. Please contact support."
-                          : (user?.landlordStatus as any) === "SUSPENDED"
-                          ? "Your account has been suspended. Please contact support."
+                          : user?.landlordStatus === "SUSPENDED"
+                          ? "Your account has been suspended. Visit your profile to submit an appeal."
                           : "Your account is being reviewed. You can list properties once verified."}
                       </p>
                     </div>
@@ -839,7 +839,7 @@ const LandlordDashboard = () => {
       <Footer />
 
       {/* Mobile FAB - Add Property */}
-      {(user?.landlordStatus as any) === "VERIFIED" && (
+      {user?.landlordStatus === "VERIFIED" && (
         <Link
           to="/properties/add"
           className="md:hidden fixed bottom-6 right-4 z-40 gradient-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary/30 active:scale-95 transition-transform"

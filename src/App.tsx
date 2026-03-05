@@ -84,7 +84,7 @@ const App = () => (
 
               {/* Landlord routes */}
               <Route path="/landlord" element={
-                <ProtectedRoute allowedRoles={["LANDLORD"]}>
+                <ProtectedRoute allowedRoles={["LANDLORD"]} allowUnverifiedLandlord>
                   <LandlordDashboard />
                 </ProtectedRoute>
               } />
