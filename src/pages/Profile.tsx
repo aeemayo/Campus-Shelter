@@ -505,9 +505,11 @@ function EmptyState({
 export default Profile;
 
 function SuspensionAppealSection() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   const { data: appealsRes, isLoading: appealsLoading, refetch } = useQuery({
     queryKey: ["my-appeals"],
@@ -515,7 +517,7 @@ function SuspensionAppealSection() {
   });
 
   const appeals = appealsRes?.data || [];
-  const hasPendingAppeal = appeals.some(a => a.status === "PENDING");
+  const pendingAppeal = appeals.find(a => a.status === "PENDING");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -536,6 +538,19 @@ function SuspensionAppealSection() {
     }
   };
 
+  const handleWithdraw = async (id: string) => {
+    setWithdrawingId(id);
+    try {
+      await import("@/services/appeals").then(m => m.withdrawAppeal(id));
+      toast({ title: "Appeal Withdrawn", description: "Your appeal has been withdrawn." });
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to withdraw appeal.", variant: "destructive" });
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
   return (
     <Card className="border-destructive/20 bg-destructive/5">
       <CardHeader>
@@ -548,6 +563,14 @@ function SuspensionAppealSection() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Suspension reason */}
+        {user?.suspensionReason && (
+          <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
+            <p className="font-semibold text-destructive mb-1">Reason for suspension</p>
+            <p className="text-muted-foreground">{user.suspensionReason}</p>
+          </div>
+        )}
+
         {/* Existing appeals */}
         {appealsLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -561,12 +584,30 @@ function SuspensionAppealSection() {
               <div key={appeal.id} className="p-3 rounded-xl bg-background/80 border border-border/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">{new Date(appeal.createdAt).toLocaleDateString()}</span>
-                  <Badge
-                    variant={appeal.status === "APPROVED" ? "success" : appeal.status === "REJECTED" ? "destructive" : "warning"}
-                    className="text-[9px]"
-                  >
-                    {appeal.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={appeal.status === "APPROVED" ? "success" : appeal.status === "REJECTED" ? "destructive" : "warning"}
+                      className="text-[9px]"
+                    >
+                      {appeal.status}
+                    </Badge>
+                    {appeal.status === "PENDING" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                        disabled={withdrawingId === appeal.id}
+                        onClick={() => handleWithdraw(appeal.id)}
+                      >
+                        {withdrawingId === appeal.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <X className="w-3 h-3 mr-1" />
+                        )}
+                        Withdraw
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm">{appeal.reason}</p>
                 {appeal.adminNote && (
@@ -580,7 +621,7 @@ function SuspensionAppealSection() {
         )}
 
         {/* Submit new appeal */}
-        {!hasPendingAppeal ? (
+        {!pendingAppeal ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-bold">Reason for Appeal</Label>

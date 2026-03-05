@@ -158,10 +158,10 @@ export async function adminApproveProperty(id: string, status: string) {
   return res.data;
 }
 
-export async function adminVerifyLandlord(id: string, status: string) {
+export async function adminVerifyLandlord(id: string, status: string, suspensionReason?: string) {
   const res = await apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}/verify`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...(suspensionReason ? { suspensionReason } : {}) }),
   });
   return res.data;
 }

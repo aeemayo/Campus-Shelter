@@ -32,6 +32,9 @@ import {
   Flag,
   ShieldAlert,
   UserX,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -102,9 +105,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => {
+  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => {
     try {
-      await adminVerifyLandlord(id, status);
+      await adminVerifyLandlord(id, status, suspensionReason);
       const labels: Record<string, string> = { VERIFIED: "Verified", REJECTED: "Rejected", SUSPENDED: "Suspended" };
       toast({
         title: `Landlord ${labels[status]}`,
@@ -451,25 +454,40 @@ const AdminDashboard = () => {
 function AppealsTab() {
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const LIMIT = 10;
 
   const { data: response, isLoading, refetch } = useQuery({
-    queryKey: ["admin-appeals"],
-    queryFn: () => import("@/services/appeals").then(m => m.fetchAllAppeals()),
+    queryKey: ["admin-appeals", statusFilter, searchQuery, page],
+    queryFn: () =>
+      import("@/services/appeals").then(m =>
+        m.fetchAllAppeals({
+          page,
+          limit: LIMIT,
+          status: statusFilter !== "ALL" ? statusFilter : undefined,
+          search: searchQuery || undefined,
+        }),
+      ),
   });
 
   const appeals = response?.data || [];
+  const meta = response?.meta;
 
-  const handleProcess = async (id: string, status: "APPROVED" | "REJECTED", adminNote?: string) => {
+  const handleProcess = async (id: string, status: "APPROVED" | "REJECTED") => {
     setProcessingId(id);
     try {
       const { processAppeal } = await import("@/services/appeals");
-      await processAppeal(id, status, adminNote);
+      await processAppeal(id, status, adminNotes[id] || undefined);
       toast({
         title: status === "APPROVED" ? "Appeal Approved" : "Appeal Rejected",
         description: status === "APPROVED"
           ? "The landlord's account has been reinstated."
           : "The appeal has been rejected.",
       });
+      setAdminNotes(prev => { const n = { ...prev }; delete n[id]; return n; });
       refetch();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to process appeal.", variant: "destructive" });
@@ -491,6 +509,31 @@ function AppealsTab() {
       <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
         <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">Suspension Appeals</CardTitle>
         <CardDescription className="font-medium text-muted-foreground/70 text-sm">Review appeals from suspended landlords.</CardDescription>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              className="pl-9 h-9 rounded-xl"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="flex gap-1.5">
+            {["ALL", "PENDING", "APPROVED", "REJECTED"].map(s => (
+              <Button
+                key={s}
+                variant={statusFilter === s ? "default" : "outline"}
+                size="sm"
+                className="h-9 rounded-xl text-xs font-bold"
+                onClick={() => { setStatusFilter(s); setPage(1); }}
+              >
+                {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+              </Button>
+            ))}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {appeals.length > 0 ? (
@@ -512,37 +555,51 @@ function AppealsTab() {
                     <p className="text-sm text-muted-foreground">{appeal.reason}</p>
                     <p className="text-xs text-muted-foreground/60">
                       Submitted {new Date(appeal.createdAt).toLocaleDateString()}
+                      {appeal.processedAt && (
+                        <> &middot; Processed {new Date(appeal.processedAt).toLocaleDateString()}</>
+                      )}
                     </p>
                     {appeal.adminNote && (
-                      <p className="text-xs text-muted-foreground italic">Admin note: {appeal.adminNote}</p>
+                      <p className="text-xs text-muted-foreground italic">
+                        <MessageSquare className="w-3 h-3 inline mr-1" />
+                        Admin note: {appeal.adminNote}
+                      </p>
                     )}
                   </div>
                   {appeal.status === "PENDING" && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-success border-success/20 hover:bg-success/10 rounded-xl"
-                        disabled={processingId === appeal.id}
-                        onClick={() => handleProcess(appeal.id, "APPROVED")}
-                      >
-                        {processingId === appeal.id ? (
-                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                        )}
-                        Approve & Reinstate
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
-                        disabled={processingId === appeal.id}
-                        onClick={() => handleProcess(appeal.id, "REJECTED")}
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                        Reject
-                      </Button>
+                    <div className="space-y-3 min-w-[220px]">
+                      <textarea
+                        placeholder="Admin note (optional)..."
+                        className="flex w-full rounded-xl border border-border bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 min-h-[60px] resize-none"
+                        value={adminNotes[appeal.id] || ""}
+                        onChange={e => setAdminNotes(prev => ({ ...prev, [appeal.id]: e.target.value }))}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1 text-success border-success/20 hover:bg-success/10 rounded-xl"
+                          disabled={processingId === appeal.id}
+                          onClick={() => handleProcess(appeal.id, "APPROVED")}
+                        >
+                          {processingId === appeal.id ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                          )}
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
+                          disabled={processingId === appeal.id}
+                          onClick={() => handleProcess(appeal.id, "REJECTED")}
+                        >
+                          <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                          Reject
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -552,7 +609,35 @@ function AppealsTab() {
         ) : (
           <div className="py-12 text-center text-muted-foreground">
             <ShieldAlert className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="font-medium">No appeals submitted.</p>
+            <p className="font-medium">No appeals found.</p>
+          </div>
+        )}
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border/40">
+            <p className="text-xs text-muted-foreground">
+              Page {meta.page} of {meta.totalPages} ({meta.total} total)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-xl"
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-xl"
+                disabled={page >= meta.totalPages}
+                onClick={() => setPage(p => p + 1)}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
@@ -695,7 +780,7 @@ function AnalyticsTab() {
   );
 }
 
-function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => Promise<void> }) {
+function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => Promise<void> }) {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["admin-landlords"],
@@ -703,9 +788,15 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
   });
 
   const handleVerify = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => {
+    let suspensionReason: string | undefined;
+    if (status === "SUSPENDED") {
+      const reason = window.prompt("Provide a reason for suspending this landlord:");
+      if (reason === null) return; // cancelled
+      suspensionReason = reason || undefined;
+    }
     setVerifyingId(id);
     try {
-      await onVerify(id, status);
+      await onVerify(id, status, suspensionReason);
       refetch();
     } catch {
       // error toast already shown by parent
@@ -929,7 +1020,7 @@ function UsersTab({
 }: {
   onFlag: (id: string, flagged: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => Promise<void>;
+  onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => Promise<void>;
 }) {
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
@@ -1027,7 +1118,7 @@ function UsersTab({
                         variant="outline"
                         size="sm"
                         className="h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
-                        onClick={async () => { await onVerify(u.id, "SUSPENDED"); refetch(); }}
+                        onClick={async () => { const r = window.prompt("Provide a reason for suspending this landlord:"); if (r === null) return; await onVerify(u.id, "SUSPENDED", r || undefined); refetch(); }}
                       >
                         <ShieldAlert className="w-3 h-3 mr-1" />
                         Suspend
@@ -1116,7 +1207,7 @@ function UsersTab({
                               variant="outline"
                               size="sm"
                               className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
-                              onClick={async () => { await onVerify(u.id, "SUSPENDED"); refetch(); }}
+                              onClick={async () => { const r = window.prompt("Provide a reason for suspending this landlord:"); if (r === null) return; await onVerify(u.id, "SUSPENDED", r || undefined); refetch(); }}
                             >
                               Suspend
                             </Button>

@@ -1,4 +1,4 @@
-import { apiFetch, type ApiSuccess } from "@/lib/api";
+import { apiFetch, type ApiPaginated, type ApiSuccess } from "@/lib/api";
 
 export interface Appeal {
   id: string;
@@ -6,6 +6,8 @@ export interface Appeal {
   reason: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   adminNote?: string;
+  processedBy?: string;
+  processedAt?: string;
   createdAt: string;
   updatedAt: string;
   user?: {
@@ -29,9 +31,27 @@ export async function fetchMyAppeals() {
   return apiFetch<ApiSuccess<Appeal[]>>("/api/appeals");
 }
 
-/** Admin: get all appeals. */
-export async function fetchAllAppeals() {
-  return apiFetch<ApiSuccess<Appeal[]>>("/api/admin/appeals");
+/** Withdraw a pending appeal. */
+export async function withdrawAppeal(id: string) {
+  return apiFetch<ApiSuccess<{ message: string }>>(`/api/appeals?id=${id}`, {
+    method: "DELETE",
+  });
+}
+
+/** Admin: get all appeals with pagination and filtering. */
+export async function fetchAllAppeals(params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+}) {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  if (params?.status) query.set("status", params.status);
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString();
+  return apiFetch<ApiPaginated<Appeal>>(`/api/admin/appeals${qs ? `?${qs}` : ""}`);
 }
 
 /** Admin: approve or reject an appeal. */
