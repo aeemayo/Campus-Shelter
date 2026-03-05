@@ -13,6 +13,7 @@ import {
   type MaintenanceRequest,
 } from "@/services/maintenance";
 import { uploadDocument } from "@/services/documents";
+import { compressImage } from "@/lib/image-compress";
 import { createLease } from "@/services/leases";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { Button } from "@/components/ui/button";
@@ -148,7 +149,8 @@ const LandlordDashboard = () => {
     if (!leaseFile || !leaseUploadBookingId) return;
     setLeaseUploading(true);
     try {
-      const uploadRes = await uploadDocument(leaseFile, "LEASE");
+      const compressedFile = await compressImage(leaseFile);
+      const uploadRes = await uploadDocument(compressedFile, "LEASE");
       await createLease({ bookingId: leaseUploadBookingId, documentUrl: uploadRes.data.url });
       toast({ title: "Lease Created", description: "Lease document has been uploaded and linked." });
       setLeaseUploadBookingId(null);
@@ -194,11 +196,11 @@ const LandlordDashboard = () => {
             </div>
 
             {(user?.landlordStatus as any) !== "VERIFIED" && (
-              <Card className={`mb-6 md:mb-8 border-2 ${(user?.landlordStatus as any) === "REJECTED" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}`}>
+              <Card className={`mb-6 md:mb-8 border-2 ${(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}`}>
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl shrink-0 ${(user?.landlordStatus as any) === "REJECTED" ? "bg-destructive/10" : "bg-warning/10"}`}>
-                      {(user?.landlordStatus as any) === "REJECTED" ? (
+                    <div className={`p-2 rounded-xl shrink-0 ${(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? "bg-destructive/10" : "bg-warning/10"}`}>
+                      {(user?.landlordStatus as any) === "REJECTED" || (user?.landlordStatus as any) === "SUSPENDED" ? (
                         <AlertCircle className="w-5 h-5 text-destructive" />
                       ) : (
                         <Clock className="w-5 h-5 text-warning" />
@@ -206,11 +208,13 @@ const LandlordDashboard = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm md:text-base mb-1">
-                        Account {(user?.landlordStatus as any) === "REJECTED" ? "Verification Rejected" : "Pending Verification"}
+                        Account {(user?.landlordStatus as any) === "REJECTED" ? "Verification Rejected" : (user?.landlordStatus as any) === "SUSPENDED" ? "Suspended" : "Pending Verification"}
                       </p>
                       <p className="text-xs md:text-sm text-muted-foreground">
                         {(user?.landlordStatus as any) === "REJECTED"
                           ? "Your verification was rejected. Please contact support."
+                          : (user?.landlordStatus as any) === "SUSPENDED"
+                          ? "Your account has been suspended. Please contact support."
                           : "Your account is being reviewed. You can list properties once verified."}
                       </p>
                     </div>

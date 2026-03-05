@@ -114,7 +114,9 @@ export default function SignUp() {
       let idCardUrl = "";
       if (values.role === "LANDLORD" && values.idCard) {
         const { uploadDocument } = await import("@/services/documents");
-        const res = await uploadDocument(values.idCard, "ID_CARD");
+        const { compressImage } = await import("@/lib/image-compress");
+        const compressedFile = await compressImage(values.idCard);
+        const res = await uploadDocument(compressedFile, "ID_CARD");
         // @ts-ignore - res.data might have url or fileUrl
         idCardUrl = res.data.fileUrl || res.data.url;
       }

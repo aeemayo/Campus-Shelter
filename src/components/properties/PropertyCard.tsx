@@ -80,14 +80,20 @@ const PropertyCard = ({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
+            onFavoriteToggle?.();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
             onFavoriteToggle?.();
           }}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-white hover:scale-105 z-10"
+          className="absolute top-3 right-3 w-11 h-11 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-white hover:scale-105 z-10 touch-manipulation"
         >
           <Heart
-            className={`w-4.5 h-4.5 transition-colors ${
+            className={`w-5 h-5 transition-colors ${
               isFavorite ? "fill-destructive text-destructive" : "text-foreground/40"
             }`}
           />

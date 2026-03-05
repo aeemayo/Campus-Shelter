@@ -155,9 +155,9 @@ const Profile = () => {
                   </Badge>
                   {user?.role === "LANDLORD" ? (
                     <Badge
-                      variant={user?.landlordStatus === "VERIFIED" ? "success" : user?.landlordStatus === "REJECTED" ? "destructive" : "warning"}
+                      variant={user?.landlordStatus === "VERIFIED" ? "success" : user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? "destructive" : "warning"}
                     >
-                      {user?.landlordStatus === "VERIFIED" ? "Verified Landlord" : user?.landlordStatus === "REJECTED" ? "Verification Rejected" : "Verification Pending"}
+                      {user?.landlordStatus === "VERIFIED" ? "Verified Landlord" : user?.landlordStatus === "REJECTED" ? "Verification Rejected" : user?.landlordStatus === "SUSPENDED" ? "Account Suspended" : "Verification Pending"}
                     </Badge>
                   ) : user?.verified && (
                     <Badge variant="success">
@@ -371,8 +371,8 @@ const Profile = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Verification Status</span>
                           {user?.role === "LANDLORD" ? (
-                            <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.landlordStatus === "VERIFIED" ? 'bg-success text-white' : 'bg-warning text-white'}`}>
-                              {user?.landlordStatus === "VERIFIED" ? "Verified" : "Pending"}
+                            <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.landlordStatus === "VERIFIED" ? 'bg-success text-white' : user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? 'bg-destructive text-white' : 'bg-warning text-white'}`}>
+                              {user?.landlordStatus === "VERIFIED" ? "Verified" : user?.landlordStatus === "REJECTED" ? "Rejected" : user?.landlordStatus === "SUSPENDED" ? "Suspended" : "Pending"}
                             </Badge>
                           ) : (
                             <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verified ? 'bg-success text-white' : 'bg-muted text-muted-foreground'}`}>

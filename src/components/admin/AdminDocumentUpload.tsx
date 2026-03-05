@@ -17,6 +17,7 @@ import { fetchAdminUsers } from "@/services/properties";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { apiFetch } from "@/lib/api";
+import { compressImage } from "@/lib/image-compress";
 
 const AdminDocumentUpload = () => {
   const navigate = useNavigate();
@@ -48,8 +49,9 @@ const AdminDocumentUpload = () => {
 
     setIsLoading(true);
     try {
+      const compressedFile = await compressImage(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
       formData.append("type", docType);
       formData.append("targetUserId", targetUserId);
 

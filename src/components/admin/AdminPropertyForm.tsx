@@ -30,6 +30,7 @@ import { ChevronLeft, Loader2, Save, ImagePlus, X, GripVertical } from "lucide-r
 import { useToast } from "@/components/ui/use-toast";
 import { fetchProperty, createProperty, updateProperty, fetchAdminUsers } from "@/services/properties";
 import { uploadDocument } from "@/services/documents";
+import { compressImage } from "@/lib/image-compress";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
@@ -79,7 +80,7 @@ const AdminPropertyForm = () => {
   const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const addImageFiles = useCallback((files: FileList | File[]) => {
+  const addImageFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const remaining = MAX_IMAGES - images.length;
     if (remaining <= 0) {
@@ -92,7 +93,9 @@ const AdminPropertyForm = () => {
       toast({ title: "Invalid Files", description: `Some files were skipped. Only JPEG/PNG/WebP under ${MAX_FILE_SIZE_MB}MB are accepted.`, variant: "destructive" });
     }
     const valid = toAdd.filter(f => ACCEPTED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
-    const newItems: ImageItem[] = valid.map(file => ({
+    // Compress images before adding
+    const compressed = await Promise.all(valid.map(f => compressImage(f)));
+    const newItems: ImageItem[] = compressed.map(file => ({
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       url: URL.createObjectURL(file),
       file,
@@ -135,7 +138,7 @@ const AdminPropertyForm = () => {
       rooms: 1,
       bathrooms: 1,
       roomType: "SINGLE",
-      landlordId: "",
+      landlordId: isLandlord && user?.id ? user.id : "",
       furnished: false,
       wifi: false,
       water: false,
@@ -237,11 +240,15 @@ const AdminPropertyForm = () => {
         toast({ title: "Success", description: "Property updated successfully." });
       } else {
         await createProperty(payload);
-        toast({ title: "Success", description: "Property created successfully. It will be live once approved by an admin." });
+        toast({
+          title: "Property Submitted!",
+          description: "Your property is now under review. Expect approval within 24-48 hours.",
+        });
       }
       navigate(isLandlord ? "/landlord" : "/admin");
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save property.", variant: "destructive" });
+    } catch (error: any) {
+      const message = error?.message || "Failed to save property. Please try again.";
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
       setImageUploadProgress(null);
