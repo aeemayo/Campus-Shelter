@@ -1,6 +1,14 @@
 // ─── Adapter: Backend API property → Frontend Property shape ─
 import { Property, ApiProperty, RoomType } from "@/services/properties";
 
+const API_BASE = import.meta.env.VITE_API_URL || "https://campus-shelter-apis.vercel.app";
+
+function resolveImageUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) return url;
+  return `${API_BASE}${url}`;
+}
+
 const roomTypeMap: Record<string, Property["type"]> = {
   SINGLE: "single-room",
   SELF_CON: "self-con",
@@ -39,11 +47,11 @@ export function toFrontendProperty(p: ApiProperty): Property {
     price: p.priceMonthly,
     priceMonthly: p.priceMonthly,
     priceWeekly: p.priceWeekly,
-    priceType: "monthly",
+    priceType: "yearly",
     bedrooms: p.rooms,
     bathrooms: p.bathrooms,
     images: p.images && p.images.length > 0
-      ? p.images
+      ? p.images.map(resolveImageUrl)
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"],
     amenities,
     distance: `${p.distanceFromFUTA} km from FUTA`,

@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import { fetchProperties } from "@/services/properties";
+import { fetchProperties, deleteProperty } from "@/services/properties";
 import {
   fetchMyBookings,
   updateBookingStatus,
@@ -48,7 +48,17 @@ import {
   AlertCircle,
   Clock,
   ChevronRight,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -69,6 +79,8 @@ const LandlordDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("properties");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // Fetch landlord's properties
   const { data: propertiesResponse, isLoading: propsLoading } = useQuery({
@@ -150,6 +162,20 @@ const LandlordDashboard = () => {
         description: "Failed to update status.",
         variant: "destructive",
       });
+    },
+  });
+
+  // Delete property mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteProperty(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      toast({ title: "Property Deleted", description: "The property has been removed." });
+      setDeleteTarget(null);
+      setDeleteConfirmText("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete property.", variant: "destructive" });
     },
   });
 
@@ -362,7 +388,7 @@ const LandlordDashboard = () => {
                 <div className="absolute top-0 left-0 w-1 h-full bg-success" />
                 <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
                   <CardDescription className="font-medium text-xs md:text-sm">
-                    Monthly Revenue
+                    Annual Revenue
                   </CardDescription>
                   <CardTitle className="text-xl md:text-3xl font-bold font-display text-success">
                     ₦{stats.totalRevenue.toLocaleString()}
@@ -635,7 +661,7 @@ const LandlordDashboard = () => {
                                 <p className="font-bold text-sm text-primary">
                                   ₦{property.priceMonthly?.toLocaleString()}
                                   <span className="text-[10px] text-muted-foreground font-normal">
-                                    /mo
+                                    /yr
                                   </span>
                                 </p>
                               </div>
@@ -653,7 +679,7 @@ const LandlordDashboard = () => {
                                   Property Details
                                 </th>
                                 <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
-                                  Monthly Price
+                                  Annual Price
                                 </th>
                                 <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
                                   Status
@@ -699,7 +725,7 @@ const LandlordDashboard = () => {
                                         {property.priceMonthly?.toLocaleString()}
                                       </p>
                                       <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">
-                                        Per Month
+                                        Per Year
                                       </p>
                                     </div>
                                   </td>
@@ -729,17 +755,46 @@ const LandlordDashboard = () => {
                                     )}
                                   </td>
                                   <td className="py-4 px-6 text-right">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      asChild
-                                      className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
-                                    >
-                                      <Link to={`/properties/${property.id}`}>
-                                        <ExternalLink className="w-3.5 h-3.5 mr-2" />
-                                        Details
-                                      </Link>
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                        className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                      >
+                                        <Link to={`/properties/${property.id}`}>
+                                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                                          View
+                                        </Link>
+                                      </Button>
+                                      {user?.landlordStatus === "VERIFIED" && (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                            className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                          >
+                                            <Link to={`/properties/edit/${property.id}`}>
+                                              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                                              Edit
+                                            </Link>
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5 hover:border-destructive/60"
+                                            onClick={() => {
+                                              setDeleteTarget({ id: property.id, title: property.title });
+                                              setDeleteConfirmText("");
+                                            }}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                                            Delete
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -759,15 +814,21 @@ const LandlordDashboard = () => {
                           Start listing your properties to receive booking
                           requests.
                         </p>
-                        <Button
-                          asChild
-                          className="gradient-primary rounded-full px-6 md:px-8 h-11"
-                        >
-                          <Link to="/properties/add">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Your First Property
-                          </Link>
-                        </Button>
+                        {user?.landlordStatus === "VERIFIED" ? (
+                          <Button
+                            asChild
+                            className="gradient-primary rounded-full px-6 md:px-8 h-11"
+                          >
+                            <Link to="/properties/add">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Your First Property
+                            </Link>
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Complete verification to start listing properties.
+                          </p>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -1166,6 +1227,74 @@ const LandlordDashboard = () => {
       </main>
 
       <Footer />
+
+      {/* Delete confirmation dialog */}
+      {(() => {
+        const activeBookings = deleteTarget
+          ? bookings.filter(
+              (b) =>
+                b.propertyId === deleteTarget.id &&
+                (b.status === "PENDING" || b.status === "APPROVED"),
+            )
+          : [];
+        const hasActiveBookings = activeBookings.length > 0;
+
+        return (
+          <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-destructive">Delete Property</DialogTitle>
+                <DialogDescription>
+                  {hasActiveBookings
+                    ? "This property has active bookings and cannot be deleted until they are resolved."
+                    : "This action cannot be undone. Type the property name to confirm deletion."}
+                </DialogDescription>
+              </DialogHeader>
+              {hasActiveBookings ? (
+                <div className="space-y-3 py-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
+                  </p>
+                  <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-1">
+                    <p className="text-sm font-semibold text-warning-foreground">
+                      {activeBookings.length} active booking{activeBookings.length > 1 ? "s" : ""} pending
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      You must settle all pending and approved bookings with students before deleting this property. Go to the Bookings tab to reject or resolve them.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 py-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
+                  </p>
+                  <Input
+                    placeholder={`Type "${deleteTarget?.title}" to confirm`}
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  />
+                </div>
+              )}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}>
+                  {hasActiveBookings ? "Close" : "Cancel"}
+                </Button>
+                {!hasActiveBookings && (
+                  <Button
+                    variant="destructive"
+                    disabled={deleteConfirmText !== deleteTarget?.title || deleteMutation.isPending}
+                    onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+                  >
+                    {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Delete Property
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
 
       {/* Mobile FAB - Add Property */}
       {user?.landlordStatus === "VERIFIED" && (

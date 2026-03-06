@@ -72,7 +72,7 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/properties/:id" element={
-                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD", "ADMIN"]} allowUnverifiedLandlord>
                   <PropertyDetails />
                 </ProtectedRoute>
               } />
@@ -89,6 +89,11 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/properties/add" element={
+                <ProtectedRoute allowedRoles={["LANDLORD"]}>
+                  <AdminPropertyForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/properties/edit/:id" element={
                 <ProtectedRoute allowedRoles={["LANDLORD"]}>
                   <AdminPropertyForm />
                 </ProtectedRoute>
