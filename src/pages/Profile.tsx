@@ -101,7 +101,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header bgColor="white" />
 
       {/* Profile Hero */}
       <section className="pt-16">
