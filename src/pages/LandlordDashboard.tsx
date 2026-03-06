@@ -814,15 +814,21 @@ const LandlordDashboard = () => {
                           Start listing your properties to receive booking
                           requests.
                         </p>
-                        <Button
-                          asChild
-                          className="gradient-primary rounded-full px-6 md:px-8 h-11"
-                        >
-                          <Link to="/properties/add">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Your First Property
-                          </Link>
-                        </Button>
+                        {user?.landlordStatus === "VERIFIED" ? (
+                          <Button
+                            asChild
+                            className="gradient-primary rounded-full px-6 md:px-8 h-11"
+                          >
+                            <Link to="/properties/add">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Your First Property
+                            </Link>
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Complete verification to start listing properties.
+                          </p>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -1223,39 +1229,72 @@ const LandlordDashboard = () => {
       <Footer />
 
       {/* Delete confirmation dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Delete Property</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. Type the property name to confirm deletion.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
-            </p>
-            <Input
-              placeholder={`Type "${deleteTarget?.title}" to confirm`}
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={deleteConfirmText !== deleteTarget?.title || deleteMutation.isPending}
-              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
-            >
-              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Delete Property
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {(() => {
+        const activeBookings = deleteTarget
+          ? bookings.filter(
+              (b) =>
+                b.propertyId === deleteTarget.id &&
+                (b.status === "PENDING" || b.status === "APPROVED"),
+            )
+          : [];
+        const hasActiveBookings = activeBookings.length > 0;
+
+        return (
+          <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-destructive">Delete Property</DialogTitle>
+                <DialogDescription>
+                  {hasActiveBookings
+                    ? "This property has active bookings and cannot be deleted until they are resolved."
+                    : "This action cannot be undone. Type the property name to confirm deletion."}
+                </DialogDescription>
+              </DialogHeader>
+              {hasActiveBookings ? (
+                <div className="space-y-3 py-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
+                  </p>
+                  <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-1">
+                    <p className="text-sm font-semibold text-warning-foreground">
+                      {activeBookings.length} active booking{activeBookings.length > 1 ? "s" : ""} pending
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      You must settle all pending and approved bookings with students before deleting this property. Go to the Bookings tab to reject or resolve them.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 py-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
+                  </p>
+                  <Input
+                    placeholder={`Type "${deleteTarget?.title}" to confirm`}
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  />
+                </div>
+              )}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}>
+                  {hasActiveBookings ? "Close" : "Cancel"}
+                </Button>
+                {!hasActiveBookings && (
+                  <Button
+                    variant="destructive"
+                    disabled={deleteConfirmText !== deleteTarget?.title || deleteMutation.isPending}
+                    onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+                  >
+                    {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Delete Property
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
 
       {/* Mobile FAB - Add Property */}
       {user?.landlordStatus === "VERIFIED" && (
