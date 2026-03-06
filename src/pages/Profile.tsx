@@ -452,6 +452,11 @@ const Profile = () => {
                         <SuspensionAppealSection />
                       )}
 
+                    {/* Student ID Verification */}
+                    {isStudent && (
+                      <StudentIdUploadSection onVerified={(u) => updateUser(u)} />
+                    )}
+
                     {/* Sign Out */}
                     <Card className="border-border/40">
                       <CardContent className="p-6">
@@ -541,10 +546,14 @@ function EditProfileDialog({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.trim().length < 2) {
+      toast({ title: "Name too short", description: "Name must be at least 2 characters.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const res = await import("@/services/auth").then((m) =>
-        m.updateProfile({ name, phone })
+        m.updateProfile({ name: name.trim(), phone: phone.trim() || undefined })
       );
       onSave(res.data.user);
       toast({ title: "Profile updated", description: "Your changes have been saved." });
@@ -569,26 +578,58 @@ function EditProfileDialog({
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name">Full Name</Label>
               <Input
                 id="edit-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. John Adeyemi"
                 className="h-10 rounded-lg"
                 required
                 minLength={2}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="edit-phone">Phone</Label>
+              <Label htmlFor="edit-email">
+                Email Address
+                <span className="ml-2 text-xs text-muted-foreground font-normal">(cannot be changed)</span>
+              </Label>
+              <Input
+                id="edit-email"
+                value={user?.email ?? ""}
+                disabled
+                className="h-10 rounded-lg bg-muted/40 text-muted-foreground cursor-not-allowed"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone Number</Label>
               <Input
                 id="edit-phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="e.g. 07012345678"
                 className="h-10 rounded-lg"
+                type="tel"
               />
             </div>
+            <div className="space-y-1.5">
+              <Label>Role</Label>
+              <Input
+                value={user?.role === "STUDENT" ? "Student" : user?.role === "LANDLORD" ? "Landlord" : "Admin"}
+                disabled
+                className="h-10 rounded-lg bg-muted/40 text-muted-foreground cursor-not-allowed"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              To change your password, go to the{" "}
+              <button
+                type="button"
+                className="underline hover:text-foreground"
+                onClick={() => { setOpen(false); }}
+              >
+                Security tab
+              </button>.
+            </p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" className="gradient-primary rounded-lg h-10" disabled={saving}>
@@ -608,12 +649,14 @@ function EmptyState({
   description,
   actionLabel,
   actionHref,
+  actionOnClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
   actionLabel: string;
-  actionHref: string;
+  actionHref?: string;
+  actionOnClick?: () => void;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -626,14 +669,130 @@ function EmptyState({
       <p className="text-muted-foreground max-w-sm mb-10 font-medium leading-relaxed">
         {description}
       </p>
-      <Button asChild className="gradient-primary rounded-lg px-8 h-10">
-        <Link to={actionHref}>{actionLabel}</Link>
-      </Button>
+      {actionOnClick ? (
+        <Button className="gradient-primary rounded-lg px-8 h-10" onClick={actionOnClick}>
+          {actionLabel}
+        </Button>
+      ) : (
+        <Button asChild className="gradient-primary rounded-lg px-8 h-10">
+          <Link to={actionHref ?? "#"}>{actionLabel}</Link>
+        </Button>
+      )}
     </div>
   );
 }
 
 export default Profile;
+
+function StudentIdUploadSection({ onVerified }: { onVerified: (u: any) => void }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const [submitted, setSubmitted] = useState(!!user?.idCardUrl);
+
+  if (user?.verified) {
+    return (
+      <Card className="border-success/20 bg-success/5">
+        <CardContent className="p-5 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 text-success" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Account Verified</p>
+            <p className="text-xs text-muted-foreground">Your student ID has been reviewed and your account is verified.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const { uploadDocument } = await import("@/services/documents");
+      const { compressImage } = await import("@/lib/image-compress");
+      const { updateProfile } = await import("@/services/auth");
+      const compressed = await compressImage(file);
+      const res = await uploadDocument(compressed, "ID_CARD");
+      const idCardUrl = res.data.url;
+      const profileRes = await updateProfile({ idCardUrl });
+      onVerified(profileRes.data.user);
+      setSubmitted(true);
+      toast({
+        title: "Student ID submitted!",
+        description: "An admin will review your ID and verify your account within 24 hours.",
+      });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Card className="border-primary/20 bg-primary/5">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <ShieldAlert className="w-4 h-4 text-primary" />
+          {submitted ? "Verification Pending" : "Get Verified"}
+        </CardTitle>
+        <CardDescription>
+          {submitted
+            ? "Your student ID has been submitted. An admin will review it and verify your account within 24 hours. You'll be able to see a verified badge on your profile once approved."
+            : "Verified students get a trust badge on their profile and may unlock exclusive features. Here's how it works:"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!submitted && (
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            {[
+              { step: "1", text: "Upload a clear photo or scan of your FUTA student ID card or matriculation letter." },
+              { step: "2", text: "An admin reviews your submission (usually within 24 hours)." },
+              { step: "3", text: "Once approved, a verified badge appears on your profile." },
+            ].map(({ step, text }) => (
+              <li key={step} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  {step}
+                </span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {submitted ? (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+            <Loader2 className="w-4 h-4 text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Under review</p>
+              <p className="text-xs text-muted-foreground">We'll notify you once your ID is verified. You can re-upload if the wrong file was submitted.</p>
+            </div>
+          </div>
+        ) : null}
+
+        <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl transition-colors ${submitted ? "border-border/40 hover:bg-muted/30 cursor-pointer" : "border-primary/30 hover:bg-primary/5 cursor-pointer"}`}>
+          {isUploading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Uploading...
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1 text-center px-4">
+              <Shield className="w-5 h-5 text-primary/60 mb-0.5" />
+              <p className="text-sm font-medium text-foreground">
+                {submitted ? "Re-upload ID" : "Click to upload your student ID"}
+              </p>
+              <p className="text-xs text-muted-foreground">FUTA ID card or matriculation letter · PNG, JPG or PDF</p>
+            </div>
+          )}
+          <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleUpload} disabled={isUploading} />
+        </label>
+      </CardContent>
+    </Card>
+  );
+}
 
 function SuspensionAppealSection() {
   const { toast } = useToast();
@@ -1184,7 +1343,7 @@ function MaintenanceRequests() {
           title="All systems operational"
           description="You haven't reported any maintenance issues. Enjoy your stay!"
           actionLabel="Report Issue"
-          actionHref="#"
+          actionOnClick={() => setIsFormOpen(true)}
         />
       )}
     </div>

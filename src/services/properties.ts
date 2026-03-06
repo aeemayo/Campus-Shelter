@@ -168,6 +168,14 @@ export async function adminVerifyLandlord(id: string, status: string, suspension
   return res.data;
 }
 
+export async function adminVerifyStudent(id: string, verified: boolean) {
+  const res = await apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}/verify`, {
+    method: "PATCH",
+    body: JSON.stringify({ verified }),
+  });
+  return res.data;
+}
+
 export async function adminDeleteProperty(id: string) {
   return apiFetch<ApiSuccess<any>>(`/api/admin/properties/${id}`, {
     method: "DELETE",

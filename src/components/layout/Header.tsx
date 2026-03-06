@@ -90,15 +90,11 @@ const Header = ({ bgColor = "" }) => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <div className="flex items-center justify-center">
-                {scrolled ? (
-                  <img src={logo2} alt="" className="w-28 h-14" />
-                ) : (
-                  <img
-                    src={bgColor === "white" ? logo2 : logo1}
-                    alt="CampusShelter"
-                    className="w-28 h-14"
-                  />
-                )}
+                <img
+                  src={scrolled || !isHome || bgColor === "white" ? logo2 : logo1}
+                  alt="CampusShelter"
+                  className="w-28 h-14"
+                />
               </div>
               <span
                 className={`font-display text-lg font-bold tracking-tight transition-colors ${

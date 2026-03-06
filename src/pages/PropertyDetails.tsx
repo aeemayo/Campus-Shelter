@@ -73,6 +73,9 @@ export default function RentalDetailsPage() {
       .toISOString()
       .split("T")[0],
   });
+  const [inspectionDate, setInspectionDate] = useState("");
+  const [inspectionTime, setInspectionTime] = useState("");
+  const [isInspectionLoading, setIsInspectionLoading] = useState(false);
 
   const {
     data: response,
@@ -730,8 +733,8 @@ export default function RentalDetailsPage() {
                           try {
                             await createBooking({
                               propertyId: property.id,
-                              leaseStart: bookingDates.start,
-                              leaseEnd: bookingDates.end,
+                              leaseStart: new Date(bookingDates.start + "T00:00:00.000Z").toISOString(),
+                              leaseEnd: new Date(bookingDates.end + "T00:00:00.000Z").toISOString(),
                             });
                             toast({
                               title: "Booking request sent!",
@@ -775,18 +778,61 @@ export default function RentalDetailsPage() {
                 </p>
                 <div className="space-y-2">
                   <div className="relative">
-                    <Input type="date" className="rounded-lg h-10 pl-9" />
+                    <Input
+                      type="date"
+                      className="rounded-lg h-10 pl-9"
+                      value={inspectionDate}
+                      onChange={(e) => setInspectionDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                    />
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                   <Input
                     placeholder="Preferred time (e.g. 12:00 PM)"
                     className="rounded-lg h-10"
+                    value={inspectionTime}
+                    onChange={(e) => setInspectionTime(e.target.value)}
                   />
                 </div>
                 <Button
                   variant="outline"
                   className="w-full rounded-lg h-10 text-sm"
+                  disabled={isInspectionLoading}
+                  onClick={async () => {
+                    if (!isAuthenticated) {
+                      toast({
+                        title: "Sign in required",
+                        description: "Please sign in to schedule an inspection.",
+                        variant: "destructive",
+                      });
+                      navigate("/login");
+                      return;
+                    }
+                    if (!inspectionDate) {
+                      toast({
+                        title: "Date required",
+                        description: "Please select a preferred inspection date.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setIsInspectionLoading(true);
+                    try {
+                      const { sendMessage } = await import("@/services/messages");
+                      const dateStr = new Date(inspectionDate + "T00:00:00").toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+                      const content = `Hello, I would like to schedule an inspection for "${property.title}" on ${dateStr}${inspectionTime ? ` at ${inspectionTime}` : ""}. Please let me know if this works. Thank you.`;
+                      await sendMessage({ receiverId: property.landlord.id, propertyId: property.id, content });
+                      toast({ title: "Inspection request sent!", description: "The landlord will confirm your visit shortly." });
+                      setInspectionDate("");
+                      setInspectionTime("");
+                    } catch (err: any) {
+                      toast({ title: "Failed to send request", description: err.message, variant: "destructive" });
+                    } finally {
+                      setIsInspectionLoading(false);
+                    }
+                  }}
                 >
+                  {isInspectionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                   Request Inspection
                 </Button>
               </CardContent>

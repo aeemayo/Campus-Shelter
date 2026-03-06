@@ -56,6 +56,7 @@ import {
   adminApproveProperty,
   adminDeleteProperty,
   adminVerifyLandlord,
+  adminVerifyStudent,
   adminFlagUser,
   adminDeleteUser,
   fetchAdminAnalytics,
@@ -1442,6 +1443,30 @@ function UsersTab({
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
+                    {u.role === "STUDENT" && u.idCardUrl && !u.verified && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-success border-success/20 hover:bg-success/10"
+                        onClick={async () => {
+                          await adminVerifyStudent(u.id, true);
+                          refetch();
+                        }}
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Verify Student
+                      </Button>
+                    )}
+                    {u.role === "STUDENT" && u.idCardUrl && (
+                      <a
+                        href={u.idCardUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center h-8 px-2 text-xs rounded-md border border-border/60 hover:bg-muted transition-colors"
+                      >
+                        View ID
+                      </a>
+                    )}
                     {u.role === "LANDLORD" &&
                       u.landlordStatus !== "VERIFIED" && (
                         <Button
@@ -1560,13 +1585,36 @@ function UsersTab({
                             {u.landlordStatus || "PENDING"}
                           </Badge>
                         ) : (
-                          <Badge variant={u.verified ? "success" : "outline"}>
-                            {u.verified ? "Verified" : "Active"}
+                          <Badge variant={u.verified ? "success" : u.idCardUrl ? "warning" : "outline"}>
+                            {u.verified ? "Verified" : u.idCardUrl ? "ID Submitted" : "Active"}
                           </Badge>
                         )}
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {u.role === "STUDENT" && u.idCardUrl && !u.verified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-success border-success/20 hover:bg-success/10"
+                              onClick={async () => {
+                                await adminVerifyStudent(u.id, true);
+                                refetch();
+                              }}
+                            >
+                              Verify Student
+                            </Button>
+                          )}
+                          {u.role === "STUDENT" && u.idCardUrl && (
+                            <a
+                              href={u.idCardUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center h-8 px-2 text-xs rounded-md border border-border/60 hover:bg-muted transition-colors"
+                            >
+                              View ID
+                            </a>
+                          )}
                           {u.role === "LANDLORD" &&
                             u.landlordStatus !== "VERIFIED" && (
                               <Button

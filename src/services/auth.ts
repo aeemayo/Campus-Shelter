@@ -84,7 +84,7 @@ export async function changePassword(payload: any) {
   });
 }
 
-export async function updateProfile(payload: { name?: string; phone?: string }) {
+export async function updateProfile(payload: { name?: string; phone?: string; idCardUrl?: string }) {
   return apiFetch<ApiSuccess<{ user: any }>>("/api/auth/me", {
     method: "PATCH",
     body: JSON.stringify(payload),
