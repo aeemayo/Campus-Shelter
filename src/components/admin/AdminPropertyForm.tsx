@@ -206,21 +206,58 @@ const AdminPropertyForm = () => {
   }, [id, form, toast, isLandlord, user?.id]);
 
   const uploadAllImages = async (): Promise<string[]> => {
-    const urls: string[] = [];
     const total = images.length;
-    for (let i = 0; i < total; i++) {
-      const img = images[i];
+    if (total === 0) return [];
+
+    // Separate already-uploaded from new images
+    const existingUrls: { index: number; url: string }[] = [];
+    const toUpload: { index: number; file: File }[] = [];
+
+    images.forEach((img, i) => {
       if (img.uploaded) {
-        // Already on the server
-        urls.push(img.url);
+        existingUrls.push({ index: i, url: img.url });
       } else if (img.file) {
-        setImageUploadProgress(`Uploading image ${i + 1} of ${total}...`);
-        const res = await uploadDocument(img.file, "PROPERTY_IMAGE");
-        urls.push(res.data.url);
+        toUpload.push({ index: i, file: img.file });
       }
+    });
+
+    if (toUpload.length > 0) {
+      setImageUploadProgress(`Uploading ${toUpload.length} image${toUpload.length > 1 ? "s" : ""}...`);
     }
+
+    // Upload new images in parallel
+    const uploadResults = await Promise.allSettled(
+      toUpload.map(async ({ file }) => {
+        const res = await uploadDocument(file, "PROPERTY_IMAGE");
+        return res.data.url;
+      })
+    );
+
+    // Collect results, preserving original order
+    const ordered: (string | null)[] = new Array(total).fill(null);
+    existingUrls.forEach(({ index, url }) => { ordered[index] = url; });
+
+    let failedCount = 0;
+    uploadResults.forEach((result, i) => {
+      if (result.status === "fulfilled") {
+        ordered[toUpload[i].index] = result.value;
+      } else {
+        failedCount++;
+        console.error(`Image upload failed:`, result.reason);
+      }
+    });
+
     setImageUploadProgress(null);
-    return urls;
+
+    if (failedCount > 0) {
+      toast({
+        title: "Some Images Failed",
+        description: `${failedCount} image${failedCount > 1 ? "s" : ""} failed to upload and will be skipped.`,
+        variant: "destructive",
+      });
+    }
+
+    return ordered.filter((url): url is string => url !== null);
   };
 
   const onSubmit = async (values: PropertyFormValues) => {

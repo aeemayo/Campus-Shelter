@@ -37,6 +37,7 @@ export interface RegisterPayload {
   password: string;
   phone?: string;
   role?: UserRole;
+  idCardUrl?: string;
 }
 
 // ─── API calls ───────────────────────────────────────────────

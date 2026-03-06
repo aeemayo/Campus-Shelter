@@ -117,8 +117,7 @@ export default function SignUp() {
         const { compressImage } = await import("@/lib/image-compress");
         const compressedFile = await compressImage(values.idCard);
         const res = await uploadDocument(compressedFile, "ID_CARD");
-        // @ts-ignore - res.data might have url or fileUrl
-        idCardUrl = res.data.fileUrl || res.data.url;
+        idCardUrl = res.data.url;
       }
 
       await registerUser({
@@ -128,7 +127,7 @@ export default function SignUp() {
         phone: values.phone || undefined,
         role: values.role,
         idCardUrl: idCardUrl || undefined,
-      } as any);
+      });
       toast({
         title: "Account created!",
         description: "Welcome to CampusShelter.",
