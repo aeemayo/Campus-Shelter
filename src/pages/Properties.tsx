@@ -263,7 +263,14 @@ const Properties = () => {
                 resultCount={filteredProperties.length}
               />
             </div>
-
+            {/* Mobile Filters */}{" "}
+            <div className="lg:hidden mb-4">
+              <PropertyFilters
+                filters={filters}
+                onFilterChange={setFilters}
+                resultCount={filteredProperties.length}
+              />{" "}
+            </div>
             {/* Properties Grid */}
             <div className="flex-1">
               {/* Search and Sort */}
