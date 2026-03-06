@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const steps = [
   {
@@ -29,6 +30,16 @@ const steps = [
 ];
 
 const HowItWorks = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  const ctaLink = isAuthenticated
+    ? user?.role === "ADMIN"
+      ? "/admin"
+      : user?.role === "LANDLORD"
+        ? "/landlord"
+        : "/properties"
+    : "/register";
+
   return (
     <section id="how-it-works" className="py-24 lg:py-28">
       <div className="container mx-auto px-4">
@@ -71,7 +82,7 @@ const HowItWorks = () => {
 
         <div className="text-center mt-14">
           <Link
-            to="/register"
+            to={ctaLink}
             className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"
           >
             Get started now

@@ -375,9 +375,9 @@ const Header = ({ bgColor = "" }) => {
                     asChild
                     className="flex-1 h-10 gradient-primary rounded-lg text-sm"
                   >
-                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                    {/* <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                       Get started
-                    </Link>
+                    </Link> */}
                   </Button>
                 </div>
               )}
