@@ -97,12 +97,9 @@ export default function SignIn() {
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-              <Home className="w-4.5 h-4.5 text-white" />
+            <div className="flex items-center justify-center">
+              <img src="CampusShelter5.png" alt="" className="w-36 h-18" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Campus<span className="text-primary">Shelter</span>
-            </h1>
           </Link>
           <p className="text-muted-foreground mt-2 text-sm">
             Find your perfect home near FUTA
