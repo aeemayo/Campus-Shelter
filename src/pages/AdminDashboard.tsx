@@ -229,7 +229,7 @@ const AdminDashboard = () => {
             className="space-y-6 md:space-y-8"
           >
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-              <TabsList className="bg-muted/50 backdrop-blur-md p-1 md:p-1.5 rounded-xl md:rounded-2xl h-auto border border-border/40 inline-flex w-full md:w-auto">
+              <TabsList className="bg-muted/40 p-1 rounded-xl h-auto border border-border/40 inline-flex w-full md:w-auto">
                 <TabsTrigger
                   value="properties"
                   className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
@@ -311,7 +311,7 @@ const AdminDashboard = () => {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <Input
                               placeholder="Search by title or location..."
-                              className="pl-10 h-11 w-full md:w-72 bg-muted/20 border-border/40 rounded-xl focus:bg-background/80 transition-all font-medium"
+                              className="pl-10 h-9 w-full md:w-64 rounded-lg"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -319,7 +319,7 @@ const AdminDashboard = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-11 w-11 rounded-xl border-border/40 hover:bg-muted/50"
+                            className="h-9 w-9 rounded-lg"
                           >
                             <Filter className="w-4 h-4" />
                           </Button>
@@ -330,16 +330,12 @@ const AdminDashboard = () => {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="bg-muted/20 text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">
-                              <th className="text-left py-4 px-6">
-                                Property Details
-                              </th>
-                              <th className="text-left py-4 px-6">
-                                Landlord / Owner
-                              </th>
-                              <th className="text-left py-4 px-6">Base Rent</th>
-                              <th className="text-left py-4 px-6">Status</th>
-                              <th className="text-right py-4 px-6">Actions</th>
+                            <tr className="border-b border-border/40 text-xs font-medium text-muted-foreground">
+                              <th className="text-left py-3 px-6">Property Details</th>
+                              <th className="text-left py-3 px-6">Landlord / Owner</th>
+                              <th className="text-left py-3 px-6">Base Rent</th>
+                              <th className="text-left py-3 px-6">Status</th>
+                              <th className="text-right py-3 px-6">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border/40">
@@ -347,11 +343,11 @@ const AdminDashboard = () => {
                               filteredProperties.map((property) => (
                                 <tr
                                   key={property.id}
-                                  className="group hover:bg-muted/10 transition-colors"
+                                  className="group hover:bg-muted/30 transition-colors cursor-default"
                                 >
-                                  <td className="py-6 px-6">
-                                    <div className="flex items-center gap-4">
-                                      <div className="relative w-16 h-16 rounded-2xl bg-muted overflow-hidden border border-border/40 group-hover:scale-105 transition-transform duration-500 shadow-sm">
+                                  <td className="py-4 px-6">
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden border border-border/40 shrink-0">
                                         <img
                                           src={
                                             property.images?.[0] ||
@@ -361,63 +357,49 @@ const AdminDashboard = () => {
                                           className="w-full h-full object-cover"
                                         />
                                       </div>
-                                      <div className="space-y-1">
-                                        <p className="font-bold text-base tracking-tight leading-tight">
+                                      <div className="space-y-0.5">
+                                        <p className="font-semibold text-sm leading-tight">
                                           {property.title}
                                         </p>
-                                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                                          <MapPin className="w-3 h-3 text-primary/60" />
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <MapPin className="w-3 h-3" />
                                           {property.location}
                                         </p>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="py-6 px-6">
-                                    <div className="space-y-1">
-                                      <p className="font-bold text-sm tracking-tight">
-                                        {property.landlord?.name ||
-                                          "System Base"}
+                                  <td className="py-4 px-6">
+                                    <div className="space-y-0.5">
+                                      <p className="font-medium text-sm">
+                                        {property.landlord?.name || "System Base"}
                                       </p>
-                                      <p className="text-xs font-medium text-muted-foreground/70">
-                                        {property.landlord?.email ||
-                                          "internal@app.com"}
+                                      <p className="text-xs text-muted-foreground">
+                                        {property.landlord?.email || "internal@app.com"}
                                       </p>
                                     </div>
                                   </td>
-                                  <td className="py-6 px-6">
-                                    <p className="font-medium text-sm text-primary">
+                                  <td className="py-4 px-6">
+                                    <p className="font-medium text-sm text-foreground">
                                       ₦{property.priceMonthly?.toLocaleString()}
                                     </p>
                                   </td>
-                                  <td className="py-6 px-6">
-                                    {property.status === "APPROVED" ||
-                                    property.approved ? (
-                                      <Badge
-                                        variant="success"
-                                        className="text-[10px] rounded-md"
-                                      >
-                                        Approved
-                                      </Badge>
+                                  <td className="py-4 px-6">
+                                    {property.status === "APPROVED" || property.approved ? (
+                                      <Badge variant="success" className="text-xs">Approved</Badge>
                                     ) : property.status === "REJECTED" ? (
-                                      <Badge variant="destructive" className="text-[10px] rounded-md">
-                                        Rejected
-                                      </Badge>
+                                      <Badge variant="destructive" className="text-xs">Rejected</Badge>
                                     ) : (
-                                      <Badge variant="warning" className="text-[10px] rounded-md">
-                                        Pending
-                                      </Badge>
+                                      <Badge variant="warning" className="text-xs">Pending</Badge>
                                     )}
                                   </td>
-                                  <td className="py-6 px-6 text-right">
-                                    <div className="flex items-center justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                  <td className="py-4 px-6 text-right">
+                                    <div className="flex items-center justify-end gap-2">
                                       {property.status === "APPROVED" ? (
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="rounded-xl h-10 px-4 text-destructive hover:bg-destructive/5 font-bold text-xs"
-                                          onClick={() =>
-                                            handleApprove(property.id, false)
-                                          }
+                                          className="h-8 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs rounded-lg"
+                                          onClick={() => handleApprove(property.id, false)}
                                         >
                                           Deactivate
                                         </Button>
@@ -425,10 +407,8 @@ const AdminDashboard = () => {
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="rounded-xl h-10 px-4 text-success hover:bg-success/5 font-bold text-xs"
-                                          onClick={() =>
-                                            handleApprove(property.id, true)
-                                          }
+                                          className="h-8 px-3 text-success hover:bg-success/10 hover:text-success text-xs rounded-lg"
+                                          onClick={() => handleApprove(property.id, true)}
                                         >
                                           Activate
                                         </Button>
@@ -438,7 +418,7 @@ const AdminDashboard = () => {
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-10 w-10 rounded-xl hover:bg-muted/50"
+                                            className="h-8 w-8 rounded-lg hover:bg-muted"
                                           >
                                             <MoreVertical className="w-4 h-4" />
                                           </Button>

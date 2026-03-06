@@ -1,4 +1,11 @@
 import { useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -37,8 +44,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Sparkles,
-  TrendingUp,
+  Pencil,
   KeyRound,
   ShieldAlert,
   Wrench,
@@ -51,7 +57,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Profile = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { favorites, viewedPropertyIds, toggleFavorite, markViewed } =
     useUserActivity(isAuthenticated ? user?.id : undefined);
 
@@ -201,11 +207,8 @@ const Profile = () => {
 
               {/* Quick actions */}
               <div className="flex gap-2 self-start md:self-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                >
+                <EditProfileDialog user={user} onSave={(updated) => updateUser(updated)} />
+                <Button variant="outline" size="sm" asChild>
                   <Link to="/properties">
                     <MapPin className="w-4 h-4 mr-1.5" />
                     Browse
@@ -282,44 +285,48 @@ const Profile = () => {
       </section>
 
       {/* Tab Content */}
-      <section className="py-10 md:py-12">
+      <section className="py-8 md:py-10">
         <div className="container mx-auto px-4">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="overflow-x-auto pb-1 mb-10">
-              <TabsList className="bg-muted/40 p-1 rounded-xl h-auto inline-flex gap-1 border border-border/40 min-w-max">
-                {!isAdmin && (
-                  <TabsTrigger value="saved" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
-                    <Bookmark className="w-4 h-4" />
-                    <span>Saved</span>
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+              {/* Tab nav — horizontal scroll on mobile, vertical sidebar on desktop */}
+              <div className="overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 shrink-0">
+                <TabsList className="bg-muted/40 p-1 rounded-xl h-auto border border-border/40 inline-flex lg:flex lg:flex-col gap-1 lg:w-44 min-w-max lg:min-w-0">
+                  {!isAdmin && (
+                    <TabsTrigger value="saved" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
+                      <Bookmark className="w-4 h-4 shrink-0" />
+                      <span>Saved</span>
+                    </TabsTrigger>
+                  )}
+                  {!isAdmin && (
+                    <TabsTrigger value="viewed" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
+                      <Clock className="w-4 h-4 shrink-0" />
+                      <span>History</span>
+                    </TabsTrigger>
+                  )}
+                  <TabsTrigger value="settings" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
+                    <Settings className="w-4 h-4 shrink-0" />
+                    <span>Account</span>
                   </TabsTrigger>
-                )}
-                {!isAdmin && (
-                  <TabsTrigger value="viewed" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
-                    <Clock className="w-4 h-4" />
-                    <span>History</span>
+                  <TabsTrigger value="security" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
+                    <Shield className="w-4 h-4 shrink-0" />
+                    <span>Security</span>
                   </TabsTrigger>
-                )}
-                <TabsTrigger value="settings" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
-                  <Settings className="w-4 h-4" />
-                  <span>Account</span>
-                </TabsTrigger>
-                <TabsTrigger value="security" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
-                  <Shield className="w-4 h-4" />
-                  <span>Security</span>
-                </TabsTrigger>
-                {isStudent && (
-                  <TabsTrigger value="maintenance" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
-                    <Wrench className="w-4 h-4" />
-                    <span>Repair Requests</span>
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </div>
+                  {isStudent && (
+                    <TabsTrigger value="maintenance" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
+                      <Wrench className="w-4 h-4 shrink-0" />
+                      <span>Repair Requests</span>
+                    </TabsTrigger>
+                  )}
+                </TabsList>
+              </div>
 
+              {/* Content area */}
+              <div className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
               <TabsContent value="saved" className="mt-0 outline-none">
                 <motion.div
@@ -389,7 +396,7 @@ const Profile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  <div className="max-w-2xl space-y-8">
+                  <div className="space-y-6 max-w-2xl">
                     <Card className="border-border/60">
                       <CardHeader className="pb-4 border-b border-border/40">
                         <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -497,6 +504,8 @@ const Profile = () => {
                 </motion.div>
               </TabsContent>
             </AnimatePresence>
+              </div>{/* end content area */}
+            </div>{/* end lg:flex-row */}
           </Tabs>
         </div>
       </section>
@@ -514,6 +523,82 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
+  );
+}
+
+function EditProfileDialog({
+  user,
+  onSave,
+}: {
+  user: any;
+  onSave: (u: any) => void;
+}) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await import("@/services/auth").then((m) =>
+        m.updateProfile({ name, phone })
+      );
+      onSave(res.data.user);
+      toast({ title: "Profile updated", description: "Your changes have been saved." });
+      setOpen(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => { setName(user?.name ?? ""); setPhone(user?.phone ?? ""); setOpen(true); }}>
+        <Pencil className="w-4 h-4 mr-1.5" />
+        Edit Profile
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-10 rounded-lg"
+                required
+                minLength={2}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. 07012345678"
+                className="h-10 rounded-lg"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" className="gradient-primary rounded-lg h-10" disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

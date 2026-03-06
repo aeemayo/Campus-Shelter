@@ -84,6 +84,13 @@ export async function changePassword(payload: any) {
   });
 }
 
+export async function updateProfile(payload: { name?: string; phone?: string }) {
+  return apiFetch<ApiSuccess<{ user: any }>>("/api/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function deleteAccount() {
   return apiFetch<ApiSuccess<any>>("/api/auth/delete-account", {
     method: "DELETE",
