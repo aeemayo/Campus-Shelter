@@ -107,54 +107,44 @@ const Profile = () => {
 
       {/* Profile Hero */}
       <section className="pt-16">
-        <div className="relative overflow-hidden">
-          {/* Gradient background */}
-          <div className="absolute inset-0 gradient-hero opacity-90" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15),_transparent_60%)]" />
-
-          <div className="relative container mx-auto px-4 py-12 md:py-16">
+        <div className="border-b border-border/40 bg-muted/20">
+          <div className="container mx-auto px-4 py-10 md:py-12">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-white/70 mb-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
               <Home className="w-4 h-4" />
-              <Link to="/" className="hover:text-white transition-colors">
+              <Link to="/" className="hover:text-foreground transition-colors">
                 Home
               </Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white">My Profile</span>
+              <span className="text-foreground">My Profile</span>
             </div>
 
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar */}
-              <div className="relative group">
+              <div className="relative">
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-2xl overflow-hidden relative"
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-primary/10 border border-border flex items-center justify-center overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
-                  <span className="text-4xl md:text-5xl font-black text-white relative z-10 font-display tracking-tight">
+                  <span className="text-3xl md:text-4xl font-bold text-primary">
                     {initials}
                   </span>
                 </motion.div>
                 {user?.verified && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-success border-4 border-white shadow-lg flex items-center justify-center z-20"
-                  >
-                    <Shield className="w-5 h-5 text-white" />
-                  </motion.div>
+                  <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-success border-2 border-background shadow-sm flex items-center justify-center z-20">
+                    <Shield className="w-3.5 h-3.5 text-white" />
+                  </div>
                 )}
               </div>
 
               {/* User Info */}
               <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-xl md:text-2xl font-bold text-foreground">
                     {user?.name}
                   </h1>
-                  <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm">
+                  <Badge variant="secondary">
                     {roleLabel[user?.role ?? "STUDENT"]}
                   </Badge>
                   {user?.role === "LANDLORD" ? (
@@ -186,7 +176,7 @@ const Profile = () => {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 mt-3 text-white/80 text-sm">
+                <div className="flex flex-wrap items-center gap-4 mt-2 text-muted-foreground text-sm">
                   <div className="flex items-center gap-1.5">
                     <Mail className="w-4 h-4" />
                     <span>{user?.email}</span>
@@ -207,9 +197,8 @@ const Profile = () => {
               {/* Quick actions */}
               <div className="flex gap-2 self-start md:self-center">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm border-white/20"
                   asChild
                 >
                   <Link to="/properties">
@@ -221,7 +210,7 @@ const Profile = () => {
             </div>
 
             {/* Stats cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-12">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
               {[
                 {
                   label: "Saved Listings",
@@ -236,13 +225,12 @@ const Profile = () => {
                   color: "text-primary",
                 },
                 {
-                  label: "Active Score",
-                  value:
-                    savedProperties.length + viewedProperties.length > 5
-                      ? "Elite"
-                      : "Pro",
-                  icon: Sparkles,
-                  color: "text-warning",
+                  label: "Member Since",
+                  value: user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString("en-NG", { month: "short", year: "numeric" })
+                    : "—",
+                  icon: Calendar,
+                  color: "text-muted-foreground",
                 },
                 {
                   label: "Status",
@@ -270,25 +258,18 @@ const Profile = () => {
                         : "text-success",
                 },
               ].map((stat, idx) => (
-                <motion.div
+                <div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + idx * 0.05 }}
-                  className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 hover:bg-white/15 transition-all group overflow-hidden relative shadow-lg shadow-black/5"
+                  className="bg-background rounded-xl border border-border/60 p-4"
                 >
-                  <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-white/5 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" />
-                  <div className="flex justify-between items-start mb-3 relative z-10">
-                    <stat.icon className={`w-6 h-6 ${stat.color} opacity-80`} />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                  </div>
-                  <p className="text-3xl font-black text-white font-display tracking-tight leading-none mb-1.5">
+                  <stat.icon className={`w-4 h-4 ${stat.color} mb-2`} />
+                  <p className="text-lg font-bold text-foreground leading-none mb-1">
                     {stat.value}
                   </p>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-white/50">
+                  <p className="text-xs text-muted-foreground">
                     {stat.label}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -303,39 +284,24 @@ const Profile = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="bg-muted/50 backdrop-blur-md p-1.5 rounded-2xl h-auto flex flex-wrap gap-1 border border-border/40 mb-10">
-              <TabsTrigger
-                value="saved"
-                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
-              >
+            <TabsList className="bg-muted/40 p-1 rounded-xl h-auto flex flex-wrap gap-1 border border-border/40 mb-10">
+              <TabsTrigger value="saved" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Bookmark className="w-4 h-4" />
                 <span>Saved</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="viewed"
-                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
-              >
+              <TabsTrigger value="viewed" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Clock className="w-4 h-4" />
                 <span>History</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="settings"
-                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
-              >
+              <TabsTrigger value="settings" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Settings className="w-4 h-4" />
                 <span>Account</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="security"
-                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
-              >
+              <TabsTrigger value="security" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Shield className="w-4 h-4" />
                 <span>Security</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="maintenance"
-                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
-              >
+              <TabsTrigger value="maintenance" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Wrench className="w-4 h-4" />
                 <span>Repair Requests</span>
               </TabsTrigger>
@@ -411,15 +377,14 @@ const Profile = () => {
                   exit={{ opacity: 0, y: -10 }}
                 >
                   <div className="max-w-2xl space-y-8">
-                    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-                      <CardHeader className="pb-6 border-b border-border/40">
-                        <CardTitle className="flex items-center gap-3 text-xl font-bold font-display tracking-tight text-primary">
-                          <User className="w-6 h-6" />
+                    <Card className="border-border/60">
+                      <CardHeader className="pb-4 border-b border-border/40">
+                        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                          <User className="w-4 h-4 text-primary" />
                           Profile Details
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-8 space-y-6">
+                      <CardContent className="pt-5 space-y-4">
                         <InfoRow label="Name" value={user?.name ?? "—"} />
                         <Separator className="bg-border/30" />
                         <InfoRow label="Email" value={user?.email ?? "—"} />
@@ -435,7 +400,7 @@ const Profile = () => {
                         />
                         <Separator className="bg-border/30" />
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                          <span className="text-sm text-muted-foreground">
                             Verification Status
                           </span>
                           {user?.role === "LANDLORD" ? (
@@ -533,12 +498,8 @@ const Profile = () => {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-        {label}
-      </span>
-      <span className="text-sm font-bold text-foreground bg-muted/20 px-4 py-1.5 rounded-xl border border-border/40 min-w-[120px] text-center">
-        {value}
-      </span>
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -561,20 +522,14 @@ function EmptyState({
       <div className="w-24 h-24 rounded-3xl bg-muted/30 border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/30 shadow-inner">
         <Icon className="w-12 h-12" />
       </div>
-      <h3 className="text-2xl font-bold font-display tracking-tight text-foreground mb-3">
+      <h3 className="text-lg font-semibold text-foreground mb-2">
         {title}
       </h3>
       <p className="text-muted-foreground max-w-sm mb-10 font-medium leading-relaxed">
         {description}
       </p>
-      <Button
-        asChild
-        className="gradient-primary px-10 h-14 shadow-xl shadow-primary/20 gap-2 rounded-xl font-bold"
-      >
-        <Link to={actionHref}>
-          <Sparkles className="w-5 h-5" />
-          {actionLabel}
-        </Link>
+      <Button asChild className="gradient-primary rounded-lg px-8 h-10">
+        <Link to={actionHref}>{actionLabel}</Link>
       </Button>
     </div>
   );
@@ -652,9 +607,7 @@ function SuspensionAppealSection() {
         ) : (
           appeals.length > 0 && (
             <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
-                Appeal History
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Appeal History</p>
               {appeals.map((appeal) => (
                 <div
                   key={appeal.id}
@@ -704,7 +657,7 @@ function SuspensionAppealSection() {
             </div>
             <Button
               type="submit"
-              className="gradient-primary rounded-xl px-8 h-11"
+              className="gradient-primary rounded-lg h-10"
               disabled={isSubmitting || reason.trim().length < 10}
             >
               {isSubmitting ? (
@@ -870,66 +823,50 @@ function SecuritySettings() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl opacity-50" />
-        <CardHeader className="pb-6 border-b border-border/40">
-          <CardTitle className="flex items-center gap-3 text-xl font-bold font-display tracking-tight text-primary">
-            <KeyRound className="w-6 h-6" />
+      <Card className="border-border/60">
+        <CardHeader className="pb-4 border-b border-border/40">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <KeyRound className="w-4 h-4 text-primary" />
             Change Password
           </CardTitle>
-          <CardDescription className="font-medium">
+          <CardDescription>
             Update your password to keep your account secure.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-8">
-          <form onSubmit={handleUpdatePassword} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 md:col-span-2">
-                <Label
-                  htmlFor="currentPassword"
-                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
-                >
-                  Current Password
-                </Label>
+        <CardContent className="pt-5">
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
                 <Input
                   id="currentPassword"
                   name="currentPassword"
                   type="password"
-                  className="h-12 rounded-xl bg-muted/20 border-border/40"
+                  className="h-10 rounded-lg"
                   value={passwords.currentPassword}
                   onChange={handleChange}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="newPassword"
-                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
-                >
-                  New Password
-                </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="newPassword">New Password</Label>
                 <Input
                   id="newPassword"
                   name="newPassword"
                   type="password"
-                  className="h-12 rounded-xl bg-muted/20 border-border/40"
+                  className="h-10 rounded-lg"
                   value={passwords.newPassword}
                   onChange={handleChange}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="confirmPassword"
-                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
-                >
-                  Confirm New Password
-                </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  className="h-12 rounded-xl bg-muted/20 border-border/40"
+                  className="h-10 rounded-lg"
                   value={passwords.confirmPassword}
                   onChange={handleChange}
                   required
@@ -938,13 +875,13 @@ function SecuritySettings() {
             </div>
             <Button
               type="submit"
-              className="gradient-primary rounded-xl px-10 h-12 shadow-lg shadow-primary/20 font-bold"
+              className="gradient-primary rounded-lg h-10"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Syncing...</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving...</span>
                 </div>
               ) : (
                 "Update Password"
@@ -954,22 +891,18 @@ function SecuritySettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-warning/20 bg-warning/5 shadow-warning/5 overflow-hidden">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-lg text-warning font-bold">
-            <ShieldAlert className="w-5 h-5" />
+      <Card className="border-border/60">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <ShieldAlert className="w-4 h-4 text-muted-foreground" />
             Two-Factor Authentication
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-6 font-medium leading-relaxed">
+          <p className="text-sm text-muted-foreground mb-4">
             Two-factor authentication is coming soon.
           </p>
-          <Button
-            variant="outline"
-            disabled
-            className="gap-2 rounded-xl h-12 px-6 border-warning/20 text-warning opacity-60"
-          >
+          <Button variant="outline" disabled className="gap-2 h-10 rounded-lg opacity-60">
             Enable 2FA
             <Badge className="ml-1 text-[9px] bg-warning shadow-none border-none text-white">
               Soon
@@ -1049,25 +982,23 @@ function MaintenanceRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-6 mb-8">
+      <div className="flex items-center justify-between gap-6 mb-6">
         <div>
-          <h3 className="text-2xl font-bold font-display tracking-tight">
-            Active Repair Tickets
-          </h3>
-          <p className="text-sm text-muted-foreground font-medium">
-            Report and track structural/utility issues in your residence.
+          <h3 className="text-lg font-semibold">Repair Requests</h3>
+          <p className="text-sm text-muted-foreground">
+            Report and track issues in your residence.
           </p>
         </div>
         <Button
-          className="gradient-primary rounded-xl px-8 h-12 shadow-lg shadow-primary/20 font-bold gap-2"
+          className="gradient-primary rounded-lg h-10 gap-2"
           onClick={() => setIsFormOpen(!isFormOpen)}
         >
           {isFormOpen ? (
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           ) : (
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           )}
-          {isFormOpen ? "Collapse Form" : "Open Ticket"}
+          {isFormOpen ? "Cancel" : "New Request"}
         </Button>
       </div>
 
@@ -1122,44 +1053,26 @@ function MaintenanceRequests() {
       )}
 
       {listLoading ? (
-        <div className="py-24 flex flex-col items-center justify-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary opacity-40" />
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">
-            Fetching tickets...
-          </p>
+        <div className="py-16 flex items-center justify-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading...</span>
         </div>
       ) : requests.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {requests.map((req) => (
-            <Card
-              key={req.id}
-              className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-sm group overflow-hidden hover:border-primary/30 transition-all rounded-2xl"
-            >
-              <div className="flex items-center justify-between p-5 bg-muted/20 border-b border-border/40">
-                <span className="font-bold text-sm truncate max-w-[200px]">
-                  {req.description}
-                </span>
-                <Badge
-                  variant="outline"
-                  className="px-3 py-1 font-bold text-[10px] uppercase border-primary/20 bg-primary/5 text-primary italic"
-                >
-                  {req.status.replace("_", " ")}
-                </Badge>
-              </div>
-              <CardContent className="p-6">
-                <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-6">
-                  {req.description}
-                </p>
-                <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                      Ticket #{req.id.slice(0, 8)}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/60">
-                    {new Date(req.createdAt).toLocaleDateString()}
-                  </span>
+            <Card key={req.id} className="border-border/60">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <p className="text-sm font-medium leading-relaxed flex-1">
+                    {req.description}
+                  </p>
+                  <Badge variant="outline" className="shrink-0 text-xs">
+                    {req.status.replace("_", " ")}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>#{req.id.slice(0, 8)}</span>
+                  <span>{new Date(req.createdAt).toLocaleDateString()}</span>
                 </div>
               </CardContent>
             </Card>
