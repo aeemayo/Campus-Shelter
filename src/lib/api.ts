@@ -3,7 +3,7 @@
 
 // In development the Vite dev-server proxies /api requests to the real
 // backend, avoiding CORS issues. In production use the full URL.
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://campus-shelter-apis.vercel.app");
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "" : "https://campus-shelter-apis.vercel.app");
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? "";
 

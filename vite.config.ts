@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     },
     proxy: {
       "/api": {
-        target: "https://campus-shelter.vercel.app",
+        target: "https://campus-shelter-apis.vercel.app",
         changeOrigin: true,
         secure: true,
       },
