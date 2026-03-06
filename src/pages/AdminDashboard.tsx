@@ -112,24 +112,18 @@ const AdminDashboard = () => {
     }
   };
 
-<<<<<<< HEAD
   const handleVerifyLandlord = async (
     id: string,
     status: "VERIFIED" | "REJECTED" | "SUSPENDED",
+    suspensionReason?: string,
   ) => {
     try {
-      await adminVerifyLandlord(id, status);
+      await adminVerifyLandlord(id, status, suspensionReason);
       const labels: Record<string, string> = {
         VERIFIED: "Verified",
         REJECTED: "Rejected",
         SUSPENDED: "Suspended",
       };
-=======
-  const handleVerifyLandlord = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => {
-    try {
-      await adminVerifyLandlord(id, status, suspensionReason);
-      const labels: Record<string, string> = { VERIFIED: "Verified", REJECTED: "Rejected", SUSPENDED: "Suspended" };
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
       toast({
         title: `Landlord ${labels[status]}`,
         description: `The landlord account has been ${status.toLowerCase()} successfully.`,
@@ -622,20 +616,14 @@ function AppealsTab() {
   const [page, setPage] = useState(1);
   const LIMIT = 10;
 
-<<<<<<< HEAD
   const {
     data: response,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["admin-appeals"],
-    queryFn: () =>
-      import("@/services/appeals").then((m) => m.fetchAllAppeals()),
-=======
-  const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["admin-appeals", statusFilter, searchQuery, page],
     queryFn: () =>
-      import("@/services/appeals").then(m =>
+      import("@/services/appeals").then((m) =>
         m.fetchAllAppeals({
           page,
           limit: LIMIT,
@@ -643,21 +631,12 @@ function AppealsTab() {
           search: searchQuery || undefined,
         }),
       ),
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
   });
 
   const appeals = response?.data || [];
   const meta = response?.meta;
 
-<<<<<<< HEAD
-  const handleProcess = async (
-    id: string,
-    status: "APPROVED" | "REJECTED",
-    adminNote?: string,
-  ) => {
-=======
   const handleProcess = async (id: string, status: "APPROVED" | "REJECTED") => {
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
     setProcessingId(id);
     try {
       const { processAppeal } = await import("@/services/appeals");
@@ -669,7 +648,11 @@ function AppealsTab() {
             ? "The landlord's account has been reinstated."
             : "The appeal has been rejected.",
       });
-      setAdminNotes(prev => { const n = { ...prev }; delete n[id]; return n; });
+      setAdminNotes((prev) => {
+        const n = { ...prev };
+        delete n[id];
+        return n;
+      });
       refetch();
     } catch (err: any) {
       toast({
@@ -693,16 +676,12 @@ function AppealsTab() {
   return (
     <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
       <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
-<<<<<<< HEAD
         <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">
           Suspension Appeals
         </CardTitle>
         <CardDescription className="font-medium text-muted-foreground/70 text-sm">
           Review appeals from suspended landlords.
         </CardDescription>
-=======
-        <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">Suspension Appeals</CardTitle>
-        <CardDescription className="font-medium text-muted-foreground/70 text-sm">Review appeals from suspended landlords.</CardDescription>
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <div className="relative flex-1">
@@ -711,24 +690,29 @@ function AppealsTab() {
               placeholder="Search by name or email..."
               className="pl-9 h-9 rounded-xl"
               value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <div className="flex gap-1.5">
-            {["ALL", "PENDING", "APPROVED", "REJECTED"].map(s => (
+            {["ALL", "PENDING", "APPROVED", "REJECTED"].map((s) => (
               <Button
                 key={s}
                 variant={statusFilter === s ? "default" : "outline"}
                 size="sm"
                 className="h-9 rounded-xl text-xs font-bold"
-                onClick={() => { setStatusFilter(s); setPage(1); }}
+                onClick={() => {
+                  setStatusFilter(s);
+                  setPage(1);
+                }}
               >
                 {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
               </Button>
             ))}
           </div>
         </div>
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
       </CardHeader>
       <CardContent className="p-0">
         {appeals.length > 0 ? (
@@ -759,22 +743,19 @@ function AppealsTab() {
                       {appeal.reason}
                     </p>
                     <p className="text-xs text-muted-foreground/60">
-<<<<<<< HEAD
                       Submitted{" "}
                       {new Date(appeal.createdAt).toLocaleDateString()}
-                    </p>
-                    {appeal.adminNote && (
-                      <p className="text-xs text-muted-foreground italic">
-=======
-                      Submitted {new Date(appeal.createdAt).toLocaleDateString()}
                       {appeal.processedAt && (
-                        <> &middot; Processed {new Date(appeal.processedAt).toLocaleDateString()}</>
+                        <>
+                          {" "}
+                          &middot; Processed{" "}
+                          {new Date(appeal.processedAt).toLocaleDateString()}
+                        </>
                       )}
                     </p>
                     {appeal.adminNote && (
                       <p className="text-xs text-muted-foreground italic">
                         <MessageSquare className="w-3 h-3 inline mr-1" />
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
                         Admin note: {appeal.adminNote}
                       </p>
                     )}
@@ -785,7 +766,12 @@ function AppealsTab() {
                         placeholder="Admin note (optional)..."
                         className="flex w-full rounded-xl border border-border bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 min-h-[60px] resize-none"
                         value={adminNotes[appeal.id] || ""}
-                        onChange={e => setAdminNotes(prev => ({ ...prev, [appeal.id]: e.target.value }))}
+                        onChange={(e) =>
+                          setAdminNotes((prev) => ({
+                            ...prev,
+                            [appeal.id]: e.target.value,
+                          }))
+                        }
                       />
                       <div className="flex gap-2">
                         <Button
@@ -837,7 +823,7 @@ function AppealsTab() {
                 size="sm"
                 className="h-8 rounded-xl"
                 disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
+                onClick={() => setPage((p) => p - 1)}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -846,7 +832,7 @@ function AppealsTab() {
                 size="sm"
                 className="h-8 rounded-xl"
                 disabled={page >= meta.totalPages}
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -1055,18 +1041,15 @@ function AnalyticsTab() {
   );
 }
 
-<<<<<<< HEAD
 function LandlordsTab({
   onVerify,
 }: {
   onVerify: (
     id: string,
     status: "VERIFIED" | "REJECTED" | "SUSPENDED",
+    suspensionReason?: string,
   ) => Promise<void>;
 }) {
-=======
-function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => Promise<void> }) {
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const {
     data: response,
@@ -1077,20 +1060,18 @@ function LandlordsTab({ onVerify }: { onVerify: (id: string, status: "VERIFIED" 
     queryFn: () => fetchAdminUsers("LANDLORD"),
   });
 
-<<<<<<< HEAD
   const handleVerify = async (
     id: string,
     status: "VERIFIED" | "REJECTED" | "SUSPENDED",
   ) => {
-=======
-  const handleVerify = async (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED") => {
     let suspensionReason: string | undefined;
     if (status === "SUSPENDED") {
-      const reason = window.prompt("Provide a reason for suspending this landlord:");
+      const reason = window.prompt(
+        "Provide a reason for suspending this landlord:",
+      );
       if (reason === null) return; // cancelled
       suspensionReason = reason || undefined;
     }
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
     setVerifyingId(id);
     try {
       await onVerify(id, status, suspensionReason);
@@ -1364,14 +1345,11 @@ function UsersTab({
 }: {
   onFlag: (id: string, flagged: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-<<<<<<< HEAD
   onVerify: (
     id: string,
     status: "VERIFIED" | "REJECTED" | "SUSPENDED",
+    suspensionReason?: string,
   ) => Promise<void>;
-=======
-  onVerify: (id: string, status: "VERIFIED" | "REJECTED" | "SUSPENDED", suspensionReason?: string) => Promise<void>;
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
 }) {
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
@@ -1479,7 +1457,6 @@ function UsersTab({
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-<<<<<<< HEAD
                     {u.role === "LANDLORD" &&
                       u.landlordStatus !== "VERIFIED" && (
                         <Button
@@ -1502,7 +1479,11 @@ function UsersTab({
                           size="sm"
                           className="h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
                           onClick={async () => {
-                            await onVerify(u.id, "SUSPENDED");
+                            const r = window.prompt(
+                              "Provide a reason for suspending this landlord:",
+                            );
+                            if (r === null) return;
+                            await onVerify(u.id, "SUSPENDED", r || undefined);
                             refetch();
                           }}
                         >
@@ -1510,30 +1491,6 @@ function UsersTab({
                           Suspend
                         </Button>
                       )}
-=======
-                    {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs text-success border-success/20 hover:bg-success/10"
-                        onClick={async () => { await onVerify(u.id, "VERIFIED"); refetch(); }}
-                      >
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Verify
-                      </Button>
-                    )}
-                    {u.role === "LANDLORD" && u.landlordStatus === "VERIFIED" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
-                        onClick={async () => { const r = window.prompt("Provide a reason for suspending this landlord:"); if (r === null) return; await onVerify(u.id, "SUSPENDED", r || undefined); refetch(); }}
-                      >
-                        <ShieldAlert className="w-3 h-3 mr-1" />
-                        Suspend
-                      </Button>
-                    )}
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
                     <Button
                       variant="outline"
                       size="sm"
@@ -1625,7 +1582,6 @@ function UsersTab({
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-<<<<<<< HEAD
                           {u.role === "LANDLORD" &&
                             u.landlordStatus !== "VERIFIED" && (
                               <Button
@@ -1647,35 +1603,21 @@ function UsersTab({
                                 size="sm"
                                 className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
                                 onClick={async () => {
-                                  await onVerify(u.id, "SUSPENDED");
+                                  const r = window.prompt(
+                                    "Provide a reason for suspending this landlord:",
+                                  );
+                                  if (r === null) return;
+                                  await onVerify(
+                                    u.id,
+                                    "SUSPENDED",
+                                    r || undefined,
+                                  );
                                   refetch();
                                 }}
                               >
                                 Suspend
                               </Button>
                             )}
-=======
-                          {u.role === "LANDLORD" && u.landlordStatus !== "VERIFIED" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-success border-success/20 hover:bg-success/10"
-                              onClick={async () => { await onVerify(u.id, "VERIFIED"); refetch(); }}
-                            >
-                              Verify
-                            </Button>
-                          )}
-                          {u.role === "LANDLORD" && u.landlordStatus === "VERIFIED" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
-                              onClick={async () => { const r = window.prompt("Provide a reason for suspending this landlord:"); if (r === null) return; await onVerify(u.id, "SUSPENDED", r || undefined); refetch(); }}
-                            >
-                              Suspend
-                            </Button>
-                          )}
->>>>>>> 4a6035fb1fcfa172f9c32935c26a029c8ee0b7aa
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
