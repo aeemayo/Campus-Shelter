@@ -8,6 +8,12 @@ export interface Booking {
   leaseStart: string;
   leaseEnd: string;
   createdAt: string;
+  student?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
   property?: {
     id: string;
     title: string;

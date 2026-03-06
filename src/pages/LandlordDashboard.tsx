@@ -50,6 +50,12 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
+  Mail,
+  Phone,
+  MessageSquare,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -216,6 +222,9 @@ const LandlordDashboard = () => {
   >(null);
   const [leaseFile, setLeaseFile] = useState<File | null>(null);
   const [leaseUploading, setLeaseUploading] = useState(false);
+
+  // Expanded maintenance descriptions
+  const [expandedMaintenance, setExpandedMaintenance] = useState<Set<string>>(new Set());
 
   const handleLeaseUpload = async () => {
     if (!leaseFile || !leaseUploadBookingId) return;
@@ -907,6 +916,39 @@ const LandlordDashboard = () => {
                                   </p>
                                   <StatusBadge status={booking.status} />
                                 </div>
+
+                                {/* Student contact info */}
+                                {booking.student && (
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pl-0 md:pl-1">
+                                    <span className="font-semibold text-foreground">
+                                      {booking.student.name}
+                                    </span>
+                                    <a
+                                      href={`mailto:${booking.student.email}`}
+                                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                                    >
+                                      <Mail className="w-3 h-3" />
+                                      {booking.student.email}
+                                    </a>
+                                    {booking.student.phone && (
+                                      <a
+                                        href={`tel:${booking.student.phone}`}
+                                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                                      >
+                                        <Phone className="w-3 h-3" />
+                                        {booking.student.phone}
+                                      </a>
+                                    )}
+                                    <Link
+                                      to={`/messages/${booking.student.id}`}
+                                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                                    >
+                                      <MessageSquare className="w-3 h-3" />
+                                      Message
+                                    </Link>
+                                  </div>
+                                )}
+
                                 <div className="flex flex-wrap gap-x-4 md:gap-x-6 gap-y-1.5 md:gap-y-2 text-xs md:text-sm text-muted-foreground font-medium">
                                   <div className="flex items-center gap-1.5">
                                     <CalendarCheck className="w-3.5 h-3.5 text-primary/60" />
@@ -969,17 +1011,31 @@ const LandlordDashboard = () => {
                                   </>
                                 )}
                                 {booking.status === "APPROVED" && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="rounded-xl px-5 h-11 border-primary/20 hover:bg-primary/5 text-primary"
-                                    onClick={() =>
-                                      setLeaseUploadBookingId(booking.id)
-                                    }
-                                  >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Upload Lease
-                                  </Button>
+                                  booking.lease ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="rounded-xl px-5 h-11 border-primary/20 hover:bg-primary/5 text-primary"
+                                      asChild
+                                    >
+                                      <a href={booking.lease.documentUrl} target="_blank" rel="noopener noreferrer">
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        View Lease
+                                      </a>
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="rounded-xl px-5 h-11 border-primary/20 hover:bg-primary/5 text-primary"
+                                      onClick={() =>
+                                        setLeaseUploadBookingId(booking.id)
+                                      }
+                                    >
+                                      <Upload className="w-4 h-4 mr-2" />
+                                      Upload Lease
+                                    </Button>
+                                  )
                                 )}
                               </div>
                             </div>
@@ -1020,17 +1076,31 @@ const LandlordDashboard = () => {
                                 </div>
                               )}
                               {booking.status === "APPROVED" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="rounded-xl h-11 w-full border-primary/20 hover:bg-primary/5 text-primary"
-                                  onClick={() =>
-                                    setLeaseUploadBookingId(booking.id)
-                                  }
-                                >
-                                  <Upload className="w-4 h-4 mr-1.5" />
-                                  Upload Lease
-                                </Button>
+                                booking.lease ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="rounded-xl h-11 w-full border-primary/20 hover:bg-primary/5 text-primary"
+                                    asChild
+                                  >
+                                    <a href={booking.lease.documentUrl} target="_blank" rel="noopener noreferrer">
+                                      <FileText className="w-4 h-4 mr-1.5" />
+                                      View Lease
+                                    </a>
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="rounded-xl h-11 w-full border-primary/20 hover:bg-primary/5 text-primary"
+                                    onClick={() =>
+                                      setLeaseUploadBookingId(booking.id)
+                                    }
+                                  >
+                                    <Upload className="w-4 h-4 mr-1.5" />
+                                    Upload Lease
+                                  </Button>
+                                )
                               )}
                             </div>
                           </div>
@@ -1174,36 +1244,63 @@ const LandlordDashboard = () => {
                           >
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6">
                               <div className="flex-1 space-y-2 md:space-y-3">
-                                <div className="flex items-start md:items-center gap-2 md:gap-3">
-                                  <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-destructive/5 text-destructive shrink-0 mt-0.5 md:mt-0">
+                                <div className="flex items-start gap-2 md:gap-3">
+                                  <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-destructive/5 text-destructive shrink-0 mt-0.5">
                                     <Wrench className="w-4 h-4 md:w-5 md:h-5" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-sm md:text-lg tracking-tight leading-tight">
-                                      {req.description.slice(0, 80)}
-                                      {req.description.length > 80 ? "…" : ""}
-                                    </p>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className="font-bold text-sm md:text-base tracking-tight leading-snug">
+                                        {expandedMaintenance.has(req.id)
+                                          ? req.description
+                                          : req.description.slice(0, 80) + (req.description.length > 80 ? "…" : "")}
+                                      </p>
+                                      <Badge
+                                        variant="outline"
+                                        className="px-2 md:px-3 py-0.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wide border-primary/20 bg-primary/5 text-primary italic shrink-0"
+                                      >
+                                        {req.status.replace("_", " ")}
+                                      </Badge>
+                                    </div>
+                                    {req.description.length > 80 && (
+                                      <button
+                                        type="button"
+                                        className="text-xs text-primary hover:underline flex items-center gap-0.5 mt-1"
+                                        onClick={() =>
+                                          setExpandedMaintenance((prev) => {
+                                            const next = new Set(prev);
+                                            next.has(req.id) ? next.delete(req.id) : next.add(req.id);
+                                            return next;
+                                          })
+                                        }
+                                      >
+                                        {expandedMaintenance.has(req.id)
+                                          ? <><ChevronUp className="w-3 h-3" /> Show less</>
+                                          : <><ChevronDown className="w-3 h-3" /> Read more</>}
+                                      </button>
+                                    )}
                                   </div>
-                                  <Badge
-                                    variant="outline"
-                                    className="px-2 md:px-3 py-0.5 md:py-1 font-bold text-[9px] md:text-[10px] uppercase tracking-wide border-primary/20 bg-primary/5 text-primary italic shrink-0"
-                                  >
-                                    {req.status.replace("_", " ")}
-                                  </Badge>
                                 </div>
-                                <div className="flex flex-wrap gap-x-3 md:gap-x-6 gap-y-1 md:gap-y-2 text-xs md:text-sm text-muted-foreground font-medium pl-8 md:pl-0">
+                                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground font-medium pl-8 md:pl-0">
                                   {req.property && (
                                     <div className="flex items-center gap-1.5">
-                                      <Building2 className="w-3.5 h-3.5 text-primary/60" />
+                                      <Building2 className="w-3 h-3 text-primary/60" />
                                       <span>{req.property.title}</span>
                                     </div>
                                   )}
                                   {req.student && (
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-foreground">
+                                    <>
+                                      <span className="font-semibold text-foreground">
                                         {req.student.name}
                                       </span>
-                                    </div>
+                                      <Link
+                                        to={`/messages/${req.student.id}`}
+                                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                                      >
+                                        <MessageSquare className="w-3 h-3" />
+                                        Message tenant
+                                      </Link>
+                                    </>
                                   )}
                                 </div>
                               </div>
