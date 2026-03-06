@@ -254,7 +254,7 @@ const Properties = () => {
       {/* Main Content */}
       <section className="py-10">
         <div className="container mx-auto px-4">
-          <div className="flex gap-10 ">
+          <div className="lg:flex lg:gap-10">
             {/* Filters Sidebar */}
             <div className="hidden lg:block">
               <PropertyFilters

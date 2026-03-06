@@ -47,7 +47,8 @@ import {
   updateProperty,
   fetchAdminUsers,
 } from "@/services/properties";
-import { compressImage, compressToBase64 } from "@/lib/image-compress";
+import { compressImage } from "@/lib/image-compress";
+import { apiFetch } from "@/lib/api";
 import LocationPicker from "@/components/LocationPicker";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -272,14 +273,27 @@ const AdminPropertyForm = () => {
 
     const newImages = images.filter((img) => !img.uploaded && img.file);
     if (newImages.length > 0) {
-      setImageUploadProgress(`Processing ${newImages.length} image${newImages.length > 1 ? "s" : ""}...`);
+      setImageUploadProgress(`Uploading ${newImages.length} image${newImages.length > 1 ? "s" : ""}...`);
     }
 
     const results = await Promise.all(
       images.map(async (img) => {
-        if (img.uploaded) return img.url; // already a stored URL or base64
-        if (img.file) return compressToBase64(img.file, 500);
-        return null;
+        if (img.uploaded) return img.url; // already a stored URL
+        if (!img.file) return null;
+
+        const formData = new FormData();
+        formData.append("file", img.file);
+
+        try {
+          const res = await apiFetch<{ success: true; data: { url: string } }>(
+            "/api/properties/images",
+            { method: "POST", body: formData }
+          );
+          return res.data.url;
+        } catch (err) {
+          console.error("Image upload failed", err);
+          return null;
+        }
       })
     );
 
