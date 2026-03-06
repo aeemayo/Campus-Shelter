@@ -72,7 +72,7 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/properties/:id" element={
-                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD", "ADMIN"]} allowUnverifiedLandlord>
                   <PropertyDetails />
                 </ProtectedRoute>
               } />
