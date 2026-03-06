@@ -20,7 +20,6 @@ import type { RoomType } from "@/services/properties";
 import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
 import { motion, AnimatePresence } from "framer-motion";
 
-
 const Properties = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -219,7 +218,7 @@ const Properties = () => {
         description="Explore verified student accommodation near FUTA. Filter by room type, price, amenities, and location to find your perfect home."
         path="/properties"
       />
-      <Header />
+      <Header bgColor="white" />
 
       {/* Page Header */}
       <section className="pt-28 pb-12 relative overflow-hidden">
@@ -228,7 +227,9 @@ const Properties = () => {
         <div className="container mx-auto px-4 relative">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
             <Home className="w-4 h-4" />
-            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link to="/" className="hover:text-primary transition-colors">
+              Home
+            </Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-foreground">Properties</span>
           </div>
@@ -238,7 +239,8 @@ const Properties = () => {
           </h1>
 
           <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
-            Browse verified student accommodation near FUTA. Filter by location, price, and amenities.
+            Browse verified student accommodation near FUTA. Filter by location,
+            price, and amenities.
           </p>
 
           {isAuthenticated && firstName && (
@@ -252,13 +254,15 @@ const Properties = () => {
       {/* Main Content */}
       <section className="py-10">
         <div className="container mx-auto px-4">
-          <div className="flex gap-10">
+          <div className="flex gap-10 ">
             {/* Filters Sidebar */}
-            <PropertyFilters
-              filters={filters}
-              onFilterChange={setFilters}
-              resultCount={filteredProperties.length}
-            />
+            <div className="hidden lg:block">
+              <PropertyFilters
+                filters={filters}
+                onFilterChange={setFilters}
+                resultCount={filteredProperties.length}
+              />
+            </div>
 
             {/* Properties Grid */}
             <div className="flex-1">
@@ -344,20 +348,23 @@ const Properties = () => {
                       No properties found
                     </h3>
                     <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                      No properties match your current filters. Try adjusting your search criteria.
+                      No properties match your current filters. Try adjusting
+                      your search criteria.
                     </p>
                     <Button
-                      onClick={() => setFilters({
-                        search: "",
-                        location: "All Locations",
-                        propertyType: "all",
-                        priceRange: "all",
-                        amenities: [],
-                        sortBy: "featured",
-                        availableOnly: false,
-                        furnishedOnly: false,
-                        verifiedOnly: false,
-                      })}
+                      onClick={() =>
+                        setFilters({
+                          search: "",
+                          location: "All Locations",
+                          propertyType: "all",
+                          priceRange: "all",
+                          amenities: [],
+                          sortBy: "featured",
+                          availableOnly: false,
+                          furnishedOnly: false,
+                          verifiedOnly: false,
+                        })
+                      }
                     >
                       Clear filters
                     </Button>

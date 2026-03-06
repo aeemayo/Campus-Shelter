@@ -50,10 +50,10 @@ const formSchema = z
       .string()
       .min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Please enter a valid email." }),
-    phone: z
-      .string()
-      .min(10, { message: "Enter a valid phone number" })
-      .optional(),
+    phone: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.string().min(10, { message: "Enter a valid phone number" }).optional(),
+    ),
     password: z
       .string()
       .min(8, { message: "Password must be at least 8 characters." }),
@@ -151,7 +151,11 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4 py-12">
-      <SEO title="Create Account" description="Sign up for CampusShelter to find or list student accommodation near FUTA." path="/register" />
+      <SEO
+        title="Create Account"
+        description="Sign up for CampusShelter to find or list student accommodation near FUTA."
+        path="/register"
+      />
       <div className="w-full max-w-lg">
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -294,6 +298,9 @@ export default function SignUp() {
                             type="tel"
                             placeholder="+234 80x xxx xxxx"
                             {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value.trim())
+                            }
                           />
                         </FormControl>
                         <FormMessage />
