@@ -93,6 +93,11 @@ const App = () => (
                   <AdminPropertyForm />
                 </ProtectedRoute>
               } />
+              <Route path="/properties/edit/:id" element={
+                <ProtectedRoute allowedRoles={["LANDLORD"]}>
+                  <AdminPropertyForm />
+                </ProtectedRoute>
+              } />
 
               {/* Admin routes */}
               <Route path="/admin" element={
