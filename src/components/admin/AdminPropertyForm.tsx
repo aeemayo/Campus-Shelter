@@ -48,6 +48,7 @@ import {
   fetchAdminUsers,
 } from "@/services/properties";
 import { compressImage, compressToBase64 } from "@/lib/image-compress";
+import LocationPicker from "@/components/LocationPicker";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
@@ -72,6 +73,8 @@ const propertyFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   priceMonthly: z.coerce.number().positive("Monthly price must be positive"),
   location: z.string().min(2, "Location is required"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   rooms: z.coerce.number().int().positive("Rooms must be a positive integer"),
   bathrooms: z.coerce
     .number()
@@ -232,6 +235,8 @@ const AdminPropertyForm = () => {
             availableFrom: new Date(p.availableFrom)
               .toISOString()
               .split("T")[0],
+            latitude: p.latitude ?? undefined,
+            longitude: p.longitude ?? undefined,
           });
           // Load existing images
           if (p.images && p.images.length > 0) {
@@ -452,6 +457,29 @@ const AdminPropertyForm = () => {
                             </FormItem>
                           )}
                         />
+
+                        {/* Map picker — click to set property coordinates */}
+                        <div className="space-y-2">
+                          <p className="text-sm font-bold">
+                            Property Coordinates
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Click on the map to pin your property location. FUTA gates are shown for reference. Distance to the nearest gate will be calculated automatically.
+                          </p>
+                          <LocationPicker
+                            lat={form.watch("latitude")}
+                            lng={form.watch("longitude")}
+                            onChange={(lat, lng) => {
+                              form.setValue("latitude", lat);
+                              form.setValue("longitude", lng);
+                            }}
+                          />
+                          {form.watch("latitude") && form.watch("longitude") && (
+                            <p className="text-xs text-success font-medium">
+                              ✓ Coordinates set — distance to FUTA gates will display on the listing.
+                            </p>
+                          )}
+                        </div>
 
                         <FormField
                           control={form.control}

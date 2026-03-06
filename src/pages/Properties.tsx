@@ -291,15 +291,6 @@ const Properties = () => {
                 )}
               </div>
 
-              {/* Mobile Filters */}
-              <div className="lg:hidden mb-4">
-                <PropertyFilters
-                  filters={filters}
-                  onFilterChange={setFilters}
-                  resultCount={filteredProperties.length}
-                />
-              </div>
-
               {/* Results Grid */}
               <AnimatePresence mode="popLayout">
                 {apiLoading ? (

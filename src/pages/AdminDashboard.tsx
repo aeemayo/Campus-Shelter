@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -61,6 +61,8 @@ import {
   fetchAdminAnalytics,
   fetchAdminUsers,
 } from "@/services/properties";
+import { fetchFutaGates, updateFutaGates } from "@/services/settings";
+import { FUTA_GATES, type FutaGate } from "@/lib/futa-gates";
 import { useToast } from "@/components/ui/use-toast";
 import {
   BarChart,
@@ -272,6 +274,14 @@ const AdminDashboard = () => {
                   <LayoutDashboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">Analytics</span>
                   <span className="sm:hidden">Stats</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="settings"
+                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                >
+                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Settings</span>
+                  <span className="sm:hidden">Config</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -597,6 +607,18 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <AnalyticsTab />
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="settings" className="mt-0 outline-none">
+                <motion.div
+                  key="settings-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FutaGatesSettings />
                 </motion.div>
               </TabsContent>
             </AnimatePresence>
@@ -1671,6 +1693,141 @@ function UsersTab({
             <p className="font-medium">No users found.</p>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function FutaGatesSettings() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: gatesData, isLoading } = useQuery({
+    queryKey: ["futa-gates"],
+    queryFn: fetchFutaGates,
+  });
+
+  const [gates, setGates] = useState<FutaGate[]>([]);
+
+  // Sync fetched gates into local state once loaded
+  useState(() => {
+    if (gatesData?.data?.gates) setGates(gatesData.data.gates);
+    else setGates(FUTA_GATES);
+  });
+
+  // Keep local state in sync when server data arrives
+  const serverGates = gatesData?.data?.gates;
+  if (serverGates && gates.length === 0) setGates(serverGates);
+
+  const saveMutation = useMutation({
+    mutationFn: () => updateFutaGates(gates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["futa-gates"] });
+      toast({ title: "Saved", description: "FUTA gate coordinates updated." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save gate settings.", variant: "destructive" });
+    },
+  });
+
+  const updateGate = (id: string, field: "lat" | "lng", raw: string) => {
+    const val = parseFloat(raw);
+    setGates((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, [field]: isNaN(val) ? g[field] : val } : g))
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-24 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary opacity-50" />
+      </div>
+    );
+  }
+
+  const displayGates = gates.length > 0 ? gates : FUTA_GATES;
+
+  return (
+    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold font-display tracking-tight flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-primary" />
+          FUTA Gate Coordinates
+        </CardTitle>
+        <CardDescription>
+          Set the latitude and longitude of each FUTA gate. These are used to calculate walking distances for all property listings.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4">
+          {displayGates.map((gate) => (
+            <div key={gate.id} className="rounded-xl border border-border/40 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">{gate.name}</p>
+                  <p className="text-xs text-muted-foreground">{gate.label}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">
+                    Latitude
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={gate.lat}
+                    onChange={(e) => updateGate(gate.id, "lat", e.target.value)}
+                    className="h-10 rounded-xl bg-background/50 font-mono text-sm"
+                    placeholder="e.g. 7.2982"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">
+                    Longitude
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={gate.lng}
+                    onChange={(e) => updateGate(gate.id, "lng", e.target.value)}
+                    className="h-10 rounded-xl bg-background/50 font-mono text-sm"
+                    placeholder="e.g. 5.1385"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 pt-2">
+          <Button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="gradient-primary rounded-xl px-6"
+          >
+            {saveMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Save Gate Coordinates
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => setGates(FUTA_GATES)}
+          >
+            Reset to Defaults
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground bg-muted/30 rounded-xl p-3">
+          <strong>Tip:</strong> Find exact coordinates by searching "FUTA [Gate Name]" on Google Maps, right-clicking the location, and copying the coordinates shown.
+        </p>
       </CardContent>
     </Card>
   );

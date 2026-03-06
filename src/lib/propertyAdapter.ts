@@ -1,5 +1,6 @@
 // ─── Adapter: Backend API property → Frontend Property shape ─
 import { Property, ApiProperty, RoomType } from "@/services/properties";
+import { nearestGateLabel } from "@/lib/futa-gates";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://campus-shelter-apis.vercel.app";
 
@@ -54,7 +55,14 @@ export function toFrontendProperty(p: ApiProperty): Property {
       ? p.images.map(resolveImageUrl)
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"],
     amenities,
-    distance: `${p.distanceFromFUTA} km from FUTA`,
+    distance:
+      p.latitude && p.longitude
+        ? nearestGateLabel(p.latitude, p.longitude)
+        : p.distanceFromFUTA
+        ? `${p.distanceFromFUTA} km from FUTA`
+        : "Distance unknown",
+    latitude: p.latitude,
+    longitude: p.longitude,
     rating: avgRating,
     reviewCount,
     availableFrom: p.availableFrom,

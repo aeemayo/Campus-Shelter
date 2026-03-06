@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useFutaGates } from "@/hooks/useFutaGates";
 import SEO from "@/components/SEO";
 import {
   Card,
@@ -48,6 +49,7 @@ export default function RentalDetailsPage() {
   const { id } = useParams<ParamTypes>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { distancesTo } = useFutaGates();
   const { markViewed } = useUserActivity(isAuthenticated ? user?.id : undefined);
   const { toast } = useToast();
   const [activeImage, setActiveImage] = useState<string | null>(null);
@@ -316,7 +318,19 @@ export default function RentalDetailsPage() {
                 />
                 <Stat label="Bedrooms" value={property.bedrooms} subValue="Private Spaces" icon={Info} />
                 <Stat label="Bathrooms" value={property.bathrooms} subValue="Sanitary Units" icon={ShieldCheck} />
-                <Stat label="FUTA Proximity" value={property.distance} subValue="Walking Distance" icon={Star} />
+                {property.latitude && property.longitude ? (
+                  distancesTo(property.latitude, property.longitude).map(({ gate, km, walkMinutes }) => (
+                    <Stat
+                      key={gate.id}
+                      label={gate.label}
+                      value={walkMinutes < 60 ? `${walkMinutes} min` : `${km} km`}
+                      subValue={walkMinutes < 60 ? `${km} km walk` : "Walking Distance"}
+                      icon={Star}
+                    />
+                  ))
+                ) : (
+                  <Stat label="FUTA Proximity" value={property.distance} subValue="Walking Distance" icon={Star} />
+                )}
               </CardContent>
             </Card>
 
