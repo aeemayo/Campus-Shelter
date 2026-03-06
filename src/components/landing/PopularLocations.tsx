@@ -1,38 +1,34 @@
 import { MapPin, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { useProperties } from "@/hooks/use-properties";
+import { toFrontendProperty } from "@/lib/propertyAdapter";
 
-const locations = [
-  {
-    name: "Ilesha Road",
-    properties: 120,
-    image: "/images/property1/hallway.png",
-    tag: "Most Popular",
-  },
-  {
-    name: "FUTA South Gate",
-    properties: 85,
-    image: "/images/property3/frontyard.jpeg",
-    tag: "Student Favorite",
-  },
-  {
-    name: "North Gate",
-    properties: 65,
-    image: "/images/property2/frontyard.jpeg",
-    tag: null,
-  },
-  {
-    name: "Aule",
-    properties: 78,
-    image: "/images/property4/frontyard.jpeg",
-    tag: "Growing Fast",
-  },
+const LOCATION_CONFIG = [
+  { name: "Ilesha Road",    keywords: ["ilesha"],       image: "/images/property1/hallway.png",    tag: "Most Popular"    },
+  { name: "FUTA South Gate",keywords: ["south gate"],   image: "/images/property3/frontyard.jpeg", tag: "Student Favorite" },
+  { name: "North Gate",     keywords: ["north gate"],   image: "/images/property2/frontyard.jpeg", tag: null              },
+  { name: "Aule",           keywords: ["aule"],         image: "/images/property4/frontyard.jpeg", tag: "Growing Fast"    },
 ];
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=750&fit=crop&q=80";
 
 const PopularLocations = () => {
+  const { data: apiResponse } = useProperties({ limit: 200 });
+
+  const locations = useMemo(() => {
+    const all = apiResponse?.data?.map(toFrontendProperty) ?? [];
+    return LOCATION_CONFIG.map((loc) => {
+      const count = all.filter((p) =>
+        loc.keywords.some((kw) =>
+          p.location?.toLowerCase().includes(kw.toLowerCase())
+        )
+      ).length;
+      return { ...loc, properties: count };
+    });
+  }, [apiResponse]);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -113,7 +109,13 @@ const PopularLocations = () => {
                   </h3>
                   <div className="flex items-center gap-1.5 text-white/60 text-xs">
                     <MapPin className="w-3 h-3" />
-                    <span>{loc.properties} properties available</span>
+                    <span>
+                      {apiResponse
+                        ? loc.properties > 0
+                          ? `${loc.properties} ${loc.properties === 1 ? "property" : "properties"} available`
+                          : "Browse properties"
+                        : "Loading..."}
+                    </span>
                   </div>
                 </div>
               </Link>
