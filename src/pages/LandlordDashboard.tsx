@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import { fetchProperties } from "@/services/properties";
+import { fetchProperties, deleteProperty } from "@/services/properties";
 import {
   fetchMyBookings,
   updateBookingStatus,
@@ -48,7 +48,17 @@ import {
   AlertCircle,
   Clock,
   ChevronRight,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -69,6 +79,8 @@ const LandlordDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("properties");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // Fetch landlord's properties
   const { data: propertiesResponse, isLoading: propsLoading } = useQuery({
@@ -150,6 +162,20 @@ const LandlordDashboard = () => {
         description: "Failed to update status.",
         variant: "destructive",
       });
+    },
+  });
+
+  // Delete property mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteProperty(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      toast({ title: "Property Deleted", description: "The property has been removed." });
+      setDeleteTarget(null);
+      setDeleteConfirmText("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete property.", variant: "destructive" });
     },
   });
 
@@ -729,17 +755,46 @@ const LandlordDashboard = () => {
                                     )}
                                   </td>
                                   <td className="py-4 px-6 text-right">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      asChild
-                                      className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
-                                    >
-                                      <Link to={`/properties/${property.id}`}>
-                                        <ExternalLink className="w-3.5 h-3.5 mr-2" />
-                                        Details
-                                      </Link>
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                        className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                      >
+                                        <Link to={`/properties/${property.id}`}>
+                                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                                          View
+                                        </Link>
+                                      </Button>
+                                      {user?.landlordStatus === "VERIFIED" && (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                            className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                          >
+                                            <Link to={`/properties/edit/${property.id}`}>
+                                              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                                              Edit
+                                            </Link>
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5 hover:border-destructive/60"
+                                            onClick={() => {
+                                              setDeleteTarget({ id: property.id, title: property.title });
+                                              setDeleteConfirmText("");
+                                            }}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                                            Delete
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -1166,6 +1221,41 @@ const LandlordDashboard = () => {
       </main>
 
       <Footer />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Property</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. Type the property name to confirm deletion.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Property: <span className="text-foreground font-bold">"{deleteTarget?.title}"</span>
+            </p>
+            <Input
+              placeholder={`Type "${deleteTarget?.title}" to confirm`}
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteConfirmText !== deleteTarget?.title || deleteMutation.isPending}
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Property
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile FAB - Add Property */}
       {user?.landlordStatus === "VERIFIED" && (
