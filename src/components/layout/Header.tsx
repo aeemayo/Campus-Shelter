@@ -89,13 +89,17 @@ const Header = ({ bgColor = "" }) => {
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <div className="flex items-center justify-center">
                 {scrolled ? (
-                  <img src="CampusShelter5.png" alt="" className="w-28 h-14" />
+                  <img
+                    src="../../../public/CampusShelter5.png"
+                    alt=""
+                    className="w-28 h-14"
+                  />
                 ) : (
                   <img
                     src={
                       bgColor === "white"
-                        ? "CampusShelter5.png"
-                        : "CampusShelter4.png"
+                        ? "../../../public/CampusShelter5.png"
+                        : "../../../public/CampusShelter4.png"
                     }
                     alt=""
                     className="w-28 h-14"

@@ -1,12 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useFutaGates } from "@/hooks/useFutaGates";
 import SEO from "@/components/SEO";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -63,7 +58,9 @@ export default function RentalDetailsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { distancesTo } = useFutaGates();
-  const { markViewed } = useUserActivity(isAuthenticated ? user?.id : undefined);
+  const { markViewed } = useUserActivity(
+    isAuthenticated ? user?.id : undefined,
+  );
   const { toast } = useToast();
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -77,7 +74,11 @@ export default function RentalDetailsPage() {
       .split("T")[0],
   });
 
-  const { data: response, isLoading, isError } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["property", id],
     queryFn: () => fetchProperty(id!),
     enabled: !!id,
@@ -90,7 +91,11 @@ export default function RentalDetailsPage() {
   useEffect(() => {
     if (property && !activeImage) setActiveImage(property.images[0]);
     if (id) markViewed(id);
-    if (property && user?.role === "LANDLORD" && property.landlord?.id !== user.id) {
+    if (
+      property &&
+      user?.role === "LANDLORD" &&
+      property.landlord?.id !== user.id
+    ) {
       navigate("/landlord", { replace: true });
     }
   }, [property, activeImage, id, markViewed, user, navigate]);
@@ -108,7 +113,9 @@ export default function RentalDetailsPage() {
   if (isError || !property) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-semibold tracking-tight">Property not found</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">
+          Property not found
+        </h2>
         <Button onClick={() => navigate("/properties")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Properties
@@ -156,7 +163,7 @@ export default function RentalDetailsPage() {
           })),
         }}
       />
-      <Header />
+      <Header bgColor="white" />
 
       <div className="pt-24 max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* Breadcrumb + title */}
@@ -173,7 +180,9 @@ export default function RentalDetailsPage() {
                 Properties
               </Button>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-foreground truncate max-w-xs">{property.title}</span>
+              <span className="text-foreground truncate max-w-xs">
+                {property.title}
+              </span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {property.title}
@@ -209,7 +218,7 @@ export default function RentalDetailsPage() {
             className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer"
             onClick={() => {
               setLightboxIndex(
-                property.images.indexOf(activeImage || property.images[0])
+                property.images.indexOf(activeImage || property.images[0]),
               );
               setIsLightboxOpen(true);
             }}
@@ -225,7 +234,9 @@ export default function RentalDetailsPage() {
             </div>
             {!property.available && (
               <div className="absolute top-3 left-3">
-                <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>
+                <Badge variant="destructive" className="text-[10px] rounded-md">
+                  Occupied
+                </Badge>
               </div>
             )}
           </div>
@@ -254,7 +265,7 @@ export default function RentalDetailsPage() {
                     alt={`gallery-${i}`}
                     className={cn(
                       "h-full w-full object-cover transition duration-300 group-hover:scale-105",
-                      activeImage === img ? "brightness-75" : ""
+                      activeImage === img ? "brightness-75" : "",
                     )}
                   />
                   {activeImage === img && !isLastVisible && (
@@ -276,7 +287,9 @@ export default function RentalDetailsPage() {
         <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
           <DialogContent className="max-w-[95vw] h-[90vh] p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
             <DialogHeader className="p-6 absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent">
-              <DialogTitle className="text-white font-semibold">{property.title}</DialogTitle>
+              <DialogTitle className="text-white font-semibold">
+                {property.title}
+              </DialogTitle>
               <DialogDescription className="text-white/50 text-xs">
                 {lightboxIndex + 1} / {property.images.length}
               </DialogDescription>
@@ -302,7 +315,9 @@ export default function RentalDetailsPage() {
                   className="w-10 h-10 rounded-full bg-white/10 text-white pointer-events-auto hover:bg-white/20"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((p) => (p > 0 ? p - 1 : property.images.length - 1));
+                    setLightboxIndex((p) =>
+                      p > 0 ? p - 1 : property.images.length - 1,
+                    );
                   }}
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -313,7 +328,9 @@ export default function RentalDetailsPage() {
                   className="w-10 h-10 rounded-full bg-white/10 text-white pointer-events-auto hover:bg-white/20"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((p) => (p < property.images.length - 1 ? p + 1 : 0));
+                    setLightboxIndex((p) =>
+                      p < property.images.length - 1 ? p + 1 : 0,
+                    );
                   }}
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -331,10 +348,14 @@ export default function RentalDetailsPage() {
                       "w-16 h-12 rounded-lg overflow-hidden border-2 transition-all shrink-0",
                       lightboxIndex === i
                         ? "border-primary opacity-100"
-                        : "border-transparent opacity-40 hover:opacity-70"
+                        : "border-transparent opacity-40 hover:opacity-70",
                     )}
                   >
-                    <img src={img} className="w-full h-full object-cover" alt="" />
+                    <img
+                      src={img}
+                      className="w-full h-full object-cover"
+                      alt=""
+                    />
                   </button>
                 ))}
               </div>
@@ -354,8 +375,16 @@ export default function RentalDetailsPage() {
                   value={formatNaira(property.price)}
                   icon={TrendingUp}
                 />
-                <Stat label="Bedrooms" value={`${property.bedrooms} bed`} icon={Bed} />
-                <Stat label="Bathrooms" value={`${property.bathrooms} bath`} icon={Bath} />
+                <Stat
+                  label="Bedrooms"
+                  value={`${property.bedrooms} bed`}
+                  icon={Bed}
+                />
+                <Stat
+                  label="Bathrooms"
+                  value={`${property.bathrooms} bath`}
+                  icon={Bath}
+                />
                 {property.latitude && property.longitude ? (
                   distancesTo(property.latitude, property.longitude)
                     .slice(0, 1)
@@ -363,12 +392,20 @@ export default function RentalDetailsPage() {
                       <Stat
                         key={gate.id}
                         label={gate.label}
-                        value={walkMinutes < 60 ? `${walkMinutes} min walk` : `${km} km`}
+                        value={
+                          walkMinutes < 60
+                            ? `${walkMinutes} min walk`
+                            : `${km} km`
+                        }
                         icon={MapPin}
                       />
                     ))
                 ) : (
-                  <Stat label="FUTA Distance" value={property.distance} icon={MapPin} />
+                  <Stat
+                    label="FUTA Distance"
+                    value={property.distance}
+                    icon={MapPin}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -376,32 +413,58 @@ export default function RentalDetailsPage() {
             {/* Gate distances (if coordinates available) */}
             {property.latitude && property.longitude && (
               <div className="grid grid-cols-3 gap-3">
-                {distancesTo(property.latitude, property.longitude).map(({ gate, km, walkMinutes }) => (
-                  <div
-                    key={gate.id}
-                    className="flex items-center gap-2.5 p-3 rounded-lg border border-border/60 bg-muted/20"
-                  >
-                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                {distancesTo(property.latitude, property.longitude).map(
+                  ({ gate, km, walkMinutes }) => (
+                    <div
+                      key={gate.id}
+                      className="flex items-center gap-2.5 p-3 rounded-lg border border-border/60 bg-muted/20"
+                    >
+                      <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-foreground">
+                          {gate.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {walkMinutes < 60
+                            ? `${walkMinutes} min walk`
+                            : `${km} km`}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{gate.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {walkMinutes < 60 ? `${walkMinutes} min walk` : `${km} km`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             )}
 
             {/* Tabs */}
             <Tabs defaultValue="description" className="space-y-4">
               <TabsList className="bg-muted/40 border border-border/60 p-1 rounded-lg h-auto w-full justify-start gap-0.5 flex-wrap">
-                <TabsTrigger value="description" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Description</TabsTrigger>
-                <TabsTrigger value="info" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Details</TabsTrigger>
-                <TabsTrigger value="features" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Amenities</TabsTrigger>
-                <TabsTrigger value="reviews" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Reviews</TabsTrigger>
+                <TabsTrigger
+                  value="description"
+                  className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Description
+                </TabsTrigger>
+                <TabsTrigger
+                  value="info"
+                  className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Details
+                </TabsTrigger>
+                <TabsTrigger
+                  value="features"
+                  className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Amenities
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reviews"
+                  className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  Reviews
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="description">
@@ -416,25 +479,41 @@ export default function RentalDetailsPage() {
                 <Card className="border-border/60">
                   <CardContent className="p-5 space-y-3">
                     {[
-                      { label: "Furnishing", value: property.furnished ? "Furnished" : "Unfurnished" },
+                      {
+                        label: "Furnishing",
+                        value: property.furnished ? "Furnished" : "Unfurnished",
+                      },
                       {
                         label: "Available From",
-                        value: new Date(property.availableFrom || "").toLocaleDateString("en-US", {
-                          month: "long", day: "numeric", year: "numeric",
+                        value: new Date(
+                          property.availableFrom || "",
+                        ).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
                         }),
                       },
-                      { label: "Lease Duration", value: "12-month standard lease" },
+                      {
+                        label: "Lease Duration",
+                        value: "12-month standard lease",
+                      },
                       {
                         label: "Electricity Backup",
-                        value: property.amenities.includes("Electricity Backup") ? "Yes" : "No",
+                        value: property.amenities.includes("Electricity Backup")
+                          ? "Yes"
+                          : "No",
                       },
                     ].map((item, idx) => (
                       <div
                         key={idx}
                         className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0"
                       >
-                        <span className="text-sm text-muted-foreground">{item.label}</span>
-                        <span className="text-sm font-medium text-foreground">{item.value}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.label}
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
+                          {item.value}
+                        </span>
                       </div>
                     ))}
                   </CardContent>
@@ -450,11 +529,15 @@ export default function RentalDetailsPage() {
                           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                             <Check className="w-3.5 h-3.5 text-primary" />
                           </div>
-                          <span className="text-sm text-foreground">{item}</span>
+                          <span className="text-sm text-foreground">
+                            {item}
+                          </span>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground col-span-2">No amenities listed.</p>
+                      <p className="text-sm text-muted-foreground col-span-2">
+                        No amenities listed.
+                      </p>
                     )}
                   </CardContent>
                 </Card>
@@ -470,9 +553,12 @@ export default function RentalDetailsPage() {
               <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
                 <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Verified property</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Verified property
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    This listing has been reviewed and verified by CampusShelter.
+                    This listing has been reviewed and verified by
+                    CampusShelter.
                   </p>
                 </div>
               </div>
@@ -484,7 +570,9 @@ export default function RentalDetailsPage() {
             {/* Price */}
             <Card className="border-border/60">
               <CardContent className="p-5 space-y-1.5">
-                <p className="text-2xl font-bold text-foreground">{formatNaira(property.price)}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {formatNaira(property.price)}
+                </p>
                 <p className="text-sm text-muted-foreground">per year</p>
                 {property.priceWeekly && (
                   <p className="text-xs text-muted-foreground">
@@ -497,7 +585,9 @@ export default function RentalDetailsPage() {
             {/* Landlord */}
             <Card className="border-border/60">
               <CardContent className="p-5 space-y-4">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Landlord</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Landlord
+                </p>
                 <div className="flex items-center gap-3">
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={(property.landlord as any).avatar} />
@@ -510,7 +600,9 @@ export default function RentalDetailsPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-foreground text-sm">{property.landlord.name}</p>
+                    <p className="font-medium text-foreground text-sm">
+                      {property.landlord.name}
+                    </p>
                     {property.landlord.verified && (
                       <div className="flex items-center gap-1 mt-0.5">
                         <ShieldCheck className="w-3 h-3 text-primary" />
@@ -530,7 +622,11 @@ export default function RentalDetailsPage() {
                     <Phone className="w-4 h-4 mr-2" />
                     Call Landlord
                   </Button>
-                  <Button variant="outline" className="w-full rounded-lg h-10" asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-lg h-10"
+                    asChild
+                  >
                     <Link to={`/messages/${property.landlord.id}`}>
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Send Message
@@ -544,11 +640,20 @@ export default function RentalDetailsPage() {
             <Card className="border-border/60">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-foreground">Book this property</p>
+                  <p className="font-medium text-foreground">
+                    Book this property
+                  </p>
                   {property.available ? (
-                    <Badge variant="success" className="text-[10px] rounded-md">Available</Badge>
+                    <Badge variant="success" className="text-[10px] rounded-md">
+                      Available
+                    </Badge>
                   ) : (
-                    <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>
+                    <Badge
+                      variant="destructive"
+                      className="text-[10px] rounded-md"
+                    >
+                      Occupied
+                    </Badge>
                   )}
                 </div>
 
@@ -560,9 +665,12 @@ export default function RentalDetailsPage() {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[440px] rounded-xl">
                     <DialogHeader>
-                      <DialogTitle className="text-lg font-semibold">Request Booking</DialogTitle>
+                      <DialogTitle className="text-lg font-semibold">
+                        Request Booking
+                      </DialogTitle>
                       <DialogDescription className="text-sm text-muted-foreground">
-                        Choose your lease start and end dates. The landlord will confirm within 24 hours.
+                        Choose your lease start and end dates. The landlord will
+                        confirm within 24 hours.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -574,7 +682,10 @@ export default function RentalDetailsPage() {
                             className="rounded-lg h-10"
                             value={bookingDates.start}
                             onChange={(e) =>
-                              setBookingDates({ ...bookingDates, start: e.target.value })
+                              setBookingDates({
+                                ...bookingDates,
+                                start: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -585,7 +696,10 @@ export default function RentalDetailsPage() {
                             className="rounded-lg h-10"
                             value={bookingDates.end}
                             onChange={(e) =>
-                              setBookingDates({ ...bookingDates, end: e.target.value })
+                              setBookingDates({
+                                ...bookingDates,
+                                end: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -594,7 +708,8 @@ export default function RentalDetailsPage() {
                       <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
                         <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Your contact details will be shared with the landlord to process this booking.
+                          Your contact details will be shared with the landlord
+                          to process this booking.
                         </p>
                       </div>
                     </div>
@@ -618,17 +733,27 @@ export default function RentalDetailsPage() {
                               leaseStart: bookingDates.start,
                               leaseEnd: bookingDates.end,
                             });
-                            toast({ title: "Booking request sent!", description: "The landlord will contact you shortly." });
+                            toast({
+                              title: "Booking request sent!",
+                              description:
+                                "The landlord will contact you shortly.",
+                            });
                             navigate("/my-bookings");
                           } catch (err: any) {
-                            toast({ title: "Booking failed", description: err.message, variant: "destructive" });
+                            toast({
+                              title: "Booking failed",
+                              description: err.message,
+                              variant: "destructive",
+                            });
                           } finally {
                             setIsBookingLoading(false);
                           }
                         }}
                         disabled={isBookingLoading}
                       >
-                        {isBookingLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        {isBookingLoading && (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        )}
                         Confirm Booking
                       </Button>
                     </DialogFooter>
@@ -645,15 +770,23 @@ export default function RentalDetailsPage() {
             {/* Schedule inspection */}
             <Card className="border-border/60">
               <CardContent className="p-5 space-y-3">
-                <p className="font-medium text-foreground text-sm">Schedule inspection</p>
+                <p className="font-medium text-foreground text-sm">
+                  Schedule inspection
+                </p>
                 <div className="space-y-2">
                   <div className="relative">
                     <Input type="date" className="rounded-lg h-10 pl-9" />
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
-                  <Input placeholder="Preferred time (e.g. 12:00 PM)" className="rounded-lg h-10" />
+                  <Input
+                    placeholder="Preferred time (e.g. 12:00 PM)"
+                    className="rounded-lg h-10"
+                  />
                 </div>
-                <Button variant="outline" className="w-full rounded-lg h-10 text-sm">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg h-10 text-sm"
+                >
                   Request Inspection
                 </Button>
               </CardContent>
@@ -687,7 +820,9 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
             <div className="flex items-center gap-1.5">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold text-sm">{avg}</span>
-              <span className="text-xs text-muted-foreground">({reviews.length})</span>
+              <span className="text-xs text-muted-foreground">
+                ({reviews.length})
+              </span>
             </div>
           )}
         </div>
@@ -709,7 +844,9 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-primary uppercase">
                       {review.student?.name?.[0] || "S"}
                     </div>
-                    <span className="font-medium text-sm">{review.student?.name || "Student"}</span>
+                    <span className="font-medium text-sm">
+                      {review.student?.name || "Student"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-0.5">
                     {[...Array(5)].map((_, i) => (
