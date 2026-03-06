@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import logo1 from "../../../public/CampusShelter4.png";
+import logo2 from "../../../public/CampusShelter5.png";
 
 const Header = ({ bgColor = "" }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -89,19 +91,11 @@ const Header = ({ bgColor = "" }) => {
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <div className="flex items-center justify-center">
                 {scrolled ? (
-                  <img
-                    src="../../../public/CampusShelter5.png"
-                    alt=""
-                    className="w-28 h-14"
-                  />
+                  <img src={logo2} alt="" className="w-28 h-14" />
                 ) : (
                   <img
-                    src={
-                      bgColor === "white"
-                        ? "../../../public/CampusShelter5.png"
-                        : "../../../public/CampusShelter4.png"
-                    }
-                    alt=""
+                    src={bgColor === "white" ? logo2 : logo1}
+                    alt="CampusShelter"
                     className="w-28 h-14"
                   />
                 )}
