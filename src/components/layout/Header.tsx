@@ -16,7 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const Header = () => {
+const Header = ({ bgColor = "" }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -87,19 +87,26 @@ const Header = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <Home className="w-4 h-4 text-white" />
+              <div className="flex items-center justify-center">
+                {scrolled ? (
+                  <img src="CampusShelter5.png" alt="" className="w-28 h-14" />
+                ) : (
+                  <img
+                    src={
+                      bgColor === "white"
+                        ? "CampusShelter5.png"
+                        : "CampusShelter4.png"
+                    }
+                    alt=""
+                    className="w-28 h-14"
+                  />
+                )}
               </div>
               <span
                 className={`font-display text-lg font-bold tracking-tight transition-colors ${
                   scrolled || !isHome ? "text-foreground" : "text-white"
                 }`}
-              >
-                Campus
-                <span className={scrolled || !isHome ? "text-primary" : "text-white/90"}>
-                  Shelter
-                </span>
-              </span>
+              ></span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -134,7 +141,10 @@ const Header = () => {
                 </Link>
               )}
               {isAuthenticated && user?.role === "STUDENT" && (
-                <Link to="/my-bookings" className={navLinkClass("/my-bookings")}>
+                <Link
+                  to="/my-bookings"
+                  className={navLinkClass("/my-bookings")}
+                >
                   Bookings
                 </Link>
               )}
@@ -331,8 +341,12 @@ const Header = () => {
                       {initials}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{user?.email}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {user?.name}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {user?.email}
+                      </p>
                     </div>
                   </Link>
                   <button
@@ -348,12 +362,19 @@ const Header = () => {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="outline" asChild className="flex-1 h-10 rounded-lg text-sm">
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="flex-1 h-10 rounded-lg text-sm"
+                  >
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                       Sign in
                     </Link>
                   </Button>
-                  <Button asChild className="flex-1 h-10 gradient-primary rounded-lg text-sm">
+                  <Button
+                    asChild
+                    className="flex-1 h-10 gradient-primary rounded-lg text-sm"
+                  >
                     <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                       Get started
                     </Link>

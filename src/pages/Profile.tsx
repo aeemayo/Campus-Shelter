@@ -9,7 +9,14 @@ import { useUserActivity } from "@/hooks/use-user-activity";
 import { useAuth } from "@/contexts/AuthContext";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -45,12 +52,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const Profile = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const {
-    favorites,
-    viewedPropertyIds,
-    toggleFavorite,
-    markViewed,
-  } = useUserActivity(isAuthenticated ? user?.id : undefined);
+  const { favorites, viewedPropertyIds, toggleFavorite, markViewed } =
+    useUserActivity(isAuthenticated ? user?.id : undefined);
 
   const [activeTab, setActiveTab] = useState("saved");
 
@@ -73,7 +76,6 @@ const Profile = () => {
         .filter(Boolean) as typeof allProperties,
     [allProperties, viewedPropertyIds],
   );
-
 
   const firstName = user?.name?.trim().split(" ")[0] ?? "";
   const initials =
@@ -101,7 +103,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Profile" description="Manage your CampusShelter profile and account settings." path="/profile" noIndex />
-      <Header />
+      <Header bgColor="white" />
 
       {/* Profile Hero */}
       <section className="pt-16">
@@ -157,15 +159,30 @@ const Profile = () => {
                   </Badge>
                   {user?.role === "LANDLORD" ? (
                     <Badge
-                      variant={user?.landlordStatus === "VERIFIED" ? "success" : user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? "destructive" : "warning"}
+                      variant={
+                        user?.landlordStatus === "VERIFIED"
+                          ? "success"
+                          : user?.landlordStatus === "REJECTED" ||
+                              user?.landlordStatus === "SUSPENDED"
+                            ? "destructive"
+                            : "warning"
+                      }
                     >
-                      {user?.landlordStatus === "VERIFIED" ? "Verified Landlord" : user?.landlordStatus === "REJECTED" ? "Verification Rejected" : user?.landlordStatus === "SUSPENDED" ? "Account Suspended" : "Verification Pending"}
+                      {user?.landlordStatus === "VERIFIED"
+                        ? "Verified Landlord"
+                        : user?.landlordStatus === "REJECTED"
+                          ? "Verification Rejected"
+                          : user?.landlordStatus === "SUSPENDED"
+                            ? "Account Suspended"
+                            : "Verification Pending"}
                     </Badge>
-                  ) : user?.verified && (
-                    <Badge variant="success">
-                      <Shield className="w-3 h-3 mr-1" />
-                      Verified
-                    </Badge>
+                  ) : (
+                    user?.verified && (
+                      <Badge variant="success">
+                        <Shield className="w-3 h-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )
                   )}
                 </div>
 
@@ -220,21 +237,37 @@ const Profile = () => {
                 },
                 {
                   label: "Active Score",
-                  value: savedProperties.length + viewedProperties.length > 5 ? "Elite" : "Pro",
+                  value:
+                    savedProperties.length + viewedProperties.length > 5
+                      ? "Elite"
+                      : "Pro",
                   icon: Sparkles,
                   color: "text-warning",
                 },
                 {
                   label: "Status",
-                  value: user?.role === "LANDLORD"
-                    ? (user.landlordStatus === "VERIFIED" ? "Verified" : user.landlordStatus === "SUSPENDED" ? "Suspended" : user.landlordStatus === "REJECTED" ? "Rejected" : "Pending")
-                    : (user?.verified ? "Verified" : "Active"),
+                  value:
+                    user?.role === "LANDLORD"
+                      ? user.landlordStatus === "VERIFIED"
+                        ? "Verified"
+                        : user.landlordStatus === "SUSPENDED"
+                          ? "Suspended"
+                          : user.landlordStatus === "REJECTED"
+                            ? "Rejected"
+                            : "Pending"
+                      : user?.verified
+                        ? "Verified"
+                        : "Active",
                   icon: Shield,
-                  color: user?.role === "LANDLORD" && (user.landlordStatus === "SUSPENDED" || user.landlordStatus === "REJECTED")
-                    ? "text-destructive"
-                    : user?.role === "LANDLORD" && user.landlordStatus === "PENDING"
-                    ? "text-warning"
-                    : "text-success",
+                  color:
+                    user?.role === "LANDLORD" &&
+                    (user.landlordStatus === "SUSPENDED" ||
+                      user.landlordStatus === "REJECTED")
+                      ? "text-destructive"
+                      : user?.role === "LANDLORD" &&
+                          user.landlordStatus === "PENDING"
+                        ? "text-warning"
+                        : "text-success",
                 },
               ].map((stat, idx) => (
                 <motion.div
@@ -249,8 +282,12 @@ const Profile = () => {
                     <stat.icon className={`w-6 h-6 ${stat.color} opacity-80`} />
                     <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
                   </div>
-                  <p className="text-3xl font-black text-white font-display tracking-tight leading-none mb-1.5">{stat.value}</p>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-white/50">{stat.label}</p>
+                  <p className="text-3xl font-black text-white font-display tracking-tight leading-none mb-1.5">
+                    {stat.value}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-white/50">
+                    {stat.label}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -267,23 +304,38 @@ const Profile = () => {
             className="w-full"
           >
             <TabsList className="bg-muted/50 backdrop-blur-md p-1.5 rounded-2xl h-auto flex flex-wrap gap-1 border border-border/40 mb-10">
-              <TabsTrigger value="saved" className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">
+              <TabsTrigger
+                value="saved"
+                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+              >
                 <Bookmark className="w-4 h-4" />
                 <span>Saved</span>
               </TabsTrigger>
-              <TabsTrigger value="viewed" className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">
+              <TabsTrigger
+                value="viewed"
+                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+              >
                 <Clock className="w-4 h-4" />
                 <span>History</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">
+              <TabsTrigger
+                value="settings"
+                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+              >
                 <Settings className="w-4 h-4" />
                 <span>Account</span>
               </TabsTrigger>
-              <TabsTrigger value="security" className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">
+              <TabsTrigger
+                value="security"
+                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+              >
                 <Shield className="w-4 h-4" />
                 <span>Security</span>
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">
+              <TabsTrigger
+                value="maintenance"
+                className="gap-2 px-5 py-2.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+              >
                 <Wrench className="w-4 h-4" />
                 <span>Repair Requests</span>
               </TabsTrigger>
@@ -372,18 +424,36 @@ const Profile = () => {
                         <Separator className="bg-border/30" />
                         <InfoRow label="Email" value={user?.email ?? "—"} />
                         <Separator className="bg-border/30" />
-                        <InfoRow label="Phone" value={user?.phone ?? "Not provided"} />
+                        <InfoRow
+                          label="Phone"
+                          value={user?.phone ?? "Not provided"}
+                        />
                         <Separator className="bg-border/30" />
-                        <InfoRow label="Role" value={roleLabel[user?.role ?? "STUDENT"]} />
+                        <InfoRow
+                          label="Role"
+                          value={roleLabel[user?.role ?? "STUDENT"]}
+                        />
                         <Separator className="bg-border/30" />
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Verification Status</span>
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                            Verification Status
+                          </span>
                           {user?.role === "LANDLORD" ? (
-                            <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.landlordStatus === "VERIFIED" ? 'bg-success text-white' : user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? 'bg-destructive text-white' : 'bg-warning text-white'}`}>
-                              {user?.landlordStatus === "VERIFIED" ? "Verified" : user?.landlordStatus === "REJECTED" ? "Rejected" : user?.landlordStatus === "SUSPENDED" ? "Suspended" : "Pending"}
+                            <Badge
+                              className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.landlordStatus === "VERIFIED" ? "bg-success text-white" : user?.landlordStatus === "REJECTED" || user?.landlordStatus === "SUSPENDED" ? "bg-destructive text-white" : "bg-warning text-white"}`}
+                            >
+                              {user?.landlordStatus === "VERIFIED"
+                                ? "Verified"
+                                : user?.landlordStatus === "REJECTED"
+                                  ? "Rejected"
+                                  : user?.landlordStatus === "SUSPENDED"
+                                    ? "Suspended"
+                                    : "Pending"}
                             </Badge>
                           ) : (
-                            <Badge className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verified ? 'bg-success text-white' : 'bg-muted text-muted-foreground'}`}>
+                            <Badge
+                              className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verified ? "bg-success text-white" : "bg-muted text-muted-foreground"}`}
+                            >
                               {user?.verified ? "Verified" : "Unverified"}
                             </Badge>
                           )}
@@ -392,9 +462,10 @@ const Profile = () => {
                     </Card>
 
                     {/* Suspension Appeal */}
-                    {user?.role === "LANDLORD" && user.landlordStatus === "SUSPENDED" && (
-                      <SuspensionAppealSection />
-                    )}
+                    {user?.role === "LANDLORD" &&
+                      user.landlordStatus === "SUSPENDED" && (
+                        <SuspensionAppealSection />
+                      )}
 
                     {/* Sign Out */}
                     <Card className="border-border/40">
@@ -404,7 +475,9 @@ const Profile = () => {
                             <LogOut className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-base font-semibold mb-1">Sign out</h3>
+                            <h3 className="text-base font-semibold mb-1">
+                              Sign out
+                            </h3>
                             <p className="text-sm text-muted-foreground mb-4">
                               Sign out of your account on this device.
                             </p>
@@ -457,19 +530,15 @@ const Profile = () => {
 
 // ─── Helper components ──────────────────────────────────────────
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
         {label}
       </span>
-      <span className="text-sm font-bold text-foreground bg-muted/20 px-4 py-1.5 rounded-xl border border-border/40 min-w-[120px] text-center">{value}</span>
+      <span className="text-sm font-bold text-foreground bg-muted/20 px-4 py-1.5 rounded-xl border border-border/40 min-w-[120px] text-center">
+        {value}
+      </span>
     </div>
   );
 }
@@ -492,9 +561,16 @@ function EmptyState({
       <div className="w-24 h-24 rounded-3xl bg-muted/30 border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/30 shadow-inner">
         <Icon className="w-12 h-12" />
       </div>
-      <h3 className="text-2xl font-bold font-display tracking-tight text-foreground mb-3">{title}</h3>
-      <p className="text-muted-foreground max-w-sm mb-10 font-medium leading-relaxed">{description}</p>
-      <Button asChild className="gradient-primary px-10 h-14 shadow-xl shadow-primary/20 gap-2 rounded-xl font-bold">
+      <h3 className="text-2xl font-bold font-display tracking-tight text-foreground mb-3">
+        {title}
+      </h3>
+      <p className="text-muted-foreground max-w-sm mb-10 font-medium leading-relaxed">
+        {description}
+      </p>
+      <Button
+        asChild
+        className="gradient-primary px-10 h-14 shadow-xl shadow-primary/20 gap-2 rounded-xl font-bold"
+      >
         <Link to={actionHref}>
           <Sparkles className="w-5 h-5" />
           {actionLabel}
@@ -507,49 +583,50 @@ function EmptyState({
 export default Profile;
 
 function SuspensionAppealSection() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
-  const { data: appealsRes, isLoading: appealsLoading, refetch } = useQuery({
+  const {
+    data: appealsRes,
+    isLoading: appealsLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["my-appeals"],
-    queryFn: () => import("@/services/appeals").then(m => m.fetchMyAppeals()),
+    queryFn: () => import("@/services/appeals").then((m) => m.fetchMyAppeals()),
   });
 
   const appeals = appealsRes?.data || [];
-  const pendingAppeal = appeals.find(a => a.status === "PENDING");
+  const hasPendingAppeal = appeals.some((a) => a.status === "PENDING");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (reason.trim().length < 10) {
-      toast({ title: "Error", description: "Please provide a detailed reason (at least 10 characters).", variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          "Please provide a detailed reason (at least 10 characters).",
+        variant: "destructive",
+      });
       return;
     }
     setIsSubmitting(true);
     try {
-      await import("@/services/appeals").then(m => m.submitAppeal(reason));
-      toast({ title: "Appeal Submitted", description: "Your appeal has been submitted and is under review." });
+      await import("@/services/appeals").then((m) => m.submitAppeal(reason));
+      toast({
+        title: "Appeal Submitted",
+        description: "Your appeal has been submitted and is under review.",
+      });
       setReason("");
       refetch();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to submit appeal.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message || "Failed to submit appeal.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleWithdraw = async (id: string) => {
-    setWithdrawingId(id);
-    try {
-      await import("@/services/appeals").then(m => m.withdrawAppeal(id));
-      toast({ title: "Appeal Withdrawn", description: "Your appeal has been withdrawn." });
-      refetch();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to withdraw appeal.", variant: "destructive" });
-    } finally {
-      setWithdrawingId(null);
     }
   };
 
@@ -561,75 +638,65 @@ function SuspensionAppealSection() {
           Account Suspended
         </CardTitle>
         <CardDescription>
-          Your landlord account has been suspended. You can submit an appeal below to request reinstatement.
+          Your landlord account has been suspended. You can submit an appeal
+          below to request reinstatement.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Suspension reason */}
-        {user?.suspensionReason && (
-          <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
-            <p className="font-semibold text-destructive mb-1">Reason for suspension</p>
-            <p className="text-muted-foreground">{user.suspensionReason}</p>
-          </div>
-        )}
-
         {/* Existing appeals */}
         {appealsLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading appeal history...
           </div>
-        ) : appeals.length > 0 && (
-          <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Appeal History</p>
-            {appeals.map(appeal => (
-              <div key={appeal.id} className="p-3 rounded-xl bg-background/80 border border-border/40 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{new Date(appeal.createdAt).toLocaleDateString()}</span>
-                  <div className="flex items-center gap-2">
+        ) : (
+          appeals.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                Appeal History
+              </p>
+              {appeals.map((appeal) => (
+                <div
+                  key={appeal.id}
+                  className="p-3 rounded-xl bg-background/80 border border-border/40 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(appeal.createdAt).toLocaleDateString()}
+                    </span>
                     <Badge
-                      variant={appeal.status === "APPROVED" ? "success" : appeal.status === "REJECTED" ? "destructive" : "warning"}
+                      variant={
+                        appeal.status === "APPROVED"
+                          ? "success"
+                          : appeal.status === "REJECTED"
+                            ? "destructive"
+                            : "warning"
+                      }
                       className="text-[9px]"
                     >
                       {appeal.status}
                     </Badge>
-                    {appeal.status === "PENDING" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
-                        disabled={withdrawingId === appeal.id}
-                        onClick={() => handleWithdraw(appeal.id)}
-                      >
-                        {withdrawingId === appeal.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <X className="w-3 h-3 mr-1" />
-                        )}
-                        Withdraw
-                      </Button>
-                    )}
                   </div>
+                  <p className="text-sm">{appeal.reason}</p>
+                  {appeal.adminNote && (
+                    <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2">
+                      Admin response: {appeal.adminNote}
+                    </p>
+                  )}
                 </div>
-                <p className="text-sm">{appeal.reason}</p>
-                {appeal.adminNote && (
-                  <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2">
-                    Admin response: {appeal.adminNote}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         )}
 
         {/* Submit new appeal */}
-        {!pendingAppeal ? (
+        {!hasPendingAppeal ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-bold">Reason for Appeal</Label>
               <textarea
                 value={reason}
-                onChange={e => setReason(e.target.value)}
+                onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain why you believe your account should be reinstated..."
                 className="flex min-h-[120px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 required
@@ -645,7 +712,9 @@ function SuspensionAppealSection() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Submitting...
                 </div>
-              ) : "Submit Appeal"}
+              ) : (
+                "Submit Appeal"
+              )}
             </Button>
           </form>
         ) : (
@@ -655,7 +724,8 @@ function SuspensionAppealSection() {
               Appeal Under Review
             </p>
             <p className="text-muted-foreground mt-1">
-              Your appeal is currently being reviewed by our team. We'll update your account status once a decision has been made.
+              Your appeal is currently being reviewed by our team. We'll update
+              your account status once a decision has been made.
             </p>
           </div>
         )}
@@ -675,10 +745,17 @@ function DeleteAccountSection() {
     try {
       const { deleteAccount } = await import("@/services/auth");
       await deleteAccount();
-      toast({ title: "Account deleted", description: "Your account has been permanently removed." });
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently removed.",
+      });
       logout();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to delete account.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete account.",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
       setIsConfirming(false);
@@ -693,12 +770,18 @@ function DeleteAccountSection() {
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-destructive mb-1">Delete Account</h3>
+            <h3 className="text-base font-semibold text-destructive mb-1">
+              Delete Account
+            </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Permanently delete your account and all associated data. This action cannot be undone.
+              Permanently delete your account and all associated data. This
+              action cannot be undone.
             </p>
             {!isConfirming ? (
-              <Button variant="destructive" onClick={() => setIsConfirming(true)}>
+              <Button
+                variant="destructive"
+                onClick={() => setIsConfirming(true)}
+              >
                 Delete my account
               </Button>
             ) : (
@@ -717,7 +800,11 @@ function DeleteAccountSection() {
                     "Yes, delete permanently"
                   )}
                 </Button>
-                <Button variant="outline" onClick={() => setIsConfirming(false)} disabled={isDeleting}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsConfirming(false)}
+                  disabled={isDeleting}
+                >
                   Cancel
                 </Button>
               </div>
@@ -759,13 +846,17 @@ function SecuritySettings() {
         m.changePassword({
           currentPassword: passwords.currentPassword,
           newPassword: passwords.newPassword,
-        })
+        }),
       );
       toast({
         title: "Success",
         description: "Your password has been changed.",
       });
-      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (err: any) {
       toast({
         title: "Error",
@@ -794,7 +885,12 @@ function SecuritySettings() {
           <form onSubmit={handleUpdatePassword} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Current Password</Label>
+                <Label
+                  htmlFor="currentPassword"
+                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
+                >
+                  Current Password
+                </Label>
                 <Input
                   id="currentPassword"
                   name="currentPassword"
@@ -806,7 +902,12 @@ function SecuritySettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">New Password</Label>
+                <Label
+                  htmlFor="newPassword"
+                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
+                >
+                  New Password
+                </Label>
                 <Input
                   id="newPassword"
                   name="newPassword"
@@ -818,7 +919,12 @@ function SecuritySettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Confirm New Password</Label>
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60"
+                >
+                  Confirm New Password
+                </Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -840,7 +946,9 @@ function SecuritySettings() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Syncing...</span>
                 </div>
-              ) : "Update Password"}
+              ) : (
+                "Update Password"
+              )}
             </Button>
           </form>
         </CardContent>
@@ -857,9 +965,15 @@ function SecuritySettings() {
           <p className="text-sm text-muted-foreground mb-6 font-medium leading-relaxed">
             Two-factor authentication is coming soon.
           </p>
-          <Button variant="outline" disabled className="gap-2 rounded-xl h-12 px-6 border-warning/20 text-warning opacity-60">
+          <Button
+            variant="outline"
+            disabled
+            className="gap-2 rounded-xl h-12 px-6 border-warning/20 text-warning opacity-60"
+          >
             Enable 2FA
-            <Badge className="ml-1 text-[9px] bg-warning shadow-none border-none text-white">Soon</Badge>
+            <Badge className="ml-1 text-[9px] bg-warning shadow-none border-none text-white">
+              Soon
+            </Badge>
           </Button>
         </CardContent>
       </Card>
@@ -872,18 +986,26 @@ function MaintenanceRequests() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: response, isLoading: listLoading, refetch } = useQuery({
+  const {
+    data: response,
+    isLoading: listLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["my-maintenance"],
-    queryFn: () => import("@/services/maintenance").then(m => m.fetchMyMaintenanceRequests()),
+    queryFn: () =>
+      import("@/services/maintenance").then((m) =>
+        m.fetchMyMaintenanceRequests(),
+      ),
   });
 
   const { data: bookingsResponse } = useQuery({
     queryKey: ["my-bookings"],
-    queryFn: () => import("@/services/bookings").then(m => m.fetchMyBookings()),
+    queryFn: () =>
+      import("@/services/bookings").then((m) => m.fetchMyBookings()),
   });
 
   const approvedBookings = (bookingsResponse?.data || []).filter(
-    (b) => b.status === "APPROVED"
+    (b) => b.status === "APPROVED",
   );
 
   const requests = response?.data || [];
@@ -895,18 +1017,31 @@ function MaintenanceRequests() {
     const description = formData.get("description") as string;
 
     if (!propertyId) {
-      toast({ title: "Error", description: "Please select a property.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Please select a property.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
     try {
-      await import("@/services/maintenance").then(m => m.createMaintenanceRequest({ propertyId, description }));
-      toast({ title: "Request submitted", description: "The maintenance team has been notified." });
+      await import("@/services/maintenance").then((m) =>
+        m.createMaintenanceRequest({ propertyId, description }),
+      );
+      toast({
+        title: "Request submitted",
+        description: "The maintenance team has been notified.",
+      });
       setIsFormOpen(false);
       refetch();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -916,11 +1051,22 @@ function MaintenanceRequests() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-6 mb-8">
         <div>
-          <h3 className="text-2xl font-bold font-display tracking-tight">Active Repair Tickets</h3>
-          <p className="text-sm text-muted-foreground font-medium">Report and track structural/utility issues in your residence.</p>
+          <h3 className="text-2xl font-bold font-display tracking-tight">
+            Active Repair Tickets
+          </h3>
+          <p className="text-sm text-muted-foreground font-medium">
+            Report and track structural/utility issues in your residence.
+          </p>
         </div>
-        <Button className="gradient-primary rounded-xl px-8 h-12 shadow-lg shadow-primary/20 font-bold gap-2" onClick={() => setIsFormOpen(!isFormOpen)}>
-          {isFormOpen ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+        <Button
+          className="gradient-primary rounded-xl px-8 h-12 shadow-lg shadow-primary/20 font-bold gap-2"
+          onClick={() => setIsFormOpen(!isFormOpen)}
+        >
+          {isFormOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Plus className="w-5 h-5" />
+          )}
           {isFormOpen ? "Collapse Form" : "Open Ticket"}
         </Button>
       </div>
@@ -949,7 +1095,8 @@ function MaintenanceRequests() {
                   </select>
                 ) : (
                   <p className="text-sm text-muted-foreground py-2">
-                    You need an approved booking to submit a maintenance request.
+                    You need an approved booking to submit a maintenance
+                    request.
                   </p>
                 )}
               </div>
@@ -977,26 +1124,42 @@ function MaintenanceRequests() {
       {listLoading ? (
         <div className="py-24 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary opacity-40" />
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">Fetching tickets...</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">
+            Fetching tickets...
+          </p>
         </div>
       ) : requests.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {requests.map(req => (
-            <Card key={req.id} className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-sm group overflow-hidden hover:border-primary/30 transition-all rounded-2xl">
+          {requests.map((req) => (
+            <Card
+              key={req.id}
+              className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-sm group overflow-hidden hover:border-primary/30 transition-all rounded-2xl"
+            >
               <div className="flex items-center justify-between p-5 bg-muted/20 border-b border-border/40">
-                <span className="font-bold text-sm truncate max-w-[200px]">{req.description}</span>
-                <Badge variant="outline" className="px-3 py-1 font-bold text-[10px] uppercase border-primary/20 bg-primary/5 text-primary italic">
-                  {req.status.replace('_', ' ')}
+                <span className="font-bold text-sm truncate max-w-[200px]">
+                  {req.description}
+                </span>
+                <Badge
+                  variant="outline"
+                  className="px-3 py-1 font-bold text-[10px] uppercase border-primary/20 bg-primary/5 text-primary italic"
+                >
+                  {req.status.replace("_", " ")}
                 </Badge>
               </div>
               <CardContent className="p-6">
-                <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-6">{req.description}</p>
+                <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-6">
+                  {req.description}
+                </p>
                 <div className="flex items-center justify-between pt-4 border-t border-border/40">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Ticket #{req.id.slice(0, 8)}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      Ticket #{req.id.slice(0, 8)}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/60">{new Date(req.createdAt).toLocaleDateString()}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">
+                    {new Date(req.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
