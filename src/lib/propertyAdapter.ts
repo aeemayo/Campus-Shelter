@@ -6,6 +6,8 @@ const API_BASE = import.meta.env.VITE_API_URL || "https://campus-shelter-apis.ve
 
 function resolveImageUrl(url: string): string {
   if (!url) return url;
+  // base64 data URLs are already fully self-contained
+  if (url.startsWith("data:")) return url;
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) return url;
   return `${API_BASE}${url}`;
 }
