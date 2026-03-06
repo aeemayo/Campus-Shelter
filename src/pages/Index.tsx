@@ -15,10 +15,10 @@ const Index = () => {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "CampusShelter",
-        "url": "https://campusshelter.com",
+        "url": "https://campus-shelter.vercel.app",
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://campusshelter.com/properties?q={search_term_string}",
+          "target": "https://campus-shelter.vercel.app/properties?q={search_term_string}",
           "query-input": "required name=search_term_string",
         },
       }} />

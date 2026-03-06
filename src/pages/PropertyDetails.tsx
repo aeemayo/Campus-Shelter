@@ -117,7 +117,7 @@ export default function RentalDetailsPage() {
           name: property.title,
           description: property.description,
           image: property.images,
-          url: `https://campusshelter.com/properties/${property.id}`,
+          url: `https://campus-shelter.vercel.app/properties/${property.id}`,
           address: {
             "@type": "PostalAddress",
             addressLocality: property.location,

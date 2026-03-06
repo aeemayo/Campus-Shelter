@@ -5,4 +5,4 @@ Disallow: /profile
 Disallow: /messages
 Disallow: /my-bookings
 
-Sitemap: https://campusshelter.com/sitemap.xml
+Sitemap: https://campus-shelter.vercel.app/sitemap.xml

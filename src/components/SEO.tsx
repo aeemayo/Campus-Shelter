@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "CampusShelter";
-const BASE_URL = "https://campusshelter.com";
+const BASE_URL = "https://campus-shelter.vercel.app";
 const DEFAULT_DESCRIPTION =
   "Find affordable, verified student accommodation near FUTA. Browse rooms, self-contained apartments, and mini flats with trusted landlords.";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
