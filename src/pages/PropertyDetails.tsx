@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import SEO from "@/components/SEO";
 import {
   Card,
   CardContent,
@@ -105,6 +106,37 @@ export default function RentalDetailsPage() {
 
   return (
     <section>
+      <SEO
+        title={property.title}
+        description={property.description?.slice(0, 160) || `${property.title} - Student accommodation near FUTA.`}
+        path={`/properties/${property.id}`}
+        image={property.images?.[0]}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Accommodation",
+          name: property.title,
+          description: property.description,
+          image: property.images,
+          url: `https://campusshelter.com/properties/${property.id}`,
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: property.location,
+          },
+          offers: {
+            "@type": "Offer",
+            price: property.price,
+            priceCurrency: "NGN",
+            availability: "https://schema.org/InStock",
+          },
+          numberOfBedrooms: property.bedrooms,
+          numberOfBathroomsTotal: property.bathrooms,
+          amenityFeature: property.amenities?.map((a: string) => ({
+            "@type": "LocationFeatureSpecification",
+            name: a,
+            value: true,
+          })),
+        }}
+      />
       <Header />
       <div className="pt-24 max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Header */}

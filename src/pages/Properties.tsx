@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import SEO from "@/components/SEO";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -213,6 +214,11 @@ const Properties = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Browse Properties"
+        description="Explore verified student accommodation near FUTA. Filter by room type, price, amenities, and location to find your perfect home."
+        path="/properties"
+      />
       <Header />
 
       {/* Page Header */}

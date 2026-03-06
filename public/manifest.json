@@ -1,0 +1,16 @@
+{
+  "name": "CampusShelter",
+  "short_name": "CampusShelter",
+  "description": "Find affordable, verified student accommodation near FUTA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

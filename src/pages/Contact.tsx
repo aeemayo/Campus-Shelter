@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,6 +86,7 @@ const Contact = () => {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <SEO title="Contact Us" description="Get in touch with the CampusShelter team. We're here to help with student housing near FUTA." path="/contact" />
             <Header />
             <main>
                 {/* Hero */}
