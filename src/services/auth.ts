@@ -14,6 +14,7 @@ export interface User {
   role: UserRole;
   verified: boolean;
   landlordStatus?: LandlordStatus;
+  suspensionReason?: string;
   idCardUrl?: string;
   createdAt: string;
 }
@@ -36,6 +37,7 @@ export interface RegisterPayload {
   password: string;
   phone?: string;
   role?: UserRole;
+  idCardUrl?: string;
 }
 
 // ─── API calls ───────────────────────────────────────────────
