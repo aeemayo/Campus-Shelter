@@ -295,15 +295,15 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+                  <Card className="border-border/60">
                     <CardHeader className="pb-6 border-b border-border/40">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
-                          <CardTitle className="text-xl font-bold font-display tracking-tight">
-                            Global Listings
+                          <CardTitle className="text-lg font-semibold">
+                            Properties
                           </CardTitle>
-                          <CardDescription className="font-medium text-muted-foreground/70">
-                            Audit and manage every property on the platform.
+                          <CardDescription>
+                            Manage every property on the platform.
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-3">
@@ -385,43 +385,26 @@ const AdminDashboard = () => {
                                     </div>
                                   </td>
                                   <td className="py-6 px-6">
-                                    <div className="space-y-1">
-                                      <p className="font-bold text-sm text-primary">
-                                        ₦
-                                        {property.priceMonthly?.toLocaleString()}
-                                      </p>
-                                      <div className="flex gap-1">
-                                        {[1, 2, 3].map((_, i) => (
-                                          <div
-                                            key={i}
-                                            className="w-1.5 h-1.5 rounded-full bg-primary/20"
-                                          />
-                                        ))}
-                                      </div>
-                                    </div>
+                                    <p className="font-medium text-sm text-primary">
+                                      ₦{property.priceMonthly?.toLocaleString()}
+                                    </p>
                                   </td>
                                   <td className="py-6 px-6">
                                     {property.status === "APPROVED" ||
                                     property.approved ? (
                                       <Badge
                                         variant="success"
-                                        className="px-3 py-1 font-bold text-[10px] uppercase border-success/20 bg-success/5 italic"
+                                        className="text-[10px] rounded-md"
                                       >
-                                        Live Listing
+                                        Approved
                                       </Badge>
                                     ) : property.status === "REJECTED" ? (
-                                      <Badge
-                                        variant="destructive"
-                                        className="px-3 py-1 font-bold text-[10px] uppercase border-destructive/20 bg-destructive/5"
-                                      >
+                                      <Badge variant="destructive" className="text-[10px] rounded-md">
                                         Rejected
                                       </Badge>
                                     ) : (
-                                      <Badge
-                                        variant="warning"
-                                        className="px-3 py-1 font-bold text-[10px] uppercase border-warning/20 bg-warning/5 animate-pulse"
-                                      >
-                                        Audit Needed
+                                      <Badge variant="warning" className="text-[10px] rounded-md">
+                                        Pending
                                       </Badge>
                                     )}
                                   </td>
@@ -496,7 +479,7 @@ const AdminDashboard = () => {
                                             }
                                           >
                                             <Trash2 className="w-4 h-4" />
-                                            Purge Data
+                                            Delete
                                           </DropdownMenuItem>
                                         </DropdownMenuContent>
                                       </DropdownMenu>
@@ -563,7 +546,7 @@ const AdminDashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
+                  <Card className="border-border/60 relative">
                     <CardContent className="py-20 text-center">
                       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                         <FileText className="w-8 h-8 text-muted-foreground" />
@@ -698,7 +681,7 @@ function AppealsTab() {
   }
 
   return (
-    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+    <Card className="border-border/60">
       <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
         <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">
           Suspension Appeals
@@ -946,20 +929,18 @@ function AnalyticsTab() {
         {stats.map((stat) => (
           <Card
             key={stat.label}
-            className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-sm group overflow-hidden relative"
+            className="border-border/60"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-primary/10 transition-colors" />
-            <CardContent className="p-6 relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="p-3 rounded-2xl bg-muted/40 group-hover:bg-primary/10 transition-colors">
-                  <stat.icon className={`w-7 h-7 ${stat.color}`} />
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-muted/50">
+                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
-                <TrendingUp className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
               </div>
-              <p className="text-3xl font-black font-display tracking-tight leading-none mb-2">
+              <p className="text-2xl font-bold tracking-tight leading-none mb-1">
                 {stat.value}
               </p>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+              <p className="text-xs text-muted-foreground">
                 {stat.label}
               </p>
             </CardContent>
@@ -1118,7 +1099,7 @@ function LandlordsTab({
   const landlords = response?.data || [];
 
   return (
-    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+    <Card className="border-border/60">
       <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
         <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">
           Landlord Verification
@@ -1401,7 +1382,7 @@ function UsersTab({
       : allUsers.filter((u: any) => u.role === roleFilter);
 
   return (
-    <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden">
+    <Card className="border-border/60">
       <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
