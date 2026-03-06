@@ -47,8 +47,7 @@ import {
   updateProperty,
   fetchAdminUsers,
 } from "@/services/properties";
-import { uploadDocument } from "@/services/documents";
-import { compressImage } from "@/lib/image-compress";
+import { compressImage, compressToBase64 } from "@/lib/image-compress";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
@@ -59,7 +58,7 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
   "image/avif",
 ];
-const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 10; // raw input limit; compressed output will be ≤500KB
 
 interface ImageItem {
   id: string;
@@ -263,66 +262,31 @@ const AdminPropertyForm = () => {
     loadProperty();
   }, [id, form, toast, isLandlord, user?.id]);
 
-  const uploadAllImages = async (): Promise<string[]> => {
-    const total = images.length;
-    if (total === 0) return [];
+  const prepareImages = async (): Promise<string[]> => {
+    if (images.length === 0) return [];
 
-    // Separate already-uploaded from new images
-    const existingUrls: { index: number; url: string }[] = [];
-    const toUpload: { index: number; file: File }[] = [];
-
-    images.forEach((img, i) => {
-      if (img.uploaded) {
-        existingUrls.push({ index: i, url: img.url });
-      } else if (img.file) {
-        toUpload.push({ index: i, file: img.file });
-      }
-    });
-
-    if (toUpload.length > 0) {
-      setImageUploadProgress(`Uploading ${toUpload.length} image${toUpload.length > 1 ? "s" : ""}...`);
+    const newImages = images.filter((img) => !img.uploaded && img.file);
+    if (newImages.length > 0) {
+      setImageUploadProgress(`Processing ${newImages.length} image${newImages.length > 1 ? "s" : ""}...`);
     }
 
-    // Upload new images in parallel
-    const uploadResults = await Promise.allSettled(
-      toUpload.map(async ({ file }) => {
-        const res = await uploadDocument(file, "PROPERTY_IMAGE");
-        return res.data.url;
+    const results = await Promise.all(
+      images.map(async (img) => {
+        if (img.uploaded) return img.url; // already a stored URL or base64
+        if (img.file) return compressToBase64(img.file, 500);
+        return null;
       })
     );
 
-    // Collect results, preserving original order
-    const ordered: (string | null)[] = new Array(total).fill(null);
-    existingUrls.forEach(({ index, url }) => { ordered[index] = url; });
-
-    let failedCount = 0;
-    uploadResults.forEach((result, i) => {
-      if (result.status === "fulfilled") {
-        ordered[toUpload[i].index] = result.value;
-      } else {
-        failedCount++;
-        console.error(`Image upload failed:`, result.reason);
-      }
-    });
-
     setImageUploadProgress(null);
-
-    if (failedCount > 0) {
-      toast({
-        title: "Some Images Failed",
-        description: `${failedCount} image${failedCount > 1 ? "s" : ""} failed to upload and will be skipped.`,
-        variant: "destructive",
-      });
-    }
-
-    return ordered.filter((url): url is string => url !== null);
+    return results.filter((url): url is string => url !== null);
   };
 
   const onSubmit = async (values: PropertyFormValues) => {
     setIsLoading(true);
     try {
-      // Upload images first
-      const imageUrls = await uploadAllImages();
+      // Compress and convert images to base64 for persistent storage
+      const imageUrls = await prepareImages();
 
       const payload = {
         ...values,
@@ -703,10 +667,10 @@ const AdminPropertyForm = () => {
                       </div>
                       <div className="p-6 rounded-2xl bg-muted/30 border border-border/40 transition-all hover:border-primary/20 space-y-5">
                         <p className="text-xs text-muted-foreground font-medium">
-                          Upload high-quality images of your property. The first
-                          image will be used as the cover photo. Accepted
-                          formats: JPEG, PNG, WebP (max {MAX_FILE_SIZE_MB}MB
-                          each).
+                          Upload images of your property. The first image will
+                          be used as the cover photo. Accepted formats: JPEG,
+                          PNG, WebP. Images are automatically compressed to
+                          500KB for fast loading.
                         </p>
 
                         {/* Image previews grid */}

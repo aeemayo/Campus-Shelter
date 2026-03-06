@@ -23,7 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProperty } from "@/services/properties";
 import { fetchPropertyReviews } from "@/services/reviews";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
-import { Loader2, ArrowLeft, Phone, ShieldCheck, Info, Star, TrendingUp, MessageSquare, ChevronRight, Check } from "lucide-react";
+import { Loader2, ArrowLeft, Phone, ShieldCheck, Info, Star, TrendingUp, MessageSquare, ChevronRight, Check, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createBooking } from "@/services/bookings";
 import { useToast } from "@/hooks/use-toast";
@@ -77,7 +77,11 @@ export default function RentalDetailsPage() {
     if (id) {
       markViewed(id);
     }
-  }, [property, activeImage, id, markViewed]);
+    // Landlords can only view their own properties
+    if (property && user?.role === "LANDLORD" && property.landlord?.id !== user.id) {
+      navigate("/landlord", { replace: true });
+    }
+  }, [property, activeImage, id, markViewed, user, navigate]);
 
   if (isLoading) {
     return (
@@ -140,9 +144,21 @@ export default function RentalDetailsPage() {
       <Header />
       <div className="pt-24 max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">{property.title}</h1>
-          <p className="text-muted-foreground">{property.location}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight">{property.title}</h1>
+            <p className="text-muted-foreground">{property.location}</p>
+          </div>
+          {user?.role === "LANDLORD" && property.landlord?.id === user.id && (
+            <Button
+              variant="outline"
+              className="shrink-0 gap-2"
+              onClick={() => navigate(`/properties/edit/${property.id}`)}
+            >
+              <Pencil className="w-4 h-4" />
+              Edit Property
+            </Button>
+          )}
         </div>
         {/* Gallery */}
         <motion.div

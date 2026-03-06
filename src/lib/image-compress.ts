@@ -78,3 +78,63 @@ export async function compressImages(
 ): Promise<File[]> {
   return Promise.all(files.map((f) => compressImage(f, opts)));
 }
+
+/**
+ * Compress an image and return a base64 data URL guaranteed to be
+ * under `maxSizeKB` (default 500KB). Quality is reduced iteratively
+ * until the target size is met.
+ */
+export async function compressToBase64(
+  file: File,
+  maxSizeKB = 500
+): Promise<string> {
+  if (!file.type.startsWith("image/")) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const { width, height } = bitmap;
+
+  const maxDim = 1200;
+  let newWidth = width;
+  let newHeight = height;
+  if (width > maxDim || height > maxDim) {
+    const ratio = Math.min(maxDim / width, maxDim / height);
+    newWidth = Math.round(width * ratio);
+    newHeight = Math.round(height * ratio);
+  }
+
+  const canvas = new OffscreenCanvas(newWidth, newHeight);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, newWidth, newHeight);
+  bitmap.close();
+
+  const maxBytes = maxSizeKB * 1024;
+
+  // Try reducing quality until under the size limit
+  for (let quality = 0.8; quality >= 0.1; quality -= 0.1) {
+    const blob = await canvas.convertToBlob({ type: "image/jpeg", quality });
+    if (blob.size <= maxBytes || quality <= 0.1) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+    }
+  }
+
+  // Fallback – return at lowest quality
+  const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.1 });
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+}
