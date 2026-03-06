@@ -7,6 +7,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FUTA_CENTER, FUTA_GATES } from "@/lib/futa-gates";
 import { MapPin } from "lucide-react";
+import "./LocationPicker.css";
 
 // Fix default marker icon paths broken by bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -108,8 +109,7 @@ export default function LocationPicker({ lat, lng, onChange }: LocationPickerPro
     <div className="space-y-2">
       <div
         ref={containerRef}
-        className="h-64 rounded-xl overflow-hidden border border-border/60 ring-0 focus-within:ring-2 focus-within:ring-primary"
-        style={{ zIndex: 0 }}
+        className="h-64 rounded-xl overflow-hidden border border-border/60 ring-0 focus-within:ring-2 focus-within:ring-primary map-container"
       />
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">

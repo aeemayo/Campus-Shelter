@@ -39,6 +39,8 @@ import {
   ImagePlus,
   X,
   GripVertical,
+  MapPin,
+  Keyboard,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -52,6 +54,102 @@ import { apiFetch } from "@/lib/api";
 import LocationPicker from "@/components/LocationPicker";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+
+// ─── CoordinatePicker ───────────────────────────────────────────────────────
+// Allows admin to set property coordinates via map click OR manual lat/lng inputs.
+
+function CoordinatePicker({
+  lat,
+  lng,
+  onChange,
+}: {
+  lat?: number;
+  lng?: number;
+  onChange: (lat: number, lng: number) => void;
+}) {
+  const [mode, setMode] = useState<"map" | "input">("map");
+  const [inputLat, setInputLat] = useState(lat?.toString() ?? "");
+  const [inputLng, setInputLng] = useState(lng?.toString() ?? "");
+
+  const applyManual = () => {
+    const parsedLat = parseFloat(inputLat);
+    const parsedLng = parseFloat(inputLng);
+    if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+      onChange(parsedLat, parsedLng);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">Property Coordinates</p>
+        <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+          <button
+            type="button"
+            onClick={() => setMode("map")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${mode === "map" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >
+            <MapPin className="w-3 h-3" />
+            Map
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("input")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${mode === "input" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >
+            <Keyboard className="w-3 h-3" />
+            Manual
+          </button>
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        {mode === "map"
+          ? "Click on the map to pin the property. FUTA gate distances will be calculated automatically."
+          : "Enter latitude and longitude directly. Coordinates near FUTA: lat ~7.3197, lng ~5.1352."}
+      </p>
+
+      {mode === "map" ? (
+        <LocationPicker
+          lat={lat}
+          lng={lng}
+          onChange={onChange}
+        />
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Latitude</label>
+            <Input
+              placeholder="e.g. 7.3197"
+              value={inputLat}
+              onChange={(e) => setInputLat(e.target.value)}
+              onBlur={applyManual}
+              className="h-10 rounded-lg font-mono text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Longitude</label>
+            <Input
+              placeholder="e.g. 5.1352"
+              value={inputLng}
+              onChange={(e) => setInputLng(e.target.value)}
+              onBlur={applyManual}
+              className="h-10 rounded-lg font-mono text-sm"
+            />
+          </div>
+        </div>
+      )}
+
+      {lat && lng && (
+        <p className="text-xs text-success font-medium">
+          ✓ Coordinates set ({lat.toFixed(5)}, {lng.toFixed(5)}) — gate distances will show on the listing.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 const MAX_IMAGES = 8;
 const ACCEPTED_IMAGE_TYPES = [
@@ -472,28 +570,15 @@ const AdminPropertyForm = () => {
                           )}
                         />
 
-                        {/* Map picker — click to set property coordinates */}
-                        <div className="space-y-2">
-                          <p className="text-sm font-bold">
-                            Property Coordinates
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Click on the map to pin your property location. FUTA gates are shown for reference. Distance to the nearest gate will be calculated automatically.
-                          </p>
-                          <LocationPicker
-                            lat={form.watch("latitude")}
-                            lng={form.watch("longitude")}
-                            onChange={(lat, lng) => {
-                              form.setValue("latitude", lat);
-                              form.setValue("longitude", lng);
-                            }}
-                          />
-                          {form.watch("latitude") && form.watch("longitude") && (
-                            <p className="text-xs text-success font-medium">
-                              ✓ Coordinates set — distance to FUTA gates will display on the listing.
-                            </p>
-                          )}
-                        </div>
+                        {/* Coordinates — map or manual input */}
+                        <CoordinatePicker
+                          lat={form.watch("latitude")}
+                          lng={form.watch("longitude")}
+                          onChange={(lat, lng) => {
+                            form.setValue("latitude", lat);
+                            form.setValue("longitude", lng);
+                          }}
+                        />
 
                         <FormField
                           control={form.control}
