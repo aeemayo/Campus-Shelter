@@ -54,6 +54,8 @@ export interface Property {
   images: string[];
   amenities: string[];
   distance: string;
+  latitude?: number;
+  longitude?: number;
   rating: number;
   reviewCount: number;
   featured: boolean;
