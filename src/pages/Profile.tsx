@@ -55,7 +55,12 @@ const Profile = () => {
   const { favorites, viewedPropertyIds, toggleFavorite, markViewed } =
     useUserActivity(isAuthenticated ? user?.id : undefined);
 
-  const [activeTab, setActiveTab] = useState("saved");
+  const isAdmin = user?.role === "ADMIN";
+  const isLandlord = user?.role === "LANDLORD";
+  const isStudent = user?.role === "STUDENT";
+
+  const defaultTab = isAdmin ? "settings" : "saved";
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Fetch properties from API (for resolving saved/viewed)
   const { data: apiResponse } = useProperties({ limit: 50 });
@@ -284,28 +289,36 @@ const Profile = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="bg-muted/40 p-1 rounded-xl h-auto flex flex-wrap gap-1 border border-border/40 mb-10">
-              <TabsTrigger value="saved" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Bookmark className="w-4 h-4" />
-                <span>Saved</span>
-              </TabsTrigger>
-              <TabsTrigger value="viewed" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Clock className="w-4 h-4" />
-                <span>History</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Settings className="w-4 h-4" />
-                <span>Account</span>
-              </TabsTrigger>
-              <TabsTrigger value="security" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Shield className="w-4 h-4" />
-                <span>Security</span>
-              </TabsTrigger>
-              <TabsTrigger value="maintenance" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Wrench className="w-4 h-4" />
-                <span>Repair Requests</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto pb-1 mb-10">
+              <TabsList className="bg-muted/40 p-1 rounded-xl h-auto inline-flex gap-1 border border-border/40 min-w-max">
+                {!isAdmin && (
+                  <TabsTrigger value="saved" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                    <Bookmark className="w-4 h-4" />
+                    <span>Saved</span>
+                  </TabsTrigger>
+                )}
+                {!isAdmin && (
+                  <TabsTrigger value="viewed" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                    <Clock className="w-4 h-4" />
+                    <span>History</span>
+                  </TabsTrigger>
+                )}
+                <TabsTrigger value="settings" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                  <Settings className="w-4 h-4" />
+                  <span>Account</span>
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                  <Shield className="w-4 h-4" />
+                  <span>Security</span>
+                </TabsTrigger>
+                {isStudent && (
+                  <TabsTrigger value="maintenance" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap">
+                    <Wrench className="w-4 h-4" />
+                    <span>Repair Requests</span>
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </div>
 
             <AnimatePresence mode="wait">
               <TabsContent value="saved" className="mt-0 outline-none">
