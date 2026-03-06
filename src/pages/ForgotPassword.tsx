@@ -6,6 +6,7 @@ import * as z from "zod";
 import { forgotPassword } from "@/services/auth";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +66,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4">
+      <SEO title="Reset Password" description="Reset your CampusShelter account password." path="/forgot-password" noIndex />
       <div className="w-full max-w-md">
         <Card className="border-border/50 shadow-primary-lg">
           <CardHeader className="space-y-1.5 pb-8 text-center">

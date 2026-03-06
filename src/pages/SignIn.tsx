@@ -6,6 +6,7 @@ import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -94,6 +95,7 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4">
+      <SEO title="Sign In" description="Sign in to your CampusShelter account to browse properties, manage bookings, or list accommodation." path="/login" />
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">

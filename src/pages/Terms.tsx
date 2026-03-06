@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { ScrollText } from "lucide-react";
 
 const sections = [
@@ -60,6 +61,7 @@ const sections = [
 const Terms = () => {
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <SEO title="Terms of Service" description="CampusShelter terms of service for students and landlords." path="/terms" />
             <Header />
             <main>
                 {/* Hero */}

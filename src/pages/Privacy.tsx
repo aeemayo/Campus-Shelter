@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { ShieldCheck } from "lucide-react";
 
 const sections = [
@@ -85,6 +86,7 @@ Address: FUTA, Akure, Ondo State, Nigeria`,
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO title="Privacy Policy" description="How CampusShelter collects, uses, and protects your personal data." path="/privacy" />
       <Header />
       <main>
         {/* Hero */}

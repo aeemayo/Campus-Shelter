@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import PropertyCard from "@/components/properties/PropertyCard";
 import { useProperties } from "@/hooks/use-properties";
 import { useUserActivity } from "@/hooks/use-user-activity";
@@ -101,6 +102,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Profile" description="Manage your CampusShelter profile and account settings." path="/profile" noIndex />
       <Header bgColor="white" />
 
       {/* Profile Hero */}

@@ -6,6 +6,7 @@ import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -150,6 +151,7 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background flex items-center justify-center p-4 py-12">
+      <SEO title="Create Account" description="Sign up for CampusShelter to find or list student accommodation near FUTA." path="/register" />
       <div className="w-full max-w-lg">
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">

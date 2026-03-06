@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import {
   Accordion,
   AccordionContent,
@@ -112,6 +113,25 @@ const faqCategories = [
 const FAQ = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="FAQ"
+        description="Frequently asked questions about using CampusShelter for student housing near FUTA."
+        path="/faq"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqCategories.flatMap((category) =>
+            category.faqs.map((faq) => ({
+              "@type": "Question",
+              name: faq.q,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.a,
+              },
+            }))
+          ),
+        }}
+      />
       <Header />
       <main>
         {/* Hero */}

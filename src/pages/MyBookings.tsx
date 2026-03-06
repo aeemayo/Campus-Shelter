@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ const MyBookings = () => {
   const bookings = response?.data || [];
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="My Bookings" description="View and manage your accommodation bookings on CampusShelter." path="/my-bookings" noIndex />
       <Header />
 
       <main className="flex-1 pt-24 pb-12">

@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/landing/Hero";
@@ -10,6 +11,17 @@ import CallToAction from "@/components/landing/CallToAction";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO path="/" jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "CampusShelter",
+        "url": "https://campus-shelter.vercel.app",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://campus-shelter.vercel.app/properties?q={search_term_string}",
+          "query-input": "required name=search_term_string",
+        },
+      }} />
       <Header />
       <main>
         <Hero />
