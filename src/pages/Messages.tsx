@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Navigate, useParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMessages, sendMessage, ApiMessage } from "@/services/messages";
@@ -128,6 +129,7 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Messages" description="Your CampusShelter messages with landlords and students." path="/messages" noIndex />
       <Header />
 
       <main className="flex-1 pt-20 pb-4 overflow-hidden h-[calc(100vh-80px)]">

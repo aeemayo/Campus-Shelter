@@ -2,6 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <SEO title="Page Not Found" noIndex />
       <div className="text-center max-w-md">
         <div className="w-24 h-24 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-8">
           <SearchX className="w-12 h-12 text-primary/40" />

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperties } from "@/hooks/use-properties";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
@@ -201,6 +202,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Admin Dashboard" noIndex />
       <Header bgColor="white" />
 
       <main className="flex-1 pt-24 pb-12">

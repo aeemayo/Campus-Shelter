@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { fetchProperties } from "@/services/properties";
@@ -220,6 +221,7 @@ const LandlordDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Landlord Dashboard" description="Manage your properties, bookings, and tenant communications." path="/landlord" noIndex />
       <Header bgColor="white" />
 
       <main className="flex-1 pt-24 pb-12">
