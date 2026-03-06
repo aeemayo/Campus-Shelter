@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useFutaGates } from "@/hooks/useFutaGates";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Shield } from "lucide-react";
+import { Calendar, Shield, Plus, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -73,9 +73,12 @@ export default function RentalDetailsPage() {
       .toISOString()
       .split("T")[0],
   });
-  const [inspectionDate, setInspectionDate] = useState("");
-  const [inspectionTime, setInspectionTime] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
   const [isInspectionLoading, setIsInspectionLoading] = useState(false);
+  const [newSlotInput, setNewSlotInput] = useState("");
+  const [localSlots, setLocalSlots] = useState<string[]>([]);
+  const [isSavingSlots, setIsSavingSlots] = useState(false);
+  const slotsInitialized = useRef(false);
 
   const {
     data: response,
@@ -90,6 +93,13 @@ export default function RentalDetailsPage() {
   const property = useMemo(() => {
     return response?.data ? toFrontendProperty(response.data) : null;
   }, [response]);
+
+  useEffect(() => {
+    if (property && !slotsInitialized.current) {
+      setLocalSlots((property as any).inspectionSlots ?? []);
+      slotsInitialized.current = true;
+    }
+  }, [property]);
 
   useEffect(() => {
     if (property && !activeImage) setActiveImage(property.images[0]);
@@ -570,7 +580,7 @@ export default function RentalDetailsPage() {
 
           {/* Right sidebar */}
           <div className="space-y-4">
-            {/* Price */}
+            {/* Price — always visible */}
             <Card className="border-border/60">
               <CardContent className="p-5 space-y-1.5">
                 <p className="text-2xl font-bold text-foreground">
@@ -585,258 +595,438 @@ export default function RentalDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* Landlord */}
-            <Card className="border-border/60">
-              <CardContent className="p-5 space-y-4">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Landlord
-                </p>
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={(property.landlord as any).avatar} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {property.landlord.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
+            {user?.role === "LANDLORD" && property.landlord?.id === user.id ? (
+              /* ── Landlord: manage inspection slots ── */
+              <Card className="border-border/60">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
                     <p className="font-medium text-foreground text-sm">
-                      {property.landlord.name}
+                      Inspection time slots
                     </p>
-                    {property.landlord.verified && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <ShieldCheck className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-primary">Verified</span>
-                      </div>
-                    )}
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Button
-                    className="w-full gradient-primary rounded-lg h-10"
-                    onClick={() =>
-                      (window.location.href = `tel:${property.landlord.phone || "+2348000000000"}`)
-                    }
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Call Landlord
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-lg h-10"
-                    asChild
-                  >
-                    <Link to={`/messages/${property.landlord.id}`}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Send Message
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Book */}
-            <Card className="border-border/60">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-foreground">
-                    Book this property
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Add the times you're available for inspections. Students will
+                    pick from these slots.
                   </p>
-                  {property.available ? (
-                    <Badge variant="success" className="text-[10px] rounded-md">
-                      Available
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="destructive"
-                      className="text-[10px] rounded-md"
-                    >
-                      Occupied
-                    </Badge>
+
+                  {/* Existing slots */}
+                  {localSlots.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {localSlots.map((slot) => (
+                        <span
+                          key={slot}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium"
+                        >
+                          <Clock className="w-3 h-3" />
+                          {slot}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setLocalSlots((prev) =>
+                                prev.filter((s) => s !== slot),
+                              )
+                            }
+                            className="ml-0.5 hover:text-destructive transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   )}
-                </div>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full gradient-primary rounded-lg h-10">
-                      Book Now
+                  {/* Add new slot */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="e.g. Mon 10:00 AM"
+                      className="rounded-lg h-9 text-sm flex-1"
+                      value={newSlotInput}
+                      onChange={(e) => setNewSlotInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = newSlotInput.trim();
+                          if (val && !localSlots.includes(val)) {
+                            setLocalSlots((prev) => [...prev, val]);
+                          }
+                          setNewSlotInput("");
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 px-3 rounded-lg"
+                      onClick={() => {
+                        const val = newSlotInput.trim();
+                        if (val && !localSlots.includes(val)) {
+                          setLocalSlots((prev) => [...prev, val]);
+                        }
+                        setNewSlotInput("");
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[440px] rounded-xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg font-semibold">
-                        Request Booking
-                      </DialogTitle>
-                      <DialogDescription className="text-sm text-muted-foreground">
-                        Choose your lease start and end dates. The landlord will
-                        confirm within 24 hours.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-sm">Move-in date</Label>
-                          <Input
-                            type="date"
-                            className="rounded-lg h-10"
-                            value={bookingDates.start}
-                            onChange={(e) =>
-                              setBookingDates({
-                                ...bookingDates,
-                                start: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-sm">Move-out date</Label>
-                          <Input
-                            type="date"
-                            className="rounded-lg h-10"
-                            value={bookingDates.end}
-                            onChange={(e) =>
-                              setBookingDates({
-                                ...bookingDates,
-                                end: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
+                  </div>
 
-                      <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
-                        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Your contact details will be shared with the landlord
-                          to process this booking.
+                  <Button
+                    className="w-full gradient-primary rounded-lg h-10 text-sm"
+                    disabled={isSavingSlots}
+                    onClick={async () => {
+                      setIsSavingSlots(true);
+                      try {
+                        const { updateInspectionSlots } = await import(
+                          "@/services/properties"
+                        );
+                        await updateInspectionSlots(property.id, localSlots);
+                        toast({
+                          title: "Slots saved",
+                          description: "Students can now pick from your available times.",
+                        });
+                      } catch (err: any) {
+                        toast({
+                          title: "Failed to save slots",
+                          description: err.message,
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsSavingSlots(false);
+                      }
+                    }}
+                  >
+                    {isSavingSlots && (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    )}
+                    Save slots
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              /* ── Student / guest: contact, book, inspect ── */
+              <>
+                {/* Landlord contact */}
+                <Card className="border-border/60">
+                  <CardContent className="p-5 space-y-4">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Landlord
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={(property.landlord as any).avatar} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                          {property.landlord.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">
+                          {property.landlord.name}
                         </p>
+                        {property.landlord.verified && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <ShieldCheck className="w-3 h-3 text-primary" />
+                            <span className="text-xs text-primary">
+                              Verified
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <DialogFooter>
+
+                    <div className="flex flex-col gap-2">
                       <Button
                         className="w-full gradient-primary rounded-lg h-10"
-                        onClick={async () => {
-                          if (!isAuthenticated) {
-                            toast({
-                              title: "Sign in required",
-                              description: "Please sign in to book a property.",
-                              variant: "destructive",
-                            });
-                            navigate("/login");
-                            return;
-                          }
-                          setIsBookingLoading(true);
-                          try {
-                            await createBooking({
-                              propertyId: property.id,
-                              leaseStart: new Date(bookingDates.start + "T00:00:00.000Z").toISOString(),
-                              leaseEnd: new Date(bookingDates.end + "T00:00:00.000Z").toISOString(),
-                            });
-                            toast({
-                              title: "Booking request sent!",
-                              description:
-                                "The landlord will contact you shortly.",
-                            });
-                            navigate("/my-bookings");
-                          } catch (err: any) {
-                            toast({
-                              title: "Booking failed",
-                              description: err.message,
-                              variant: "destructive",
-                            });
-                          } finally {
-                            setIsBookingLoading(false);
-                          }
-                        }}
-                        disabled={isBookingLoading}
+                        onClick={() =>
+                          (window.location.href = `tel:${property.landlord.phone || "+2348000000000"}`)
+                        }
                       >
-                        {isBookingLoading && (
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        )}
-                        Confirm Booking
+                        <Phone className="w-4 h-4 mr-2" />
+                        Call Landlord
                       </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-lg h-10"
+                        asChild
+                      >
+                        <Link to={`/messages/${property.landlord.id}`}>
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Send Message
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                  <Shield className="w-3.5 h-3.5" />
-                  Verified and safe to book
-                </div>
-              </CardContent>
-            </Card>
+                {/* Book */}
+                <Card className="border-border/60">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-foreground">
+                        Book this property
+                      </p>
+                      {property.available ? (
+                        <Badge
+                          variant="success"
+                          className="text-[10px] rounded-md"
+                        >
+                          Available
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="destructive"
+                          className="text-[10px] rounded-md"
+                        >
+                          Occupied
+                        </Badge>
+                      )}
+                    </div>
 
-            {/* Schedule inspection */}
-            <Card className="border-border/60">
-              <CardContent className="p-5 space-y-3">
-                <p className="font-medium text-foreground text-sm">
-                  Schedule inspection
-                </p>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      className="rounded-lg h-10 pl-9"
-                      value={inspectionDate}
-                      onChange={(e) => setInspectionDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <Input
-                    placeholder="Preferred time (e.g. 12:00 PM)"
-                    className="rounded-lg h-10"
-                    value={inspectionTime}
-                    onChange={(e) => setInspectionTime(e.target.value)}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full rounded-lg h-10 text-sm"
-                  disabled={isInspectionLoading}
-                  onClick={async () => {
-                    if (!isAuthenticated) {
-                      toast({
-                        title: "Sign in required",
-                        description: "Please sign in to schedule an inspection.",
-                        variant: "destructive",
-                      });
-                      navigate("/login");
-                      return;
-                    }
-                    if (!inspectionDate) {
-                      toast({
-                        title: "Date required",
-                        description: "Please select a preferred inspection date.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    setIsInspectionLoading(true);
-                    try {
-                      const { sendMessage } = await import("@/services/messages");
-                      const dateStr = new Date(inspectionDate + "T00:00:00").toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-                      const content = `Hello, I would like to schedule an inspection for "${property.title}" on ${dateStr}${inspectionTime ? ` at ${inspectionTime}` : ""}. Please let me know if this works. Thank you.`;
-                      await sendMessage({ receiverId: property.landlord.id, propertyId: property.id, content });
-                      toast({ title: "Inspection request sent!", description: "The landlord will confirm your visit shortly." });
-                      setInspectionDate("");
-                      setInspectionTime("");
-                    } catch (err: any) {
-                      toast({ title: "Failed to send request", description: err.message, variant: "destructive" });
-                    } finally {
-                      setIsInspectionLoading(false);
-                    }
-                  }}
-                >
-                  {isInspectionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Request Inspection
-                </Button>
-              </CardContent>
-            </Card>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="w-full gradient-primary rounded-lg h-10">
+                          Book Now
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[440px] rounded-xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-lg font-semibold">
+                            Request Booking
+                          </DialogTitle>
+                          <DialogDescription className="text-sm text-muted-foreground">
+                            Choose your lease start and end dates. The landlord
+                            will confirm within 24 hours.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          {isAuthenticated && user?.role === "STUDENT" && !user?.verified && (
+                            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
+                              <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">
+                                  Verify your student ID first
+                                </p>
+                                <p className="text-xs text-yellow-700 dark:text-yellow-400/80">
+                                  Upload your FUTA ID on your{" "}
+                                  <Link to="/profile" className="underline font-medium">
+                                    profile
+                                  </Link>{" "}
+                                  to build trust with landlords. You can still book without it.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-sm">Move-in date</Label>
+                              <Input
+                                type="date"
+                                className="rounded-lg h-10"
+                                value={bookingDates.start}
+                                onChange={(e) =>
+                                  setBookingDates({
+                                    ...bookingDates,
+                                    start: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-sm">Move-out date</Label>
+                              <Input
+                                type="date"
+                                className="rounded-lg h-10"
+                                value={bookingDates.end}
+                                onChange={(e) =>
+                                  setBookingDates({
+                                    ...bookingDates,
+                                    end: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
+                            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              Your contact details will be shared with the
+                              landlord to process this booking.
+                            </p>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            className="w-full gradient-primary rounded-lg h-10"
+                            onClick={async () => {
+                              if (!isAuthenticated) {
+                                toast({
+                                  title: "Sign in required",
+                                  description:
+                                    "Please sign in to book a property.",
+                                  variant: "destructive",
+                                });
+                                navigate("/login");
+                                return;
+                              }
+                              setIsBookingLoading(true);
+                              try {
+                                await createBooking({
+                                  propertyId: property.id,
+                                  leaseStart: new Date(
+                                    bookingDates.start + "T00:00:00.000Z",
+                                  ).toISOString(),
+                                  leaseEnd: new Date(
+                                    bookingDates.end + "T00:00:00.000Z",
+                                  ).toISOString(),
+                                });
+                                toast({
+                                  title: "Booking request sent!",
+                                  description:
+                                    "The landlord will contact you shortly.",
+                                });
+                                navigate("/my-bookings");
+                              } catch (err: any) {
+                                toast({
+                                  title: "Booking failed",
+                                  description: err.message,
+                                  variant: "destructive",
+                                });
+                              } finally {
+                                setIsBookingLoading(false);
+                              }
+                            }}
+                            disabled={isBookingLoading}
+                          >
+                            {isBookingLoading && (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            )}
+                            Confirm Booking
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                      <Shield className="w-3.5 h-3.5" />
+                      Verified and safe to book
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Request Inspection */}
+                <Card className="border-border/60">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <p className="font-medium text-foreground text-sm">
+                        Schedule inspection
+                      </p>
+                    </div>
+
+                    {(property as any).inspectionSlots?.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          Pick a time slot offered by the landlord:
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          {(property as any).inspectionSlots.map(
+                            (slot: string) => (
+                              <button
+                                key={slot}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedSlot(
+                                    selectedSlot === slot ? "" : slot,
+                                  )
+                                }
+                                className={cn(
+                                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors text-left",
+                                  selectedSlot === slot
+                                    ? "border-primary bg-primary/10 text-primary font-medium"
+                                    : "border-border/60 hover:bg-muted/60",
+                                )}
+                              >
+                                <Clock className="w-3.5 h-3.5 shrink-0" />
+                                {slot}
+                                {selectedSlot === slot && (
+                                  <Check className="w-3.5 h-3.5 ml-auto" />
+                                )}
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        No inspection slots set by the landlord yet. Send a
+                        message to arrange a visit.
+                      </p>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-lg h-10 text-sm"
+                      disabled={
+                        isInspectionLoading ||
+                        ((property as any).inspectionSlots?.length > 0 &&
+                          !selectedSlot)
+                      }
+                      onClick={async () => {
+                        if (!isAuthenticated) {
+                          toast({
+                            title: "Sign in required",
+                            description:
+                              "Please sign in to schedule an inspection.",
+                            variant: "destructive",
+                          });
+                          navigate("/login");
+                          return;
+                        }
+                        setIsInspectionLoading(true);
+                        try {
+                          const { sendMessage } = await import(
+                            "@/services/messages"
+                          );
+                          const slotText =
+                            selectedSlot ||
+                            "a time convenient for both of us";
+                          const content = `Hello, I'd like to schedule an inspection for "${property.title}" at ${slotText}. Please confirm if this works. Thank you.`;
+                          await sendMessage({
+                            receiverId: property.landlord.id,
+                            propertyId: property.id,
+                            content,
+                          });
+                          toast({
+                            title: "Inspection request sent!",
+                            description:
+                              "The landlord will confirm your visit shortly.",
+                          });
+                          setSelectedSlot("");
+                          navigate(`/messages/${property.landlord.id}`);
+                        } catch (err: any) {
+                          toast({
+                            title: "Failed to send request",
+                            description: err.message,
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setIsInspectionLoading(false);
+                        }
+                      }}
+                    >
+                      {isInspectionLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      )}
+                      Request Inspection
+                    </Button>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
       </div>

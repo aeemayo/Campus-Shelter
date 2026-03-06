@@ -27,6 +27,7 @@ export interface ApiProperty {
   status: string;
   approved: boolean;
   images: string[];
+  inspectionSlots: string[];
   landlordId: string;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +67,7 @@ export interface Property {
   status?: string;
   approved?: boolean;
   landlordId?: string;
+  inspectionSlots?: string[];
   landlord?: {
     id?: string;
     name: string;
@@ -196,6 +198,14 @@ export async function adminFlagUser(id: string, flagged: boolean) {
     method: "PATCH",
     body: JSON.stringify({ flagged }),
   });
+}
+
+export async function updateInspectionSlots(id: string, inspectionSlots: string[]) {
+  const res = await apiFetch<ApiSuccess<any>>(`/api/properties/${id}/inspection-slots`, {
+    method: "PATCH",
+    body: JSON.stringify({ inspectionSlots }),
+  });
+  return res.data;
 }
 
 export async function adminDeleteUser(id: string) {

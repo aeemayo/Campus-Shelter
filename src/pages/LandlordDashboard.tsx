@@ -664,6 +664,17 @@ const LandlordDashboard = () => {
                                     /yr
                                   </span>
                                 </p>
+                                {(property.inspectionSlots?.length ?? 0) > 0 ? (
+                                  <p className="text-[10px] text-primary/70 flex items-center gap-1 mt-0.5">
+                                    <Clock className="w-3 h-3" />
+                                    {property.inspectionSlots!.length} inspection slot{property.inspectionSlots!.length !== 1 ? "s" : ""} set
+                                  </p>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mt-0.5">
+                                    <Clock className="w-3 h-3" />
+                                    No inspection slots
+                                  </p>
+                                )}
                               </div>
                               <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                             </Link>
@@ -683,6 +694,9 @@ const LandlordDashboard = () => {
                                 </th>
                                 <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
                                   Status
+                                </th>
+                                <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
+                                  Inspection Slots
                                 </th>
                                 <th className="text-right font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
                                   Actions
@@ -752,6 +766,21 @@ const LandlordDashboard = () => {
                                       >
                                         Pending Review
                                       </Badge>
+                                    )}
+                                  </td>
+                                  <td className="py-4 px-6">
+                                    {(property.inspectionSlots?.length ?? 0) > 0 ? (
+                                      <div className="flex items-center gap-1.5 text-primary/80">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        <span className="text-xs font-medium">
+                                          {property.inspectionSlots!.length} slot{property.inspectionSlots!.length !== 1 ? "s" : ""}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        None set
+                                      </span>
                                     )}
                                   </td>
                                   <td className="py-4 px-6 text-right">
