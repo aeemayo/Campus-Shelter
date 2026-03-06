@@ -362,7 +362,7 @@ const LandlordDashboard = () => {
                 <div className="absolute top-0 left-0 w-1 h-full bg-success" />
                 <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
                   <CardDescription className="font-medium text-xs md:text-sm">
-                    Monthly Revenue
+                    Annual Revenue
                   </CardDescription>
                   <CardTitle className="text-xl md:text-3xl font-bold font-display text-success">
                     ₦{stats.totalRevenue.toLocaleString()}
@@ -635,7 +635,7 @@ const LandlordDashboard = () => {
                                 <p className="font-bold text-sm text-primary">
                                   ₦{property.priceMonthly?.toLocaleString()}
                                   <span className="text-[10px] text-muted-foreground font-normal">
-                                    /mo
+                                    /yr
                                   </span>
                                 </p>
                               </div>
@@ -653,7 +653,7 @@ const LandlordDashboard = () => {
                                   Property Details
                                 </th>
                                 <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
-                                  Monthly Price
+                                  Annual Price
                                 </th>
                                 <th className="text-left font-semibold py-4 px-6 uppercase tracking-wider text-[10px]">
                                   Status
@@ -699,7 +699,7 @@ const LandlordDashboard = () => {
                                         {property.priceMonthly?.toLocaleString()}
                                       </p>
                                       <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">
-                                        Per Month
+                                        Per Year
                                       </p>
                                     </div>
                                   </td>

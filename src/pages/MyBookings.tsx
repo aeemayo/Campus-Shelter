@@ -97,7 +97,7 @@ const MyBookings = () => {
                               <Phone className="w-4 h-4 text-primary" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Monthly Rent</p>
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Annual Rent</p>
                               <p className="text-sm font-medium">₦{(booking.property?.priceMonthly || 0).toLocaleString()}</p>
                             </div>
                           </div>

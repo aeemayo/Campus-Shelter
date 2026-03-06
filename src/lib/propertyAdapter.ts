@@ -47,7 +47,7 @@ export function toFrontendProperty(p: ApiProperty): Property {
     price: p.priceMonthly,
     priceMonthly: p.priceMonthly,
     priceWeekly: p.priceWeekly,
-    priceType: "monthly",
+    priceType: "yearly",
     bedrooms: p.rooms,
     bathrooms: p.bathrooms,
     images: p.images && p.images.length > 0
