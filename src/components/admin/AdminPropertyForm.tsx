@@ -25,23 +25,46 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChevronLeft, Loader2, Save, ImagePlus, X, GripVertical } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  ChevronLeft,
+  Loader2,
+  Save,
+  ImagePlus,
+  X,
+  GripVertical,
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { fetchProperty, createProperty, updateProperty, fetchAdminUsers } from "@/services/properties";
+import {
+  fetchProperty,
+  createProperty,
+  updateProperty,
+  fetchAdminUsers,
+} from "@/services/properties";
 import { uploadDocument } from "@/services/documents";
 import { compressImage } from "@/lib/image-compress";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 const MAX_IMAGES = 8;
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
 const MAX_FILE_SIZE_MB = 5;
 
 interface ImageItem {
   id: string;
-  url: string;       // preview data-url or existing remote url
-  file?: File;       // only set for new uploads
+  url: string; // preview data-url or existing remote url
+  file?: File; // only set for new uploads
   uploaded: boolean; // true when already on the server
 }
 
@@ -51,7 +74,10 @@ const propertyFormSchema = z.object({
   priceMonthly: z.coerce.number().positive("Monthly price must be positive"),
   location: z.string().min(2, "Location is required"),
   rooms: z.coerce.number().int().positive("Rooms must be a positive integer"),
-  bathrooms: z.coerce.number().int().positive("Bathrooms must be a positive integer"),
+  bathrooms: z.coerce
+    .number()
+    .int()
+    .positive("Bathrooms must be a positive integer"),
   roomType: z.enum(["SINGLE", "SELF_CON", "MINI_FLAT"]),
   landlordId: z.string().min(1, "Landlord selection is required"),
   furnished: z.boolean().default(false),
@@ -77,38 +103,59 @@ const AdminPropertyForm = () => {
   // ── Image upload state ──
   const [images, setImages] = useState<ImageItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const addImageFiles = useCallback(async (files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-    const remaining = MAX_IMAGES - images.length;
-    if (remaining <= 0) {
-      toast({ title: "Limit Reached", description: `You can upload a maximum of ${MAX_IMAGES} images.`, variant: "destructive" });
-      return;
-    }
-    const toAdd = fileArray.slice(0, remaining);
-    const invalid = toAdd.filter(f => !ACCEPTED_IMAGE_TYPES.includes(f.type) || f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
-    if (invalid.length > 0) {
-      toast({ title: "Invalid Files", description: `Some files were skipped. Only JPEG/PNG/WebP under ${MAX_FILE_SIZE_MB}MB are accepted.`, variant: "destructive" });
-    }
-    const valid = toAdd.filter(f => ACCEPTED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
-    // Compress images before adding
-    const compressed = await Promise.all(valid.map(f => compressImage(f)));
-    const newItems: ImageItem[] = compressed.map(file => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      url: URL.createObjectURL(file),
-      file,
-      uploaded: false,
-    }));
-    setImages(prev => [...prev, ...newItems]);
-  }, [images.length, toast]);
+  const addImageFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const fileArray = Array.from(files);
+      const remaining = MAX_IMAGES - images.length;
+      if (remaining <= 0) {
+        toast({
+          title: "Limit Reached",
+          description: `You can upload a maximum of ${MAX_IMAGES} images.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      const toAdd = fileArray.slice(0, remaining);
+      const invalid = toAdd.filter(
+        (f) =>
+          !ACCEPTED_IMAGE_TYPES.includes(f.type) ||
+          f.size > MAX_FILE_SIZE_MB * 1024 * 1024,
+      );
+      if (invalid.length > 0) {
+        toast({
+          title: "Invalid Files",
+          description: `Some files were skipped. Only JPEG/PNG/WebP under ${MAX_FILE_SIZE_MB}MB are accepted.`,
+          variant: "destructive",
+        });
+      }
+      const valid = toAdd.filter(
+        (f) =>
+          ACCEPTED_IMAGE_TYPES.includes(f.type) &&
+          f.size <= MAX_FILE_SIZE_MB * 1024 * 1024,
+      );
+      // Compress images before adding
+      const compressed = await Promise.all(valid.map((f) => compressImage(f)));
+      const newItems: ImageItem[] = compressed.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        url: URL.createObjectURL(file),
+        file,
+        uploaded: false,
+      }));
+      setImages((prev) => [...prev, ...newItems]);
+    },
+    [images.length, toast],
+  );
 
   const removeImage = useCallback((imageId: string) => {
-    setImages(prev => {
-      const item = prev.find(i => i.id === imageId);
+    setImages((prev) => {
+      const item = prev.find((i) => i.id === imageId);
       if (item && !item.uploaded) URL.revokeObjectURL(item.url);
-      return prev.filter(i => i.id !== imageId);
+      return prev.filter((i) => i.id !== imageId);
     });
   }, []);
 
@@ -122,11 +169,14 @@ const AdminPropertyForm = () => {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files) addImageFiles(e.dataTransfer.files);
-  }, [addImageFiles]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (e.dataTransfer.files) addImageFiles(e.dataTransfer.files);
+    },
+    [addImageFiles],
+  );
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -180,19 +230,27 @@ const AdminPropertyForm = () => {
             water: p.water,
             security: p.security,
             electricityBackup: p.electricityBackup,
-            availableFrom: new Date(p.availableFrom).toISOString().split("T")[0],
+            availableFrom: new Date(p.availableFrom)
+              .toISOString()
+              .split("T")[0],
           });
           // Load existing images
           if (p.images && p.images.length > 0) {
-            setImages(p.images.map((url, idx) => ({
-              id: `existing-${idx}`,
-              url,
-              uploaded: true,
-            })));
+            setImages(
+              p.images.map((url, idx) => ({
+                id: `existing-${idx}`,
+                url,
+                uploaded: true,
+              })),
+            );
           }
         }
       } catch (error) {
-        toast({ title: "Error", description: "Failed to load property details.", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: "Failed to load property details.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -274,17 +332,22 @@ const AdminPropertyForm = () => {
 
       if (isEditMode) {
         await updateProperty(id as string, payload);
-        toast({ title: "Success", description: "Property updated successfully." });
+        toast({
+          title: "Success",
+          description: "Property updated successfully.",
+        });
       } else {
         await createProperty(payload);
         toast({
           title: "Property Submitted!",
-          description: "Your property is now under review. Expect approval within 24-48 hours.",
+          description:
+            "Your property is now under review. Expect approval within 24-48 hours.",
         });
       }
       navigate(isLandlord ? "/landlord" : "/admin");
     } catch (error: any) {
-      const message = error?.message || "Failed to save property. Please try again.";
+      const message =
+        error?.message || "Failed to save property. Please try again.";
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -297,7 +360,11 @@ const AdminPropertyForm = () => {
       <Header />
       <main className="flex-1 pt-24 pb-12">
         <div className="container max-w-4xl mx-auto px-4">
-          <Button variant="ghost" onClick={() => navigate(isLandlord ? "/landlord" : "/admin")} className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(isLandlord ? "/landlord" : "/admin")}
+            className="mb-6"
+          >
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -310,16 +377,25 @@ const AdminPropertyForm = () => {
                   <Save className="w-6 h-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-bold font-display tracking-tight">{isEditMode ? "Edit Property" : "Add New Property"}</CardTitle>
+                  <CardTitle className="text-2xl font-bold font-display tracking-tight">
+                    {isEditMode ? "Edit Property" : "Add New Property"}
+                  </CardTitle>
                   <CardDescription className="font-medium">
-                    {isEditMode ? "Update the property listing details." : isLandlord ? "Create a new property listing. It will require admin approval." : "Create a new property listing and assign it to a landlord."}
+                    {isEditMode
+                      ? "Update the property listing details."
+                      : isLandlord
+                        ? "Create a new property listing. It will require admin approval."
+                        : "Create a new property listing and assign it to a landlord."}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="pt-10">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-12"
+                >
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -329,7 +405,9 @@ const AdminPropertyForm = () => {
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-6 w-1 bg-primary rounded-full" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Basic Information</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                          Basic Information
+                        </h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 rounded-2xl bg-muted/30 border border-border/40 transition-all hover:border-primary/20">
                         <FormField
@@ -337,8 +415,16 @@ const AdminPropertyForm = () => {
                           name="title"
                           render={({ field }) => (
                             <FormItem className="md:col-span-2">
-                              <FormLabel className="text-sm font-bold">Property Title</FormLabel>
-                              <FormControl><Input className="h-12 rounded-xl bg-background/50" placeholder="e.g. Luxury Self-Con at South Gate" {...field} /></FormControl>
+                              <FormLabel className="text-sm font-bold">
+                                Property Title
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-12 rounded-xl bg-background/50"
+                                  placeholder="e.g. Luxury Self-Con at South Gate"
+                                  {...field}
+                                />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -349,8 +435,13 @@ const AdminPropertyForm = () => {
                             name="landlordId"
                             render={({ field }) => (
                               <FormItem className="md:col-span-2">
-                                <FormLabel className="text-sm font-bold">Assigned Landlord</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <FormLabel className="text-sm font-bold">
+                                  Assigned Landlord
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
                                   <FormControl>
                                     <SelectTrigger className="h-12 rounded-xl bg-background/50">
                                       <SelectValue placeholder="Select a landlord" />
@@ -358,11 +449,20 @@ const AdminPropertyForm = () => {
                                   </FormControl>
                                   <SelectContent className="rounded-xl border-border/40 backdrop-blur-xl">
                                     {landlords.map((l) => (
-                                      <SelectItem key={l.id} value={l.id} className="rounded-lg">{l.name} ({l.email})</SelectItem>
+                                      <SelectItem
+                                        key={l.id}
+                                        value={l.id}
+                                        className="rounded-lg"
+                                      >
+                                        {l.name} ({l.email})
+                                      </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
-                                <FormDescription className="text-[11px] font-medium">Associate this property with a landlord account.</FormDescription>
+                                <FormDescription className="text-[11px] font-medium">
+                                  Associate this property with a landlord
+                                  account.
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -374,8 +474,16 @@ const AdminPropertyForm = () => {
                           name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-bold">Location</FormLabel>
-                              <FormControl><Input className="h-12 rounded-xl bg-background/50" placeholder="e.g. Ilesha Road, Akure" {...field} /></FormControl>
+                              <FormLabel className="text-sm font-bold">
+                                Location
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-12 rounded-xl bg-background/50"
+                                  placeholder="e.g. Ilesha Road, Akure"
+                                  {...field}
+                                />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -386,8 +494,16 @@ const AdminPropertyForm = () => {
                           name="priceMonthly"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-bold">Monthly Rent (₦)</FormLabel>
-                              <FormControl><Input className="h-12 rounded-xl bg-background/50 font-bold text-primary" type="number" {...field} /></FormControl>
+                              <FormLabel className="text-sm font-bold">
+                                Yearly Rent (₦)
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-12 rounded-xl bg-background/50 font-bold text-primary"
+                                  type="number"
+                                  {...field}
+                                />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -399,7 +515,9 @@ const AdminPropertyForm = () => {
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-6 w-1 bg-primary rounded-full" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Property Architecture</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                          Property Architecture
+                        </h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 rounded-2xl bg-muted/30 border border-border/40 transition-all hover:border-primary/20">
                         <FormField
@@ -407,15 +525,37 @@ const AdminPropertyForm = () => {
                           name="roomType"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-bold">Room Category</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <FormLabel className="text-sm font-bold">
+                                Room Category
+                              </FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
                                 <FormControl>
-                                  <SelectTrigger className="h-12 rounded-xl bg-background/50"><SelectValue /></SelectTrigger>
+                                  <SelectTrigger className="h-12 rounded-xl bg-background/50">
+                                    <SelectValue />
+                                  </SelectTrigger>
                                 </FormControl>
                                 <SelectContent className="rounded-xl border-border/40 backdrop-blur-xl">
-                                  <SelectItem value="SINGLE" className="rounded-lg">Single Room</SelectItem>
-                                  <SelectItem value="SELF_CON" className="rounded-lg">Self-Contained</SelectItem>
-                                  <SelectItem value="MINI_FLAT" className="rounded-lg">Mini Flat</SelectItem>
+                                  <SelectItem
+                                    value="SINGLE"
+                                    className="rounded-lg"
+                                  >
+                                    Single Room
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="SELF_CON"
+                                    className="rounded-lg"
+                                  >
+                                    Self-Contained
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="MINI_FLAT"
+                                    className="rounded-lg"
+                                  >
+                                    Mini Flat
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -428,8 +568,16 @@ const AdminPropertyForm = () => {
                           name="availableFrom"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-bold">Availability Date</FormLabel>
-                              <FormControl><Input className="h-12 rounded-xl bg-background/50" type="date" {...field} /></FormControl>
+                              <FormLabel className="text-sm font-bold">
+                                Availability Date
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-12 rounded-xl bg-background/50"
+                                  type="date"
+                                  {...field}
+                                />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -441,8 +589,16 @@ const AdminPropertyForm = () => {
                             name="rooms"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-bold text-center block">Total Rooms</FormLabel>
-                                <FormControl><Input className="h-12 rounded-xl bg-background/50 text-center text-lg font-bold" type="number" {...field} /></FormControl>
+                                <FormLabel className="text-sm font-bold text-center block">
+                                  Total Rooms
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    className="h-12 rounded-xl bg-background/50 text-center text-lg font-bold"
+                                    type="number"
+                                    {...field}
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -452,8 +608,16 @@ const AdminPropertyForm = () => {
                             name="bathrooms"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-bold text-center block">Total Bathrooms</FormLabel>
-                                <FormControl><Input className="h-12 rounded-xl bg-background/50 text-center text-lg font-bold" type="number" {...field} /></FormControl>
+                                <FormLabel className="text-sm font-bold text-center block">
+                                  Total Bathrooms
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    className="h-12 rounded-xl bg-background/50 text-center text-lg font-bold"
+                                    type="number"
+                                    {...field}
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -469,9 +633,17 @@ const AdminPropertyForm = () => {
                         <FormItem>
                           <div className="flex items-center gap-3 mb-4">
                             <div className="h-6 w-1 bg-primary rounded-full" />
-                            <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Listings Description</FormLabel>
+                            <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                              Listings Description
+                            </FormLabel>
                           </div>
-                          <FormControl><Textarea className="rounded-2xl border-border/40 bg-muted/20 focus:bg-background/50 transition-all p-4 min-h-[160px]" placeholder="Provide a detailed and attractive description of your property..." {...field} /></FormControl>
+                          <FormControl>
+                            <Textarea
+                              className="rounded-2xl border-border/40 bg-muted/20 focus:bg-background/50 transition-all p-4 min-h-[160px]"
+                              placeholder="Provide a detailed and attractive description of your property..."
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -480,7 +652,9 @@ const AdminPropertyForm = () => {
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-6 w-1 bg-primary rounded-full" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Key Amenities</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                          Key Amenities
+                        </h3>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 rounded-2xl bg-muted/30 border border-border/40">
                         {[
@@ -488,7 +662,10 @@ const AdminPropertyForm = () => {
                           { name: "wifi", label: "Wi-Fi" },
                           { name: "water", label: "24/7 Water" },
                           { name: "security", label: "Top Security" },
-                          { name: "electricityBackup", label: "Solar/Inverter" },
+                          {
+                            name: "electricityBackup",
+                            label: "Solar/Inverter",
+                          },
                         ].map((item) => (
                           <FormField
                             key={item.name}
@@ -503,7 +680,9 @@ const AdminPropertyForm = () => {
                                     className="w-5 h-5 rounded-md border-primary/30 data-[state=checked]:bg-primary transition-all shadow-sm"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-bold text-sm cursor-pointer group-hover:text-primary transition-colors">{item.label}</FormLabel>
+                                <FormLabel className="font-bold text-sm cursor-pointer group-hover:text-primary transition-colors">
+                                  {item.label}
+                                </FormLabel>
                               </FormItem>
                             )}
                           />
@@ -515,14 +694,19 @@ const AdminPropertyForm = () => {
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-6 w-1 bg-primary rounded-full" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Property Images</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                          Property Images
+                        </h3>
                         <span className="text-xs font-medium text-muted-foreground bg-muted/50 rounded-full px-2.5 py-0.5">
                           {images.length} / {MAX_IMAGES}
                         </span>
                       </div>
                       <div className="p-6 rounded-2xl bg-muted/30 border border-border/40 transition-all hover:border-primary/20 space-y-5">
                         <p className="text-xs text-muted-foreground font-medium">
-                          Upload high-quality images of your property. The first image will be used as the cover photo. Accepted formats: JPEG, PNG, WebP (max {MAX_FILE_SIZE_MB}MB each).
+                          Upload high-quality images of your property. The first
+                          image will be used as the cover photo. Accepted
+                          formats: JPEG, PNG, WebP (max {MAX_FILE_SIZE_MB}MB
+                          each).
                         </p>
 
                         {/* Image previews grid */}
@@ -586,20 +770,29 @@ const AdminPropertyForm = () => {
                               multiple
                               className="hidden"
                               onChange={(e) => {
-                                if (e.target.files) addImageFiles(e.target.files);
+                                if (e.target.files)
+                                  addImageFiles(e.target.files);
                                 e.target.value = "";
                               }}
                             />
                             <div className="flex flex-col items-center gap-3 text-center px-4">
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                                isDragging ? "bg-primary/10 text-primary scale-110" : "bg-muted/50 text-muted-foreground/50"
-                              }`}>
+                              <div
+                                className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                                  isDragging
+                                    ? "bg-primary/10 text-primary scale-110"
+                                    : "bg-muted/50 text-muted-foreground/50"
+                                }`}
+                              >
                                 <ImagePlus className="w-7 h-7" />
                               </div>
                               <div>
-                                <p className={`font-bold text-sm transition-colors ${
-                                  isDragging ? "text-primary" : "text-foreground"
-                                }`}>
+                                <p
+                                  className={`font-bold text-sm transition-colors ${
+                                    isDragging
+                                      ? "text-primary"
+                                      : "text-foreground"
+                                  }`}
+                                >
                                   {isDragging
                                     ? "Drop images here"
                                     : images.length > 0
@@ -607,7 +800,11 @@ const AdminPropertyForm = () => {
                                       : "Drag & drop your property images"}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1 font-medium">
-                                  or <span className="text-primary">click to browse</span> · up to {MAX_IMAGES - images.length} more
+                                  or{" "}
+                                  <span className="text-primary">
+                                    click to browse
+                                  </span>{" "}
+                                  · up to {MAX_IMAGES - images.length} more
                                 </p>
                               </div>
                             </div>
@@ -622,19 +819,22 @@ const AdminPropertyForm = () => {
                             className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20"
                           >
                             <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                            <span className="text-sm font-medium text-primary">{imageUploadProgress}</span>
+                            <span className="text-sm font-medium text-primary">
+                              {imageUploadProgress}
+                            </span>
                           </motion.div>
                         )}
                       </div>
                     </div>
-
                   </motion.div>
 
                   <div className="flex items-center justify-end gap-5 pt-8 border-t border-border/40">
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => navigate(isLandlord ? "/landlord" : "/admin")}
+                      onClick={() =>
+                        navigate(isLandlord ? "/landlord" : "/admin")
+                      }
                       disabled={isLoading}
                       className="rounded-xl px-8 h-12 font-bold text-muted-foreground hover:text-foreground"
                     >
@@ -653,7 +853,9 @@ const AdminPropertyForm = () => {
                       ) : (
                         <div className="flex items-center gap-2">
                           <Save className="w-5 h-5" />
-                          <span>{isEditMode ? "Update Listing" : "Publish Property"}</span>
+                          <span>
+                            {isEditMode ? "Update Listing" : "Publish Property"}
+                          </span>
                         </div>
                       )}
                     </Button>
