@@ -1079,10 +1079,12 @@ function MaintenanceRequests() {
           <CardContent>
             <form onSubmit={handleCreateRequest} className="space-y-4">
               <div className="space-y-2">
-                <Label>Property</Label>
+                <Label htmlFor="propertyId">Property</Label>
                 {approvedBookings.length > 0 ? (
                   <select
+                    id="propertyId"
                     name="propertyId"
+                    aria-label="Select a property"
                     required
                     className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
