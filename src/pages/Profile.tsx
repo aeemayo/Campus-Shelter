@@ -1,4 +1,11 @@
 import { useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -37,8 +44,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Sparkles,
-  TrendingUp,
+  Pencil,
   KeyRound,
   ShieldAlert,
   Wrench,
@@ -51,7 +57,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Profile = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { favorites, viewedPropertyIds, toggleFavorite, markViewed } =
     useUserActivity(isAuthenticated ? user?.id : undefined);
 
@@ -201,11 +207,8 @@ const Profile = () => {
 
               {/* Quick actions */}
               <div className="flex gap-2 self-start md:self-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                >
+                <EditProfileDialog user={user} onSave={(updated) => updateUser(updated)} />
+                <Button variant="outline" size="sm" asChild>
                   <Link to="/properties">
                     <MapPin className="w-4 h-4 mr-1.5" />
                     Browse
@@ -520,6 +523,82 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
+  );
+}
+
+function EditProfileDialog({
+  user,
+  onSave,
+}: {
+  user: any;
+  onSave: (u: any) => void;
+}) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await import("@/services/auth").then((m) =>
+        m.updateProfile({ name, phone })
+      );
+      onSave(res.data.user);
+      toast({ title: "Profile updated", description: "Your changes have been saved." });
+      setOpen(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => { setName(user?.name ?? ""); setPhone(user?.phone ?? ""); setOpen(true); }}>
+        <Pencil className="w-4 h-4 mr-1.5" />
+        Edit Profile
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-10 rounded-lg"
+                required
+                minLength={2}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. 07012345678"
+                className="h-10 rounded-lg"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" className="gradient-primary rounded-lg h-10" disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
