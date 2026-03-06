@@ -4,8 +4,6 @@ import SEO from "@/components/SEO";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -15,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Divide, Shield } from "lucide-react";
+import { Calendar, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -24,7 +22,22 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProperty } from "@/services/properties";
 import { fetchPropertyReviews } from "@/services/reviews";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
-import { Loader2, ArrowLeft, Phone, ShieldCheck, Info, Star, TrendingUp, MessageSquare, ChevronRight, Check, Pencil } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  Phone,
+  ShieldCheck,
+  Info,
+  Star,
+  TrendingUp,
+  MessageSquare,
+  ChevronRight,
+  Check,
+  Pencil,
+  MapPin,
+  Bed,
+  Bath,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createBooking } from "@/services/bookings";
 import { useToast } from "@/hooks/use-toast";
@@ -58,8 +71,10 @@ export default function RentalDetailsPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [bookingDates, setBookingDates] = useState({
-    start: new Date().toISOString().split('T')[0],
-    end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+    start: new Date().toISOString().split("T")[0],
+    end: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+      .toISOString()
+      .split("T")[0],
   });
 
   const { data: response, isLoading, isError } = useQuery({
@@ -73,13 +88,8 @@ export default function RentalDetailsPage() {
   }, [response]);
 
   useEffect(() => {
-    if (property && !activeImage) {
-      setActiveImage(property.images[0]);
-    }
-    if (id) {
-      markViewed(id);
-    }
-    // Landlords can only view their own properties
+    if (property && !activeImage) setActiveImage(property.images[0]);
+    if (id) markViewed(id);
     if (property && user?.role === "LANDLORD" && property.landlord?.id !== user.id) {
       navigate("/landlord", { replace: true });
     }
@@ -98,7 +108,7 @@ export default function RentalDetailsPage() {
   if (isError || !property) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold tracking-tight">Property not found</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Property not found</h2>
         <Button onClick={() => navigate("/properties")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Properties
@@ -111,10 +121,13 @@ export default function RentalDetailsPage() {
   const remaining = property.images.length - 4;
 
   return (
-    <section>
+    <section className="min-h-screen bg-background">
       <SEO
         title={property.title}
-        description={property.description?.slice(0, 160) || `${property.title} - Student accommodation near FUTA.`}
+        description={
+          property.description?.slice(0, 160) ||
+          `${property.title} - Student accommodation near FUTA.`
+        }
         path={`/properties/${property.id}`}
         image={property.images?.[0]}
         jsonLd={{
@@ -144,59 +157,89 @@ export default function RentalDetailsPage() {
         }}
       />
       <Header />
-      <div className="pt-24 max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
+
+      <div className="pt-24 max-w-6xl mx-auto px-4 py-8 space-y-6">
+        {/* Breadcrumb + title */}
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">{property.title}</h1>
-            <p className="text-muted-foreground">{property.location}</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 gap-1.5"
+                onClick={() => navigate("/properties")}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Properties
+              </Button>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-foreground truncate max-w-xs">{property.title}</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {property.title}
+            </h1>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
+              {property.location}
+              <span className="text-muted-foreground/50">·</span>
+              <span>{property.distance}</span>
+            </div>
           </div>
           {user?.role === "LANDLORD" && property.landlord?.id === user.id && (
             <Button
               variant="outline"
-              className="shrink-0 gap-2"
+              size="sm"
+              className="shrink-0 gap-2 rounded-lg"
               onClick={() => navigate(`/properties/edit/${property.id}`)}
             >
-              <Pencil className="w-4 h-4" />
-              Edit Property
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
             </Button>
           )}
         </div>
+
         {/* Gallery */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          transition={{ duration: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-3"
         >
-          <div className="md:col-span-2 relative group overflow-hidden rounded-[2rem] shadow-2xl">
+          <div
+            className="md:col-span-2 relative group overflow-hidden rounded-xl cursor-pointer"
+            onClick={() => {
+              setLightboxIndex(
+                property.images.indexOf(activeImage || property.images[0])
+              );
+              setIsLightboxOpen(true);
+            }}
+          >
             <img
               src={activeImage || property.images[0]}
               alt="main"
-              className="h-[500px] w-full object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105"
-              onClick={() => {
-                setLightboxIndex(property.images.indexOf(activeImage || property.images[0]));
-                setIsLightboxOpen(true);
-              }}
+              className="h-[420px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="absolute bottom-6 left-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-               <p className="font-bold text-lg">Click to expand gallery</p>
-               <p className="text-sm opacity-80">{property.images.length} high-resolution captures</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <p className="text-sm font-medium">View gallery</p>
             </div>
+            {!property.available && (
+              <div className="absolute top-3 left-3">
+                <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {thumbnails.map((img, i) => {
               const isLastVisible = !showAll && i === 3 && remaining > 0;
-
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 * i }}
-                  className="relative h-[242px] w-full cursor-pointer overflow-hidden rounded-[1.5rem] shadow-lg group"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.05 * i }}
+                  className="relative h-[200px] cursor-pointer overflow-hidden rounded-xl group"
                   onClick={() => {
                     if (isLastVisible) {
                       setLightboxIndex(4);
@@ -210,19 +253,17 @@ export default function RentalDetailsPage() {
                     src={img}
                     alt={`gallery-${i}`}
                     className={cn(
-                      "h-full w-full object-cover transition duration-500 group-hover:scale-110",
-                      activeImage === img ? "brightness-75" : "brightness-100"
+                      "h-full w-full object-cover transition duration-300 group-hover:scale-105",
+                      activeImage === img ? "brightness-75" : ""
                     )}
                   />
-
                   {activeImage === img && !isLastVisible && (
-                    <div className="absolute inset-0 border-4 border-primary rounded-[1.5rem] z-10" />
+                    <div className="absolute inset-0 border-2 border-primary rounded-xl z-10" />
                   )}
-
                   {isLastVisible && (
-                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white backdrop-blur-sm transition-all group-hover:bg-black/40">
-                      <span className="text-3xl font-black">+{remaining}</span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Discover</span>
+                    <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center text-white">
+                      <span className="text-2xl font-bold">+{remaining}</span>
+                      <span className="text-xs mt-0.5">more</span>
                     </div>
                   )}
                 </motion.div>
@@ -231,70 +272,69 @@ export default function RentalDetailsPage() {
           </div>
         </motion.div>
 
-        {/* Lightbox Modal */}
+        {/* Lightbox */}
         <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-          <DialogContent className="max-w-[95vw] h-[90vh] p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-[2rem]">
-            <DialogHeader className="p-8 bg-gradient-to-b from-black/80 to-transparent z-20 absolute top-0 left-0 right-0">
-              <DialogTitle className="text-white text-2xl font-black font-display tracking-tight">Gallery Exploration</DialogTitle>
-              <DialogDescription className="text-white/60 font-medium uppercase tracking-widest text-xs">
-                {property.title} — Item {lightboxIndex + 1} of {property.images.length}
+          <DialogContent className="max-w-[95vw] h-[90vh] p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
+            <DialogHeader className="p-6 absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent">
+              <DialogTitle className="text-white font-semibold">{property.title}</DialogTitle>
+              <DialogDescription className="text-white/50 text-xs">
+                {lightboxIndex + 1} / {property.images.length}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 relative flex items-center justify-center p-8">
+            <div className="flex-1 relative flex items-center justify-center p-6 pt-20">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={lightboxIndex}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
                   src={property.images[lightboxIndex]}
-                  alt={`gallery-full-${lightboxIndex}`}
-                  className="max-w-full max-h-full object-contain shadow-2xl rounded-2xl"
+                  alt={`gallery-${lightboxIndex}`}
+                  className="max-w-full max-h-full object-contain rounded-xl"
                 />
               </AnimatePresence>
-
-              {/* Navigation Controls */}
-              <div className="absolute inset-0 flex items-center justify-between p-8 pointer-events-none">
+              <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-16 h-16 rounded-full bg-white/5 hover:bg-white/10 text-white pointer-events-auto backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
+                  className="w-10 h-10 rounded-full bg-white/10 text-white pointer-events-auto hover:bg-white/20"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((prev) => (prev > 0 ? prev - 1 : property.images.length - 1));
+                    setLightboxIndex((p) => (p > 0 ? p - 1 : property.images.length - 1));
                   }}
                 >
-                  <ArrowLeft className="w-8 h-8" />
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-16 h-16 rounded-full bg-white/5 hover:bg-white/10 text-white pointer-events-auto backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
+                  className="w-10 h-10 rounded-full bg-white/10 text-white pointer-events-auto hover:bg-white/20"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((prev) => (prev < property.images.length - 1 ? prev + 1 : 0));
+                    setLightboxIndex((p) => (p < property.images.length - 1 ? p + 1 : 0));
                   }}
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <ChevronRight className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
-            {/* Thumbnail Strip */}
-            <div className="p-8 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto">
-              <div className="flex gap-4 justify-center min-w-max mx-auto px-4">
+            <div className="p-4 overflow-x-auto">
+              <div className="flex gap-2 justify-center">
                 {property.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setLightboxIndex(i)}
                     className={cn(
-                      "w-24 h-16 rounded-xl overflow-hidden border-2 transition-all duration-300",
-                      lightboxIndex === i ? "border-primary scale-110 shadow-lg shadow-primary/20" : "border-transparent opacity-40 hover:opacity-100"
+                      "w-16 h-12 rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                      lightboxIndex === i
+                        ? "border-primary opacity-100"
+                        : "border-transparent opacity-40 hover:opacity-70"
                     )}
                   >
-                    <img src={img} className="w-full h-full object-cover" alt="thumb" />
+                    <img src={img} className="w-full h-full object-cover" alt="" />
                   </button>
                 ))}
               </div>
@@ -303,70 +343,98 @@ export default function RentalDetailsPage() {
         </Dialog>
 
         {/* Main layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5">
             {/* Stats */}
-            <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-              <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8">
+            <Card className="border-border/60">
+              <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6">
                 <Stat
-                  label="Premium Rate"
-                  value={`${formatNaira(property.price)}`}
-                  subValue={property.priceType === "yearly" ? "Per Annum" : "Per Month"}
+                  label="Yearly Rent"
+                  value={formatNaira(property.price)}
                   icon={TrendingUp}
                 />
-                <Stat label="Bedrooms" value={property.bedrooms} subValue="Private Spaces" icon={Info} />
-                <Stat label="Bathrooms" value={property.bathrooms} subValue="Sanitary Units" icon={ShieldCheck} />
+                <Stat label="Bedrooms" value={`${property.bedrooms} bed`} icon={Bed} />
+                <Stat label="Bathrooms" value={`${property.bathrooms} bath`} icon={Bath} />
                 {property.latitude && property.longitude ? (
-                  distancesTo(property.latitude, property.longitude).map(({ gate, km, walkMinutes }) => (
-                    <Stat
-                      key={gate.id}
-                      label={gate.label}
-                      value={walkMinutes < 60 ? `${walkMinutes} min` : `${km} km`}
-                      subValue={walkMinutes < 60 ? `${km} km walk` : "Walking Distance"}
-                      icon={Star}
-                    />
-                  ))
+                  distancesTo(property.latitude, property.longitude)
+                    .slice(0, 1)
+                    .map(({ gate, km, walkMinutes }) => (
+                      <Stat
+                        key={gate.id}
+                        label={gate.label}
+                        value={walkMinutes < 60 ? `${walkMinutes} min walk` : `${km} km`}
+                        icon={MapPin}
+                      />
+                    ))
                 ) : (
-                  <Stat label="FUTA Proximity" value={property.distance} subValue="Walking Distance" icon={Star} />
+                  <Stat label="FUTA Distance" value={property.distance} icon={MapPin} />
                 )}
               </CardContent>
             </Card>
 
+            {/* Gate distances (if coordinates available) */}
+            {property.latitude && property.longitude && (
+              <div className="grid grid-cols-3 gap-3">
+                {distancesTo(property.latitude, property.longitude).map(({ gate, km, walkMinutes }) => (
+                  <div
+                    key={gate.id}
+                    className="flex items-center gap-2.5 p-3 rounded-lg border border-border/60 bg-muted/20"
+                  >
+                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-foreground">{gate.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {walkMinutes < 60 ? `${walkMinutes} min walk` : `${km} km`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Tabs */}
-            <Tabs defaultValue="description" className="space-y-6">
-              <TabsList className="bg-white/5 backdrop-blur-xl border border-white/10 p-1 rounded-2xl h-14">
-                <TabsTrigger value="description" className="rounded-xl px-6 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Description</TabsTrigger>
-                <TabsTrigger value="info" className="rounded-xl px-6 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Protocol</TabsTrigger>
-                <TabsTrigger value="features" className="rounded-xl px-6 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Amenities</TabsTrigger>
-                <TabsTrigger value="reviews" className="rounded-xl px-6 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Insights</TabsTrigger>
-                <TabsTrigger value="history" className="rounded-xl px-6 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Metrics</TabsTrigger>
+            <Tabs defaultValue="description" className="space-y-4">
+              <TabsList className="bg-muted/40 border border-border/60 p-1 rounded-lg h-auto w-full justify-start gap-0.5 flex-wrap">
+                <TabsTrigger value="description" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Description</TabsTrigger>
+                <TabsTrigger value="info" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Details</TabsTrigger>
+                <TabsTrigger value="features" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Amenities</TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">Reviews</TabsTrigger>
               </TabsList>
 
               <TabsContent value="description">
-                <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl relative overflow-hidden">
-                  <CardContent className="p-8 leading-relaxed text-base text-muted-foreground/80 space-y-4">
-                     <p className="first-letter:text-4xl first-letter:font-bold first-letter:text-primary first-letter:mr-1 first-letter:float-left">
-                       {property.description}
-                     </p>
+                <Card className="border-border/60">
+                  <CardContent className="p-5 text-sm text-muted-foreground leading-relaxed">
+                    {property.description}
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="info">
-                <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl relative overflow-hidden">
-                  <CardContent className="p-8 space-y-4">
+                <Card className="border-border/60">
+                  <CardContent className="p-5 space-y-3">
                     {[
-                      { label: "Furnishing Status", value: property.furnished ? "Fully Furnished" : "Unfurnished" },
-                      { label: "Availability Date", value: new Date(property.availableFrom || '').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) },
-                      { label: "Contract Duration", value: "Standard 12-Month Lease" },
-                      { label: "Energy Solutions", value: property.amenities.includes("Electricity Backup") ? "Integrated Backup" : "None" },
-                      { label: "External Entitles", value: "Policy available on request" }
+                      { label: "Furnishing", value: property.furnished ? "Furnished" : "Unfurnished" },
+                      {
+                        label: "Available From",
+                        value: new Date(property.availableFrom || "").toLocaleDateString("en-US", {
+                          month: "long", day: "numeric", year: "numeric",
+                        }),
+                      },
+                      { label: "Lease Duration", value: "12-month standard lease" },
+                      {
+                        label: "Electricity Backup",
+                        value: property.amenities.includes("Electricity Backup") ? "Yes" : "No",
+                      },
                     ].map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center border-b border-white/5 pb-4 last:border-0 last:pb-0 group">
-                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary/70 transition-colors">{item.label}</span>
-                        <span className="font-bold text-foreground tracking-tight">{item.value}</span>
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0"
+                      >
+                        <span className="text-sm text-muted-foreground">{item.label}</span>
+                        <span className="text-sm font-medium text-foreground">{item.value}</span>
                       </div>
                     ))}
                   </CardContent>
@@ -374,16 +442,20 @@ export default function RentalDetailsPage() {
               </TabsContent>
 
               <TabsContent value="features">
-                <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl relative overflow-hidden">
-                  <CardContent className="p-8 grid grid-cols-2 lg:grid-cols-3 gap-6">
-                    {property.amenities.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3 group">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                           <Check className="w-4 h-4" />
+                <Card className="border-border/60">
+                  <CardContent className="p-5 grid grid-cols-2 gap-3">
+                    {property.amenities.length > 0 ? (
+                      property.amenities.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                            <Check className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <span className="text-sm text-foreground">{item}</span>
                         </div>
-                        <span className="font-bold text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground col-span-2">No amenities listed.</p>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -391,167 +463,151 @@ export default function RentalDetailsPage() {
               <TabsContent value="reviews">
                 <PropertyReviews propertyId={id!} />
               </TabsContent>
-
-              <TabsContent value="history">
-                <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl relative overflow-hidden">
-                  <CardContent className="p-12 text-center">
-                    <div className="w-20 h-20 rounded-3xl bg-secondary/10 flex items-center justify-center mx-auto mb-6 text-secondary shadow-lg shadow-secondary/5">
-                      <TrendingUp className="w-10 h-10" />
-                    </div>
-                    <h4 className="text-xl font-bold mb-2">Market Stability Report</h4>
-                    <p className="text-sm text-muted-foreground font-medium max-w-xs mx-auto mb-8">This property reflects current market excellence for the FUTA region.</p>
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl">
-                       <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Current Valuation</span>
-                       <span className="text-2xl font-black text-primary">{formatNaira(property.price)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
             </Tabs>
 
-            {/* Agent Lead info */}
-            <Card className="border-primary/20 bg-primary/5 backdrop-blur-xl rounded-[1.5rem] shadow-none overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24 blur-3xl" />
-              <CardContent className="p-8">
-                <div className="flex gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20 shadow-lg shadow-primary/5">
-                    <ShieldCheck className="w-8 h-8 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-foreground tracking-tight mb-2">Sanctuary Verification Protocol</h4>
-                    <p className="text-muted-foreground/80 font-medium leading-relaxed">
-                      Every dimension of this residence has been scrutinized by verified CampusShelter personnel.
-                      Our protocol ensures transactional integrity, accurate documentation, and elite-tier coordination
-                      throughout your tenancy.
-                    </p>
-                  </div>
+            {/* Verified badge */}
+            {property.landlord?.verified && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
+                <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Verified property</p>
+                  <p className="text-sm text-muted-foreground">
+                    This listing has been reviewed and verified by CampusShelter.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
           </div>
 
           {/* Right sidebar */}
-          <div className="space-y-6">
-            <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl overflow-hidden relative">
-              <CardContent className="p-8 space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-b border-white/5 pb-4">Authorized Representative</h3>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="w-16 h-16 border-2 border-primary/20 p-1">
-                      <AvatarImage src={property.landlord.avatar} className="rounded-full" />
-                      <AvatarFallback className="bg-primary/5 text-primary font-black text-lg">
-                        {property.landlord.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center border-4 border-background">
-                       <Check className="w-3 h-3 text-white" />
-                    </div>
-                  </div>
+          <div className="space-y-4">
+            {/* Price */}
+            <Card className="border-border/60">
+              <CardContent className="p-5 space-y-1.5">
+                <p className="text-2xl font-bold text-foreground">{formatNaira(property.price)}</p>
+                <p className="text-sm text-muted-foreground">per year</p>
+                {property.priceWeekly && (
+                  <p className="text-xs text-muted-foreground">
+                    {formatNaira(property.priceWeekly)} / week
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Landlord */}
+            <Card className="border-border/60">
+              <CardContent className="p-5 space-y-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Landlord</p>
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={(property.landlord as any).avatar} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                      {property.landlord.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
-                    <p className="font-black text-lg tracking-tight text-foreground">
-                      {property.landlord.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-success/10 text-success border-success/20 font-bold text-[10px] uppercase tracking-widest px-2">
-                        Tier 1 Agent
-                      </Badge>
-                    </div>
+                    <p className="font-medium text-foreground text-sm">{property.landlord.name}</p>
+                    {property.landlord.verified && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <ShieldCheck className="w-3 h-3 text-primary" />
+                        <span className="text-xs text-primary">Verified</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-2">
                   <Button
-                    className="h-14 rounded-2xl gap-3 font-black uppercase tracking-widest text-xs gradient-primary shadow-lg shadow-primary/20"
-                    onClick={() => window.location.href = `tel:${property.landlord.phone || '+2348000000000'}`}
+                    className="w-full gradient-primary rounded-lg h-10"
+                    onClick={() =>
+                      (window.location.href = `tel:${property.landlord.phone || "+2348000000000"}`)
+                    }
                   >
-                    <Phone className="w-4 h-4" />
-                    Secure Audio Link
+                    <Phone className="w-4 h-4 mr-2" />
+                    Call Landlord
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-14 rounded-2xl gap-3 border-white/10 bg-white/5 font-black uppercase tracking-widest text-xs hover:bg-white/10"
-                    asChild
-                  >
+                  <Button variant="outline" className="w-full rounded-lg h-10" asChild>
                     <Link to={`/messages/${property.landlord.id}`}>
-                      <MessageSquare className="w-4 h-4" />
-                      Digital Correspondence
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Send Message
                     </Link>
                   </Button>
-                </div>
-
-                <div className="flex items-center justify-center gap-2 p-4 bg-white/5 rounded-2xl border border-white/5">
-                   <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Available for live briefing</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-primary/20 bg-primary/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl" />
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between border-b border-primary/10 pb-4">
-                  <h3 className="font-black text-xl tracking-tight text-foreground">Initiate Lease</h3>
-                  <Badge className="bg-primary/20 text-primary border-primary/30 font-bold text-[10px] uppercase tracking-widest">Express Entry</Badge>
+            {/* Book */}
+            <Card className="border-border/60">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-foreground">Book this property</p>
+                  {property.available ? (
+                    <Badge variant="success" className="text-[10px] rounded-md">Available</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>
+                  )}
                 </div>
-
-                <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed">
-                  Join the elite cluster of residents. Submit your formal booking request for immediate agent priority.
-                </p>
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-xs gradient-primary shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                      Establish Residency
+                    <Button className="w-full gradient-primary rounded-lg h-10">
+                      Book Now
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px] border-white/20 bg-background/80 backdrop-blur-3xl p-10 rounded-[2rem]">
-                    <DialogHeader className="space-y-4">
-                      <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5 mb-2 mx-auto">
-                         <Calendar className="w-8 h-8" />
-                      </div>
-                      <DialogTitle className="text-3xl font-black font-display text-center">Lease Configuration</DialogTitle>
-                      <DialogDescription className="text-center font-medium text-muted-foreground/70">
-                        Specify your tenure window. Our executive agents will finalize the logistics within 24 hours.
+                  <DialogContent className="sm:max-w-[440px] rounded-xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-semibold">Request Booking</DialogTitle>
+                      <DialogDescription className="text-sm text-muted-foreground">
+                        Choose your lease start and end dates. The landlord will confirm within 24 hours.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-8 py-8">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Arrival Date</Label>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-sm">Move-in date</Label>
                           <Input
-                            id="start"
                             type="date"
-                            className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-primary/40 focus:bg-white/10 font-bold"
+                            className="rounded-lg h-10"
                             value={bookingDates.start}
-                            onChange={(e) => setBookingDates({ ...bookingDates, start: e.target.value })}
+                            onChange={(e) =>
+                              setBookingDates({ ...bookingDates, start: e.target.value })
+                            }
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Departure Date</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm">Move-out date</Label>
                           <Input
-                            id="end"
                             type="date"
-                            className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-primary/40 focus:bg-white/10 font-bold"
+                            className="rounded-lg h-10"
                             value={bookingDates.end}
-                            onChange={(e) => setBookingDates({ ...bookingDates, end: e.target.value })}
+                            onChange={(e) =>
+                              setBookingDates({ ...bookingDates, end: e.target.value })
+                            }
                           />
                         </div>
                       </div>
 
-                      <div className="p-6 bg-primary/5 rounded-[1.5rem] border border-primary/20 flex gap-4 items-start relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl" />
-                        <Info className="w-6 h-6 text-primary shrink-0 mt-0.5" />
-                        <p className="text-xs font-bold text-muted-foreground/80 leading-relaxed z-10">
-                          PLATFORM PROTOCOL: Your secure identification and verification status will be relayed to the primary agent to expedite this transaction.
+                      <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
+                        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Your contact details will be shared with the landlord to process this booking.
                         </p>
                       </div>
                     </div>
                     <DialogFooter>
                       <Button
-                        className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-xs gradient-primary shadow-2xl shadow-primary/30 mt-4"
+                        className="w-full gradient-primary rounded-lg h-10"
                         onClick={async () => {
                           if (!isAuthenticated) {
-                            toast({ title: "Auth required", description: "Please sign in to book a property.", variant: "destructive" });
+                            toast({
+                              title: "Sign in required",
+                              description: "Please sign in to book a property.",
+                              variant: "destructive",
+                            });
                             navigate("/login");
                             return;
                           }
@@ -560,9 +616,9 @@ export default function RentalDetailsPage() {
                             await createBooking({
                               propertyId: property.id,
                               leaseStart: bookingDates.start,
-                              leaseEnd: bookingDates.end
+                              leaseEnd: bookingDates.end,
                             });
-                            toast({ title: "Request Sent!", description: "An agent will contact you shortly." });
+                            toast({ title: "Booking request sent!", description: "The landlord will contact you shortly." });
                             navigate("/my-bookings");
                           } catch (err: any) {
                             toast({ title: "Booking failed", description: err.message, variant: "destructive" });
@@ -572,45 +628,33 @@ export default function RentalDetailsPage() {
                         }}
                         disabled={isBookingLoading}
                       >
-                        {isBookingLoading ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : null}
-                        Authorize Request
+                        {isBookingLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        Confirm Booking
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
 
-                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 justify-center pt-4 border-t border-primary/10">
-                  <ShieldCheck className="w-4 h-4 text-success opacity-70" />
-                  Cryptographic Integrity Guaranteed
+                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                  <Shield className="w-3.5 h-3.5" />
+                  Verified and safe to book
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl overflow-hidden relative group">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-              <CardContent className="p-8 space-y-6">
-                <h3 className="font-black text-xl tracking-tight text-foreground border-b border-white/5 pb-4">Schedule Inspection</h3>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Select Window</Label>
-                    <div className="relative group">
-                      <Input type="date" className="h-14 rounded-2xl bg-white/5 border-white/10 pl-12 focus:bg-white/10 focus:border-primary/40 font-bold" />
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-                    </div>
+            {/* Schedule inspection */}
+            <Card className="border-border/60">
+              <CardContent className="p-5 space-y-3">
+                <p className="font-medium text-foreground text-sm">Schedule inspection</p>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Input type="date" className="rounded-lg h-10 pl-9" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Preferred Timeframe</Label>
-                    <div className="relative group">
-                      <Input placeholder="12:00 PM - 02:00 PM" className="h-14 rounded-2xl bg-white/5 border-white/10 pl-12 focus:bg-white/10 focus:border-primary/40 font-bold" />
-                      <Info className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-                    </div>
-                  </div>
+                  <Input placeholder="Preferred time (e.g. 12:00 PM)" className="rounded-lg h-10" />
                 </div>
-
-                <Button className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs border border-white/10 bg-white/5 hover:bg-white/10 text-foreground shadow-lg transition-all group-hover:border-primary/30">
-                  Request Authorization
+                <Button variant="outline" className="w-full rounded-lg h-10 text-sm">
+                  Request Inspection
                 </Button>
               </CardContent>
             </Card>
@@ -629,57 +673,72 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
   });
 
   const reviews = response?.data || [];
+  const avg =
+    reviews.length > 0
+      ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1)
+      : null;
 
   return (
-    <Card className="border-white/20 bg-white/5 backdrop-blur-2xl rounded-[2rem] shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-warning/5 rounded-full -mr-32 -mt-32 blur-[80px]" />
-      <CardHeader className="p-8 border-b border-white/5 bg-white/2">
-        <div className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl font-black font-display tracking-tight mb-1">Student Intel</CardTitle>
-            <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-muted-foreground/50">Verified occupant feedback</CardDescription>
-          </div>
-          <div className="flex items-center gap-3 px-6 py-3 bg-warning/10 border border-warning/20 rounded-2xl shadow-lg shadow-warning/5">
-            <Star className="w-6 h-6 fill-warning text-warning" />
-            <span className="font-black text-2xl text-warning">{reviews.length > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1) : "0.0"}</span>
-          </div>
+    <Card className="border-border/60">
+      <CardHeader className="p-5 pb-4 border-b border-border/40">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">Reviews</CardTitle>
+          {avg && (
+            <div className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-semibold text-sm">{avg}</span>
+              <span className="text-xs text-muted-foreground">({reviews.length})</span>
+            </div>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="p-8">
+      <CardContent className="p-5">
         {isLoading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" /></div>
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
         ) : reviews.length > 0 ? (
-          <div className="space-y-8">
-            {reviews.map(review => (
-              <div key={review.id} className="space-y-4 border-b border-white/5 pb-8 last:border-0 last:pb-0 group">
+          <div className="space-y-5">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="space-y-2 border-b border-border/40 pb-5 last:border-0 last:pb-0"
+              >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs font-black text-primary uppercase">
-                        {review.student?.name?.[0] || "S"}
-                     </div>
-                     <span className="font-black text-base tracking-tight">{review.student?.name || "Verified Student"}</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-primary uppercase">
+                      {review.student?.name?.[0] || "S"}
+                    </div>
+                    <span className="font-medium text-sm">{review.student?.name || "Student"}</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                  <div className="flex items-center gap-0.5">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-warning text-warning" : "text-muted-foreground/20"}`} />
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${
+                          i < review.rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground/25"
+                        }`}
+                      />
                     ))}
                   </div>
                 </div>
-                <p className="text-muted-foreground/80 font-medium italic leading-relaxed pl-13">
-                  "{review.comment}"
+                {review.comment && (
+                  <p className="text-sm text-muted-foreground leading-relaxed pl-10">
+                    {review.comment}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground/50 pl-10">
+                  {new Date(review.createdAt).toLocaleDateString()}
                 </p>
-                <div className="flex justify-end">
-                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">{new Date(review.createdAt).toLocaleDateString()}</span>
-                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-white/2 rounded-[1.5rem] border border-dashed border-white/10">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
-               <MessageSquare className="w-6 h-6 text-muted-foreground/30" />
-            </div>
-            <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Awaiting verification Intel</p>
+          <div className="text-center py-10">
+            <MessageSquare className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No reviews yet</p>
           </div>
         )}
       </CardContent>
@@ -687,29 +746,29 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
   );
 }
 
-function Stat({ label, value, subValue, icon: Icon }: { label: string; value: string | number; subValue?: string; icon?: any }) {
+function Stat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  icon?: React.ElementType;
+}) {
   return (
-    <div className="space-y-3 group">
-      <div className="flex items-center gap-3">
-        {Icon && (
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-            <Icon className="w-5 h-5" />
-          </div>
-        )}
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 transition-colors group-hover:text-primary/70">{label}</p>
-          <p className="text-xl font-black tracking-tight text-foreground">{value}</p>
-          {subValue && <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{subValue}</p>}
-        </div>
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {Icon && <Icon className="w-3.5 h-3.5" />}
+        <p className="text-xs">{label}</p>
       </div>
+      <p className="text-base font-semibold text-foreground">{value}</p>
     </div>
   );
 }
 
-const formatNaira = (amount: number): string => {
-  return new Intl.NumberFormat("en-NG", {
+const formatNaira = (amount: number): string =>
+  new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 0,
   }).format(amount);
-};
