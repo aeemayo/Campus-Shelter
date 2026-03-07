@@ -1937,7 +1937,7 @@ function StudentsTab() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {student.idCardUrl && !student.verified && (
+                    {!student.verified && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -2024,7 +2024,7 @@ function StudentsTab() {
                       </td>
                       <td className="py-5 px-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {student.idCardUrl && !student.verified && (
+                          {!student.verified && (
                             <Button
                               variant="outline"
                               size="sm"
