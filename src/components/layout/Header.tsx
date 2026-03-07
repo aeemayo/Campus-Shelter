@@ -17,8 +17,8 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchUnreadCount } from "@/services/messages";
-import logo1 from "../../../public/CampusShelter4.png";
-import logo2 from "../../../public/CampusShelter5.png";
+const logo1 = "/CampusShelter4.png";
+const logo2 = "/CampusShelter5.png";
 
 const Header = ({ bgColor = "" }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
