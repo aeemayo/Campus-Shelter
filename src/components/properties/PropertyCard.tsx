@@ -52,7 +52,7 @@ const PropertyCard = ({
 
   return (
     <Card
-      className="group overflow-hidden border-border/60 hover:border-border transition-all duration-200 hover:shadow-primary-lg cursor-pointer"
+      className="group overflow-hidden border-border/60 hover:border-border transition-all duration-200 hover:shadow-primary-lg cursor-pointer flex flex-col h-full"
       onClick={() => navigate(`/properties/${property.id}`)}
     >
       {/* Image */}
@@ -122,7 +122,7 @@ const PropertyCard = ({
         )}
       </div>
 
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 flex flex-col flex-1">
         {/* Title */}
         <div>
           <div className="flex items-start justify-between gap-2">
@@ -135,16 +135,16 @@ const PropertyCard = ({
           </div>
 
           <div className="flex items-center gap-1 mt-1.5 text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            <span className="text-sm">{property.location}</span>
-            <span className="text-xs text-muted-foreground/60 ml-0.5">
+            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="text-sm line-clamp-1">{property.location}</span>
+            <span className="text-xs text-muted-foreground/60 ml-0.5 shrink-0">
               • {property.distance}
             </span>
           </div>
         </div>
 
         {/* Room details */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
           <div className="flex items-center gap-1.5">
             <Bed className="w-3.5 h-3.5" />
             <span>{property.bedrooms} Bed</span>
@@ -161,8 +161,8 @@ const PropertyCard = ({
         </div>
 
         {/* Amenities */}
-        <div className="flex flex-wrap gap-1.5">
-          {property.amenities.slice(0, 4).map((amenity) => (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {property.amenities.slice(0, 3).map((amenity) => (
             <div
               key={amenity}
               className="flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md"
@@ -171,15 +171,15 @@ const PropertyCard = ({
               <span>{amenity}</span>
             </div>
           ))}
-          {property.amenities.length > 4 && (
+          {property.amenities.length > 3 && (
             <div className="text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
-              +{property.amenities.length - 4} more
+              +{property.amenities.length - 3} more
             </div>
           )}
         </div>
 
-        {/* CTA */}
-        <div className="pt-3 border-t border-border/50">
+        {/* CTA — pushed to bottom */}
+        <div className="pt-3 mt-auto border-t border-border/50">
           <Button
             size="sm"
             asChild
