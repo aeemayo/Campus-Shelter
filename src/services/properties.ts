@@ -191,8 +191,9 @@ export async function fetchAdminAnalytics() {
 }
 
 export async function fetchAdminUsers(role?: string) {
-  const query = role ? `?role=${role}` : "";
-  return apiFetch<ApiPaginated<any>>(`/api/admin/users${query}`);
+  const params = new URLSearchParams({ limit: "100" });
+  if (role) params.set("role", role);
+  return apiFetch<ApiPaginated<any>>(`/api/admin/users?${params}`);
 }
 
 export async function adminFlagUser(id: string, flagged: boolean) {
