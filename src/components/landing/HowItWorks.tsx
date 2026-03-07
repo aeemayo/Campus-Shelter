@@ -80,12 +80,19 @@ const HowItWorks = () => {
           ))}
         </div>
 
-        <div className="text-center mt-14">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-14">
           <Link
             to={ctaLink}
             className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"
           >
             {isAuthenticated ? "Browse properties" : "Get started now"}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-2 text-muted-foreground font-medium text-sm hover:text-foreground hover:gap-3 transition-all"
+          >
+            See full guide
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

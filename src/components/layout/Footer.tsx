@@ -1,26 +1,7 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Home, Mail, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const scrollToHowItWorks = () => {
-    if (location.pathname === "/") {
-      const el = document.getElementById("how-it-works");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      navigate("/");
-      setTimeout(() => {
-        const el = document.getElementById("how-it-works");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 300);
-    }
-  };
 
   return (
     <footer className="bg-foreground text-background">
@@ -51,12 +32,12 @@ const Footer = () => {
               >
                 Browse Properties
               </Link>
-              <button
-                onClick={scrollToHowItWorks}
-                className="text-background/50 hover:text-background transition-colors text-sm text-left"
+              <Link
+                to="/how-it-works"
+                className="text-background/50 hover:text-background transition-colors text-sm"
               >
                 How It Works
-              </button>
+              </Link>
             </nav>
           </div>
 
