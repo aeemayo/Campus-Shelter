@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import { fetchProperties, deleteProperty } from "@/services/properties";
+import { fetchProperties, deleteProperty, updatePropertyNotes } from "@/services/properties";
 import {
   fetchMyBookings,
   updateBookingStatus,
@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Building2,
@@ -56,6 +57,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  StickyNote,
+  Save,
 } from "lucide-react";
 import {
   Dialog,
@@ -182,6 +185,23 @@ const LandlordDashboard = () => {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete property.", variant: "destructive" });
+    },
+  });
+
+  // Notes editing state
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+  const [notesText, setNotesText] = useState("");
+
+  const notesMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string | null }) =>
+      updatePropertyNotes(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      toast({ title: "Notes Updated", description: "Property notes have been saved." });
+      setEditingNotesId(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update notes.", variant: "destructive" });
     },
   });
 
@@ -673,17 +693,25 @@ const LandlordDashboard = () => {
                                     /yr
                                   </span>
                                 </p>
-                                {(property.inspectionSlots?.length ?? 0) > 0 ? (
-                                  <p className="text-[10px] text-primary/70 flex items-center gap-1 mt-0.5">
-                                    <Clock className="w-3 h-3" />
-                                    {property.inspectionSlots!.length} inspection slot{property.inspectionSlots!.length !== 1 ? "s" : ""} set
-                                  </p>
-                                ) : (
-                                  <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mt-0.5">
-                                    <Clock className="w-3 h-3" />
-                                    No inspection slots
-                                  </p>
-                                )}
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {(property.inspectionSlots?.length ?? 0) > 0 ? (
+                                    <p className="text-[10px] text-primary/70 flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {property.inspectionSlots!.length} slot{property.inspectionSlots!.length !== 1 ? "s" : ""}
+                                    </p>
+                                  ) : (
+                                    <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      No slots
+                                    </p>
+                                  )}
+                                  {property.notes && (
+                                    <p className="text-[10px] text-primary/70 flex items-center gap-1">
+                                      <StickyNote className="w-3 h-3" />
+                                      Has notes
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                             </Link>
@@ -714,8 +742,8 @@ const LandlordDashboard = () => {
                             </thead>
                             <tbody className="divide-y divide-border/40">
                               {myProperties.map((property) => (
+                                <React.Fragment key={property.id}>
                                 <tr
-                                  key={property.id}
                                   className="hover:bg-muted/40 transition-all duration-200 group"
                                 >
                                   <td className="py-4 px-6">
@@ -805,6 +833,22 @@ const LandlordDashboard = () => {
                                           View
                                         </Link>
                                       </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={`rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5 ${editingNotesId === property.id ? "bg-primary/5 border-primary/40" : ""}`}
+                                        onClick={() => {
+                                          if (editingNotesId === property.id) {
+                                            setEditingNotesId(null);
+                                          } else {
+                                            setEditingNotesId(property.id);
+                                            setNotesText(property.notes ?? "");
+                                          }
+                                        }}
+                                      >
+                                        <StickyNote className="w-3.5 h-3.5 mr-1.5" />
+                                        Notes
+                                      </Button>
                                       {user?.landlordStatus === "VERIFIED" && (
                                         <>
                                           <Button
@@ -835,6 +879,53 @@ const LandlordDashboard = () => {
                                     </div>
                                   </td>
                                 </tr>
+                                {editingNotesId === property.id && (
+                                  <tr>
+                                    <td colSpan={5} className="px-6 py-4 bg-muted/20 border-b border-border/40">
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          <StickyNote className="w-4 h-4 text-primary" />
+                                          <span className="text-sm font-bold">Landlord Notes</span>
+                                          <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5">Visible to students</span>
+                                        </div>
+                                        <Textarea
+                                          value={notesText}
+                                          onChange={(e) => setNotesText(e.target.value)}
+                                          placeholder="Add notes for tenants — e.g. generator schedule, house rules, caretaker contact..."
+                                          className="min-h-[80px] rounded-xl bg-background/80 border-border/60 text-sm"
+                                          maxLength={2000}
+                                        />
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[11px] text-muted-foreground">{notesText.length}/2000</span>
+                                          <div className="flex items-center gap-2">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => setEditingNotesId(null)}
+                                              className="rounded-lg text-xs"
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              className="gradient-primary rounded-lg text-xs"
+                                              disabled={notesMutation.isPending}
+                                              onClick={() => notesMutation.mutate({ id: property.id, notes: notesText.trim() || null })}
+                                            >
+                                              {notesMutation.isPending ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                                              ) : (
+                                                <Save className="w-3.5 h-3.5 mr-1.5" />
+                                              )}
+                                              Save Notes
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                                </React.Fragment>
                               ))}
                             </tbody>
                           </table>

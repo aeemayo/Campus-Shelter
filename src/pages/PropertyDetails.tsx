@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Shield, Plus, X, Clock } from "lucide-react";
+import { Calendar, Shield, Plus, X, Clock, StickyNote } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -480,12 +480,25 @@ export default function RentalDetailsPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="description">
+              <TabsContent value="description" className="space-y-4">
                 <Card className="border-border/60">
                   <CardContent className="p-5 text-sm text-muted-foreground leading-relaxed">
                     {property.description}
                   </CardContent>
                 </Card>
+                {property.notes && (
+                  <Card className="border-primary/20 bg-primary/[0.02]">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <StickyNote className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold text-foreground">Landlord Notes</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {property.notes}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               <TabsContent value="info">

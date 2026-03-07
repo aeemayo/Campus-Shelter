@@ -187,6 +187,7 @@ const propertyFormSchema = z.object({
   security: z.boolean().default(false),
   electricityBackup: z.boolean().default(false),
   availableFrom: z.string().min(1, "Availability date is required"),
+  notes: z.string().max(2000, "Notes must be under 2000 characters").optional(),
 });
 
 type PropertyFormValues = z.infer<typeof propertyFormSchema>;
@@ -296,6 +297,7 @@ const AdminPropertyForm = () => {
       security: false,
       electricityBackup: false,
       availableFrom: new Date().toISOString().split("T")[0],
+      notes: "",
     },
   });
 
@@ -336,6 +338,7 @@ const AdminPropertyForm = () => {
               .split("T")[0],
             latitude: p.latitude ?? undefined,
             longitude: p.longitude ?? undefined,
+            notes: p.notes ?? "",
           });
           // Load existing images
           if (p.images && p.images.length > 0) {
@@ -735,6 +738,33 @@ const AdminPropertyForm = () => {
                               {...field}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="h-6 w-1 bg-primary rounded-full" />
+                            <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                              Landlord Notes
+                            </FormLabel>
+                            <span className="text-[10px] text-muted-foreground font-medium bg-muted/50 rounded-full px-2 py-0.5">Optional</span>
+                          </div>
+                          <FormControl>
+                            <Textarea
+                              className="rounded-2xl border-border/40 bg-muted/20 focus:bg-background/50 transition-all p-4 min-h-[100px]"
+                              placeholder="Add notes for tenants — e.g. generator schedule, house rules, caretaker contact..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-[11px] font-medium">
+                            Notes are visible to students on the property page. You can update them anytime without re-approval.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

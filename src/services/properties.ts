@@ -21,6 +21,7 @@ export interface ApiProperty {
   electricityBackup: boolean;
   water: boolean;
   security: boolean;
+  notes?: string | null;
   roomType: RoomType;
   distanceFromFUTA: number;
   availableFrom: string;
@@ -63,6 +64,7 @@ export interface Property {
   available: boolean;
   furnished: boolean;
   description: string;
+  notes?: string | null;
   availableFrom?: string;
   status?: string;
   approved?: boolean;
@@ -206,6 +208,14 @@ export async function adminFlagUser(id: string, flagged: boolean) {
     method: "PATCH",
     body: JSON.stringify({ flagged }),
   });
+}
+
+export async function updatePropertyNotes(id: string, notes: string | null) {
+  const res = await apiFetch<ApiSuccess<{ id: string; notes: string | null }>>(`/api/properties/${id}/notes`, {
+    method: "PATCH",
+    body: JSON.stringify({ notes }),
+  });
+  return res.data;
 }
 
 export async function updateInspectionSlots(id: string, inspectionSlots: string[]) {

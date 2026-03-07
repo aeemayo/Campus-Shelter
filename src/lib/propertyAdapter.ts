@@ -83,6 +83,7 @@ export function toFrontendProperty(p: ApiProperty): Property {
     featured: false,
     furnished: p.furnished,
     description: p.description,
+    notes: p.notes ?? null,
     inspectionSlots: p.inspectionSlots ?? [],
   };
 }
