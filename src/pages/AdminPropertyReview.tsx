@@ -540,6 +540,8 @@ export default function AdminPropertyReview() {
               {property.images.map((img, i) => (
                 <button
                   key={i}
+                  type="button"
+                  aria-label={`View photo ${i + 1}`}
                   onClick={() => setLightboxIndex(i)}
                   className={cn(
                     "w-16 h-12 rounded-lg overflow-hidden border-2 transition-all shrink-0",
