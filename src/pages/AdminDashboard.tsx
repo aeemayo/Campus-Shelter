@@ -79,11 +79,33 @@ import {
   Pie,
 } from "recharts";
 
+const PAGE_SIZE = 10;
+
+function Pagination({ page, totalPages, total, onPageChange }: { page: number; totalPages: number; total: number; onPageChange: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between px-6 py-4 border-t border-border/40">
+      <p className="text-xs text-muted-foreground">
+        Page {page} of {totalPages} ({total} total)
+      </p>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="h-8 rounded-xl" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <Button variant="outline" size="sm" className="h-8 rounded-xl" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("properties");
   const [searchQuery, setSearchQuery] = useState("");
+  const [propsPage, setPropsPage] = useState(1);
 
   // Fetch all properties
   const { data: apiResponse, refetch } = useProperties({ limit: 100 });
@@ -93,11 +115,13 @@ const AdminDashboard = () => {
     return apiResponse.data.map(toFrontendProperty);
   }, [apiResponse]);
 
-  const filteredProperties = properties.filter(
+  const allFilteredProperties = properties.filter(
     (p) =>
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.location.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+  const propsTotalPages = Math.ceil(allFilteredProperties.length / PAGE_SIZE);
+  const filteredProperties = allFilteredProperties.slice((propsPage - 1) * PAGE_SIZE, propsPage * PAGE_SIZE);
 
   const handleApprove = async (id: string, approved: boolean) => {
     try {
@@ -322,7 +346,7 @@ const AdminDashboard = () => {
                               placeholder="Search by title or location..."
                               className="pl-10 h-9 w-full md:w-64 rounded-lg"
                               value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onChange={(e) => { setSearchQuery(e.target.value); setPropsPage(1); }}
                             />
                           </div>
                           <Button
@@ -497,6 +521,7 @@ const AdminDashboard = () => {
                           </tbody>
                         </table>
                       </div>
+                      <Pagination page={propsPage} totalPages={propsTotalPages} total={allFilteredProperties.length} onPageChange={setPropsPage} />
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1060,6 +1085,7 @@ function LandlordsTab({
   ) => Promise<void>;
 }) {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const {
     data: response,
     isLoading,
@@ -1100,7 +1126,9 @@ function LandlordsTab({
     );
   }
 
-  const landlords = response?.data || [];
+  const allLandlords = response?.data || [];
+  const landlordsTotalPages = Math.ceil(allLandlords.length / PAGE_SIZE);
+  const landlords = allLandlords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <Card className="border-border/60">
@@ -1122,9 +1150,12 @@ function LandlordsTab({
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-sm truncate">
+                        <Link
+                          to={`/admin/users/${landlord.id}/review`}
+                          className="font-bold text-sm truncate hover:text-primary hover:underline transition-colors"
+                        >
                           {landlord.name}
-                        </p>
+                        </Link>
                         {landlord.landlordStatus === "VERIFIED" ? (
                           <Badge
                             variant="success"
@@ -1248,7 +1279,11 @@ function LandlordsTab({
                       key={landlord.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="py-5 px-3 font-medium">{landlord.name}</td>
+                      <td className="py-5 px-3 font-medium">
+                        <Link to={`/admin/users/${landlord.id}/review`} className="hover:text-primary hover:underline transition-colors">
+                          {landlord.name}
+                        </Link>
+                      </td>
                       <td className="py-5 px-3 text-muted-foreground">
                         {landlord.email}
                       </td>
@@ -1342,6 +1377,7 @@ function LandlordsTab({
             <p className="font-medium">No landlords registered yet.</p>
           </div>
         )}
+        <Pagination page={page} totalPages={landlordsTotalPages} total={allLandlords.length} onPageChange={setPage} />
       </CardContent>
     </Card>
   );
@@ -1361,6 +1397,7 @@ function UsersTab({
   ) => Promise<void>;
 }) {
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [page, setPage] = useState(1);
 
   const {
     data: allUsersRes,
@@ -1380,10 +1417,12 @@ function UsersTab({
   }
 
   const allUsers: any[] = allUsersRes?.data || [];
-  const filteredUsers =
+  const allFilteredUsers =
     roleFilter === "ALL"
       ? allUsers
       : allUsers.filter((u: any) => u.role === roleFilter);
+  const usersTotalPages = Math.ceil(allFilteredUsers.length / PAGE_SIZE);
+  const filteredUsers = allFilteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <Card className="border-border/60">
@@ -1404,7 +1443,7 @@ function UsersTab({
                 variant={roleFilter === role ? "default" : "outline"}
                 size="sm"
                 className="text-xs"
-                onClick={() => setRoleFilter(role)}
+                onClick={() => { setRoleFilter(role); setPage(1); }}
               >
                 {role === "ALL"
                   ? "All"
@@ -1426,7 +1465,7 @@ function UsersTab({
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="font-bold text-sm truncate">{u.name}</p>
+                        <Link to={`/admin/users/${u.id}/review`} className="font-bold text-sm truncate hover:text-primary hover:underline transition-colors">{u.name}</Link>
                         <Badge
                           variant="outline"
                           className="text-[9px] px-1.5 py-0 shrink-0"
@@ -1575,7 +1614,7 @@ function UsersTab({
                     >
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{u.name}</span>
+                          <Link to={`/admin/users/${u.id}/review`} className="font-medium hover:text-primary hover:underline transition-colors">{u.name}</Link>
                           {u.flagged && (
                             <Badge
                               variant="destructive"
@@ -1725,6 +1764,7 @@ function UsersTab({
             <p className="font-medium">No users found.</p>
           </div>
         )}
+        <Pagination page={page} totalPages={usersTotalPages} total={allFilteredUsers.length} onPageChange={setPage} />
       </CardContent>
     </Card>
   );
@@ -1735,6 +1775,7 @@ function StudentsTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "verified" | "unverified">("all");
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const {
     data: response,
@@ -1751,14 +1792,12 @@ function StudentsTab() {
     (s: any) => s.idCardUrl && !s.verified,
   ).length;
 
-  const filteredStudents = students.filter((s: any) => {
-    // Search filter
+  const allFilteredStudents = students.filter((s: any) => {
     const matchesSearch =
       !searchQuery ||
       s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Status filter
     let matchesFilter = true;
     if (filter === "pending") {
       matchesFilter = !!s.idCardUrl && !s.verified;
@@ -1770,6 +1809,8 @@ function StudentsTab() {
 
     return matchesSearch && matchesFilter;
   });
+  const studentsTotalPages = Math.ceil(allFilteredStudents.length / PAGE_SIZE);
+  const filteredStudents = allFilteredStudents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleVerify = async (id: string, verified: boolean) => {
     setVerifyingId(id);
@@ -1849,7 +1890,7 @@ function StudentsTab() {
               placeholder="Search by name or email..."
               className="pl-10 h-9 w-full md:w-64 rounded-lg"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             />
           </div>
         </div>
@@ -1858,7 +1899,7 @@ function StudentsTab() {
             variant={filter === "all" ? "default" : "outline"}
             size="sm"
             className="h-8 rounded-xl text-xs font-bold"
-            onClick={() => setFilter("all")}
+            onClick={() => { setFilter("all"); setPage(1); }}
           >
             All ({students.length})
           </Button>
@@ -1866,7 +1907,7 @@ function StudentsTab() {
             variant={filter === "pending" ? "default" : "outline"}
             size="sm"
             className="h-8 rounded-xl text-xs font-bold"
-            onClick={() => setFilter("pending")}
+            onClick={() => { setFilter("pending"); setPage(1); }}
           >
             Pending
             {pendingCount > 0 && (
@@ -1882,7 +1923,7 @@ function StudentsTab() {
             variant={filter === "verified" ? "default" : "outline"}
             size="sm"
             className="h-8 rounded-xl text-xs font-bold"
-            onClick={() => setFilter("verified")}
+            onClick={() => { setFilter("verified"); setPage(1); }}
           >
             Verified
           </Button>
@@ -1890,7 +1931,7 @@ function StudentsTab() {
             variant={filter === "unverified" ? "default" : "outline"}
             size="sm"
             className="h-8 rounded-xl text-xs font-bold"
-            onClick={() => setFilter("unverified")}
+            onClick={() => { setFilter("unverified"); setPage(1); }}
           >
             Unverified
           </Button>
@@ -1906,9 +1947,12 @@ function StudentsTab() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-sm truncate">
+                        <Link
+                          to={`/admin/users/${student.id}/review`}
+                          className="font-bold text-sm truncate hover:text-primary hover:underline transition-colors"
+                        >
                           {student.name}
-                        </p>
+                        </Link>
                         {getStatusBadgeMobile(student)}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
@@ -1995,7 +2039,11 @@ function StudentsTab() {
                       key={student.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="py-5 px-3 font-medium">{student.name}</td>
+                      <td className="py-5 px-3 font-medium">
+                        <Link to={`/admin/users/${student.id}/review`} className="hover:text-primary hover:underline transition-colors">
+                          {student.name}
+                        </Link>
+                      </td>
                       <td className="py-5 px-3 text-muted-foreground">
                         {student.email}
                       </td>
@@ -2070,6 +2118,7 @@ function StudentsTab() {
             </p>
           </div>
         )}
+        <Pagination page={page} totalPages={studentsTotalPages} total={allFilteredStudents.length} onPageChange={setPage} />
       </CardContent>
     </Card>
   );

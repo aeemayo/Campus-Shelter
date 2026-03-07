@@ -196,6 +196,11 @@ export async function fetchAdminUsers(role?: string) {
   return apiFetch<ApiPaginated<any>>(`/api/admin/users?${params}`);
 }
 
+export async function fetchAdminUser(id: string) {
+  const res = await apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}`);
+  return res.data;
+}
+
 export async function adminFlagUser(id: string, flagged: boolean) {
   return apiFetch<ApiSuccess<any>>(`/api/admin/users/${id}/flag`, {
     method: "PATCH",
