@@ -377,15 +377,17 @@ export default function AdminPropertyReview() {
                   <CardTitle className="text-base">Property Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={`grid gap-3 ${raw.priceWeekly ? "grid-cols-2" : "grid-cols-1"}`}>
                     <div className="p-3 rounded-lg bg-muted/30 border border-border/40 text-center">
                       <p className="text-xs text-muted-foreground mb-1">Monthly</p>
                       <p className="text-lg font-bold text-foreground">{raw.priceMonthly?.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/40 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Weekly</p>
-                      <p className="text-lg font-bold text-foreground">{raw.priceWeekly?.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })}</p>
-                    </div>
+                    {raw.priceWeekly && (
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/40 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Weekly</p>
+                        <p className="text-lg font-bold text-foreground">{raw.priceWeekly.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3">
