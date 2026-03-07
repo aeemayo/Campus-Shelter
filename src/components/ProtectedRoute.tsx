@@ -1,4 +1,4 @@
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/services/auth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +19,7 @@ const roleHomeMap: Record<UserRole, string> = {
 
 export default function ProtectedRoute({ children, allowedRoles, allowUnverifiedLandlord }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -29,7 +30,7 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {

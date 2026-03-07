@@ -306,7 +306,29 @@ const Properties = () => {
 
               {/* Results Grid */}
               <AnimatePresence mode="popLayout">
-                {apiLoading ? (
+                {isError ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20 bg-destructive/5 rounded-xl border-2 border-dashed border-destructive/30"
+                  >
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <Home className="w-8 h-8 text-destructive" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-2 tracking-tight">
+                      Something went wrong
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                      We couldn't load properties right now. Please check your connection and try again.
+                    </p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      variant="outline"
+                    >
+                      Try again
+                    </Button>
+                  </motion.div>
+                ) : apiLoading ? (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

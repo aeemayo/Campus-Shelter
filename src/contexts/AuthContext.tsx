@@ -12,6 +12,7 @@ import {
   type RegisterPayload,
   login as apiLogin,
   register as apiRegister,
+  fetchProfile,
   saveAuth,
   clearAuth,
   getSavedUser,
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         try {
           // Refresh from DB to get latest role/status
-          const { user: freshUser } = await import("@/services/auth").then(m => m.fetchProfile());
+          const { user: freshUser } = await fetchProfile();
           setUser(freshUser);
           localStorage.setItem("cs_user", JSON.stringify(freshUser));
         } catch (err: any) {

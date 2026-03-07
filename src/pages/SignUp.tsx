@@ -160,7 +160,7 @@ export default function SignUp() {
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className=" rounded-lg flex items-center justify-center">
-              <img src="CampusShelter5.png" alt="" className="w-36 h-18" />
+              <img src="/CampusShelter5.png" alt="" className="w-36 h-18" />
             </div>
           </Link>
           <p className="text-muted-foreground mt-2 text-sm">

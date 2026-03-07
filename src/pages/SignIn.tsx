@@ -47,6 +47,7 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const roleParam = searchParams.get("role");
+  const redirectTo = searchParams.get("redirect");
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(formSchema),
@@ -71,7 +72,9 @@ export default function SignIn() {
         description: "You've signed in successfully.",
       });
 
-      if (role === "LANDLORD") {
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (role === "LANDLORD") {
         navigate("/landlord");
       } else if (role === "ADMIN") {
         navigate("/admin");
@@ -100,7 +103,7 @@ export default function SignIn() {
         <div className="flex flex-col items-center mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="flex items-center justify-center">
-              <img src="CampusShelter5.png" alt="" className="w-36 h-18" />
+              <img src="/CampusShelter5.png" alt="" className="w-36 h-18" />
             </div>
           </Link>
           <p className="text-muted-foreground mt-2 text-sm">

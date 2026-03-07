@@ -5,15 +5,16 @@ import {
   Menu,
   X,
   LogOut,
-  User,
   LayoutDashboard,
   MessageSquare,
   CalendarCheck,
   Building2,
   ArrowRight,
   Plus,
+  ChevronDown,
+  Shield,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchUnreadCount } from "@/services/messages";
@@ -22,12 +23,15 @@ const logo2 = "/CampusShelter5.png";
 
 const Header = ({ bgColor = "" }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
   const isHome = location.pathname === "/";
+  const isDark = !scrolled && isHome && bgColor !== "white";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -38,7 +42,17 @@ const Header = ({ bgColor = "" }) => {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setProfileOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node))
+        setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -62,13 +76,19 @@ const Header = ({ bgColor = "" }) => {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinkClass = (path: string) =>
-    `relative text-sm font-medium px-3.5 py-2 rounded-md transition-colors ${
+    `relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 ${
       isActive(path)
-        ? "text-primary bg-primary/8"
-        : scrolled || !isHome
-          ? "text-foreground/70 hover:text-foreground hover:bg-muted"
-          : "text-white/70 hover:text-white hover:bg-white/10"
+        ? isDark ? "text-white bg-white/15" : "text-primary bg-primary/8"
+        : isDark
+          ? "text-white/70 hover:text-white hover:bg-white/10"
+          : "text-foreground/60 hover:text-foreground hover:bg-muted"
     }`;
+
+  const roleBadge = user?.role === "ADMIN"
+    ? { label: "Admin", color: "bg-red-500/10 text-red-600 border-red-500/20" }
+    : user?.role === "LANDLORD"
+      ? { label: "Landlord", color: "bg-amber-500/10 text-amber-700 border-amber-500/20" }
+      : null;
 
   const firstName = user?.name?.split(" ")[0];
   const initials = user?.name
@@ -90,34 +110,35 @@ const Header = ({ bgColor = "" }) => {
     <header className="fixed top-0 left-0 right-0 z-50">
       <div
         className={`mx-auto transition-all duration-300 ${
-          scrolled || !isHome
-            ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-primary-sm"
+          !isDark
+            ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
             : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center h-16 gap-1">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="flex items-center justify-center">
-                <img
-                  src={scrolled || !isHome || bgColor === "white" ? logo2 : logo1}
-                  alt="CampusShelter"
-                  className="w-28 h-14"
-                />
-              </div>
-              <span
-                className={`font-display text-lg font-bold tracking-tight transition-colors ${
-                  scrolled || !isHome ? "text-foreground" : "text-white"
-                }`}
-              ></span>
+            <Link to="/" className="flex items-center shrink-0 mr-1">
+              <img
+                src={isDark ? logo1 : logo2}
+                alt="CampusShelter"
+                className="w-28 h-14"
+              />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+            {/* Separator between logo and nav */}
+            {isAuthenticated && (
+              <div className={`hidden lg:block w-px h-6 mx-3 ${isDark ? "bg-white/20" : "bg-border"}`} />
+            )}
+
+            {/* Desktop Navigation — left-aligned next to logo */}
+            <nav className="hidden lg:flex items-center gap-1 flex-1">
               {(!isAuthenticated || user?.role === "STUDENT") && (
                 <Link to="/properties" className={navLinkClass("/properties")}>
-                  Properties
+                  <span className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Properties
+                  </span>
                 </Link>
               )}
               {!isAuthenticated && (
@@ -140,21 +161,22 @@ const Header = ({ bgColor = "" }) => {
                 <Link to="/admin" className={navLinkClass("/admin")}>
                   <span className="flex items-center gap-1.5">
                     <LayoutDashboard className="w-3.5 h-3.5" />
-                    Admin
+                    Dashboard
                   </span>
                 </Link>
               )}
               {isAuthenticated && user?.role === "STUDENT" && (
-                <Link
-                  to="/my-bookings"
-                  className={navLinkClass("/my-bookings")}
-                >
-                  Bookings
+                <Link to="/my-bookings" className={navLinkClass("/my-bookings")}>
+                  <span className="flex items-center gap-1.5">
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                    Bookings
+                  </span>
                 </Link>
               )}
               {isAuthenticated && user?.role !== "ADMIN" && (
                 <Link to="/messages" className={navLinkClass("/messages")}>
                   <span className="flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5" />
                     Messages
                     {unreadCount > 0 && (
                       <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-primary text-white text-[10px] font-bold leading-none">
@@ -164,53 +186,98 @@ const Header = ({ bgColor = "" }) => {
                   </span>
                 </Link>
               )}
+              {user?.role === "LANDLORD" && user.landlordStatus === "VERIFIED" && (
+                <Link
+                  to="/properties/add"
+                  className={`text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 ${
+                    isDark
+                      ? "text-white/70 hover:text-white hover:bg-white/10"
+                      : "text-primary hover:bg-primary/8"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Listing
+                  </span>
+                </Link>
+              )}
             </nav>
 
-            {/* Desktop Auth */}
-            <div className="hidden lg:flex items-center gap-3">
+            {/* Desktop Auth — right side */}
+            <div className="hidden lg:flex items-center gap-2">
               {isAuthenticated ? (
-                <>
-                  <Link
-                    to="/profile"
-                    className={`flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full transition-colors ${
-                      scrolled || !isHome
-                        ? "hover:bg-muted"
-                        : "hover:bg-white/10"
+                <div ref={profileRef} className="relative">
+                  <button
+                    onClick={() => setProfileOpen((p) => !p)}
+                    className={`flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-full transition-all duration-200 ${
+                      profileOpen
+                        ? isDark ? "bg-white/15" : "bg-muted"
+                        : isDark ? "hover:bg-white/10" : "hover:bg-muted"
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-[10px] font-bold text-white">
+                    <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-[11px] font-bold text-white ring-2 ring-background">
                       {initials}
                     </div>
-                    <span
-                      className={`text-sm font-medium ${
-                        scrolled || !isHome ? "text-foreground" : "text-white"
-                      }`}
-                    >
+                    <span className={`text-sm font-medium max-w-[100px] truncate ${isDark ? "text-white" : "text-foreground"}`}>
                       {firstName}
                     </span>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className={`p-2 rounded-md transition-colors ${
-                      scrolled || !isHome
-                        ? "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        : "text-white/60 hover:text-white hover:bg-white/10"
-                    }`}
-                    title="Sign out"
-                  >
-                    <LogOut className="w-4 h-4" />
+                    {roleBadge && (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${roleBadge.color}`}>
+                        {roleBadge.label}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""} ${isDark ? "text-white/60" : "text-muted-foreground"}`} />
                   </button>
-                </>
+
+                  {/* Profile dropdown */}
+                  {profileOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-lg py-1.5 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
+                      <div className="px-3 py-2.5 border-b border-border">
+                        <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition-colors"
+                        >
+                          <div className="w-4 h-4 rounded-full gradient-primary flex items-center justify-center">
+                            <span className="text-[7px] font-bold text-white">{initials}</span>
+                          </div>
+                          My Profile
+                        </Link>
+                        {user?.role === "ADMIN" && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition-colors"
+                          >
+                            <Shield className="w-4 h-4 text-red-500" />
+                            Admin Panel
+                          </Link>
+                        )}
+                      </div>
+                      <div className="border-t border-border pt-1">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/8 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <Button
                     variant="ghost"
                     size="sm"
                     asChild
-                    className={`text-sm h-9 rounded-md ${
-                      scrolled || !isHome
-                        ? "text-foreground/70 hover:text-foreground"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                    className={`text-sm h-9 rounded-lg ${
+                      isDark
+                        ? "text-white/80 hover:text-white hover:bg-white/10"
+                        : "text-foreground/70 hover:text-foreground"
                     }`}
                   >
                     <Link to="/login">Sign in</Link>
@@ -231,10 +298,10 @@ const Header = ({ bgColor = "" }) => {
 
             {/* Mobile Menu Toggle */}
             <button
-              className={`lg:hidden p-2 rounded-md transition-colors ${
-                scrolled || !isHome
-                  ? "text-foreground hover:bg-muted"
-                  : "text-white hover:bg-white/10"
+              className={`lg:hidden ml-auto p-2 rounded-lg transition-colors ${
+                isDark
+                  ? "text-white hover:bg-white/10"
+                  : "text-foreground hover:bg-muted"
               }`}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
@@ -257,7 +324,14 @@ const Header = ({ bgColor = "" }) => {
             onClick={() => setIsMenuOpen(false)}
           />
 
-          <div className="relative mx-4 mt-2 bg-card border border-border rounded-xl shadow-primary-xl overflow-hidden animate-fade-in">
+          <div className="relative mx-4 mt-2 bg-card border border-border rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            {isAuthenticated && roleBadge && (
+              <div className="px-4 pt-3 pb-1">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${roleBadge.color}`}>
+                  {roleBadge.label}
+                </span>
+              </div>
+            )}
             <nav className="p-3 space-y-0.5">
               {(!isAuthenticated || user?.role === "STUDENT") && (
                 <MobileLink
@@ -315,7 +389,7 @@ const Header = ({ bgColor = "" }) => {
                 <MobileLink
                   to="/admin"
                   icon={LayoutDashboard}
-                  label="Admin"
+                  label="Dashboard"
                   active={isActive("/admin")}
                   onClick={() => setIsMenuOpen(false)}
                 />
@@ -386,9 +460,9 @@ const Header = ({ bgColor = "" }) => {
                     asChild
                     className="flex-1 h-10 gradient-primary rounded-lg text-sm"
                   >
-                    {/* <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                       Get started
-                    </Link> */}
+                    </Link>
                   </Button>
                 </div>
               )}
