@@ -15,13 +15,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Home, Loader2, ChevronRight } from "lucide-react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import type { RoomType } from "@/services/properties";
 import { PropertyCardSkeleton } from "@/components/ui/skeleton-loaders";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Properties = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [searchParams] = useSearchParams();
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -323,7 +326,14 @@ const Properties = () => {
                         <PropertyCard
                           property={property}
                           isFavorite={favorites.includes(property.id)}
-                          onFavoriteToggle={() => toggleFavorite(property.id)}
+                          onFavoriteToggle={() => {
+                            if (!isAuthenticated) {
+                              toast({ title: "Sign in required", description: "Please sign in to save favorites.", variant: "destructive" });
+                              navigate(`/login?redirect=${encodeURIComponent("/properties")}`);
+                              return;
+                            }
+                            toggleFavorite(property.id);
+                          }}
                         />
                       </motion.div>
                     ))}
