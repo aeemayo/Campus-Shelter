@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/services/auth";
+import { resendVerification } from "@/services/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, XCircle, LogOut, ShieldCheck, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Clock, XCircle, LogOut, ShieldCheck, Upload, Mail, Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -36,6 +39,11 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={roleHomeMap[user.role]} replace />;
+  }
+
+  // Block users who haven't verified their email
+  if (!user.emailVerified && user.role !== "ADMIN") {
+    return <EmailNotVerifiedBlock logout={logout} email={user.email} />;
   }
 
   // Block unverified landlords from all landlord routes except profile
@@ -137,4 +145,51 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
   }
 
   return <>{children}</>;
+}
+
+function EmailNotVerifiedBlock({ logout, email }: { logout: () => void; email: string }) {
+  const { toast } = useToast();
+  const [resending, setResending] = useState(false);
+
+  async function handleResend() {
+    setResending(true);
+    try {
+      await resendVerification();
+      toast({ title: "Verification email sent", description: "Check your inbox for a new verification link." });
+    } catch (err: any) {
+      toast({
+        title: "Failed to resend",
+        description: err?.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setResending(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="max-w-md w-full border-2 border-primary/30">
+        <CardContent className="pt-8 pb-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto mb-5 flex items-center justify-center">
+            <Mail className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight mb-2">Verify Your Email</h2>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            We sent a verification link to <strong>{email}</strong>. Please check your inbox and click the link to continue.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button onClick={handleResend} disabled={resending} variant="outline">
+              {resending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
+              Resend verification email
+            </Button>
+            <Button variant="ghost" className="text-destructive" onClick={logout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

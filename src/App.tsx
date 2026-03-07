@@ -32,6 +32,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 
 const PageLoader = () => (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
 
               {/* Student routes */}
               <Route path="/properties" element={

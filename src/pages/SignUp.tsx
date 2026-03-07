@@ -144,9 +144,9 @@ export default function SignUp() {
 
       toast({
         title: "Account created!",
-        description: "Welcome to CampusShelter.",
+        description: "Please check your email to verify your account.",
       });
-      navigate(values.role === "LANDLORD" ? "/landlord" : "/properties");
+      navigate("/verify-email");
     } catch (err) {
       const message =
         err instanceof ApiError

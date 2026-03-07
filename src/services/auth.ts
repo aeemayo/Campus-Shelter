@@ -13,6 +13,7 @@ export interface User {
   phone?: string;
   role: UserRole;
   verified: boolean;
+  emailVerified: boolean;
   landlordStatus?: LandlordStatus;
   suspensionReason?: string;
   idCardUrl?: string;
@@ -94,6 +95,19 @@ export async function updateProfile(payload: { name?: string; phone?: string; id
 export async function deleteAccount() {
   return apiFetch<ApiSuccess<any>>("/api/auth/delete-account", {
     method: "DELETE",
+  });
+}
+
+export async function verifyEmail(token: string) {
+  return apiFetch<ApiSuccess<{ message: string }>>("/api/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+export async function resendVerification() {
+  return apiFetch<ApiSuccess<{ message: string }>>("/api/auth/resend-verification", {
+    method: "POST",
   });
 }
 
