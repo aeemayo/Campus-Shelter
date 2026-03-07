@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Search, MapPin, Home, Shield, Users, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import HeroIllustration from "@/components/illustrations/HeroIllustration";
 import {
   Command,
@@ -52,65 +51,31 @@ const Hero = () => {
     navigate(`/properties?${query.toString()}`);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.3,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" as const },
-    },
-  };
-
   return (
     <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-x-clip">
       <div className="absolute inset-0 gradient-hero" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.06),_transparent_60%)]" />
 
-      <motion.div
-        className="relative z-10 container mx-auto px-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <div className="relative z-10 container mx-auto px-4">
         <div className="flex items-center justify-between gap-12">
         <div className="max-w-3xl flex-1">
           {/* Trust signal */}
-          <motion.div
-            variants={itemVariants}
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8"
-          >
+          <div className="anim-fade-up anim-stagger-1 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8">
             <Shield className="w-3.5 h-3.5 text-white/80" />
             <span className="text-white/80 text-xs font-medium tracking-wide">
               Trusted by 2,000+ FUTA students
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h1
-            variants={itemVariants}
-            className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.08] tracking-tighter mb-6"
-          >
+          <h1 className="anim-fade-up anim-stagger-2 font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.08] tracking-tighter mb-6">
             Student housing,
             <br />
             without the stress.
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            variants={itemVariants}
-            className="text-white/60 text-lg max-w-xl mb-12 leading-relaxed"
-          >
+          <p className="anim-fade-up anim-stagger-3 text-white/60 text-lg max-w-xl mb-12 leading-relaxed">
             Verified landlords, real photos, secure payments. Find your next place near FUTA in minutes.
-          </motion.p>
+          </p>
 
           {/* Search */}
           <div ref={wrapperRef} className="relative max-w-2xl">
@@ -118,10 +83,7 @@ const Hero = () => {
               className="overflow-visible bg-transparent"
               shouldFilter={true}
             >
-              <motion.div
-                variants={itemVariants}
-                className="bg-white rounded-xl p-2 shadow-primary-xl"
-              >
+              <div className="anim-fade-up anim-stagger-4 bg-white rounded-xl p-2 shadow-primary-xl">
                 <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1 rounded-lg bg-muted/40 [&_[cmdk-input-wrapper]]:border-0">
                     <CommandInput
@@ -152,7 +114,7 @@ const Hero = () => {
                     <span className="hidden sm:inline">Search</span>
                   </Button>
                 </form>
-              </motion.div>
+              </div>
 
               {open && (
                 <CommandList className="absolute z-50 top-full left-0 right-0 mt-2 max-h-[280px] overflow-y-auto rounded-xl border border-border bg-white p-1 shadow-xl ring-1 ring-black/5">
@@ -211,10 +173,7 @@ const Hero = () => {
           </div>
 
           {/* Stats */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap items-center gap-x-10 gap-y-3 mt-12 text-sm"
-          >
+          <div className="anim-fade-up anim-stagger-5 flex flex-wrap items-center gap-x-10 gap-y-3 mt-12 text-sm">
             <div className="flex items-center gap-2 text-white/60">
               <Home className="w-4 h-4" />
               <span><strong className="text-white font-semibold">500+</strong> properties</span>
@@ -227,17 +186,14 @@ const Hero = () => {
               <Users className="w-4 h-4" />
               <span><strong className="text-white font-semibold">2,000+</strong> students housed</span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div
-          variants={itemVariants}
-          className="hidden lg:block flex-shrink-0 w-[400px] xl:w-[480px]"
-        >
+        <div className="anim-fade-up anim-stagger-4 hidden lg:block flex-shrink-0 w-[400px] xl:w-[480px]">
           <HeroIllustration className="w-full h-auto drop-shadow-2xl" />
-        </motion.div>
         </div>
-      </motion.div>
+        </div>
+      </div>
     </section>
   );
 };

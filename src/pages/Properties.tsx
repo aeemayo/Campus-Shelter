@@ -138,6 +138,7 @@ const Properties = () => {
     return apiResponse?.data?.map(toFrontendProperty) || [];
   }, [apiResponse]);
 
+  // Client-side filters for things NOT handled by the API
   const filteredProperties = useMemo(() => {
     let result = [...baseProperties];
 
@@ -145,56 +146,22 @@ const Properties = () => {
       result = result.filter((property) => favorites.includes(property.id));
     }
 
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchLower) ||
-          p.location.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Location filter
-    if (filters.location !== "All Locations") {
-      result = result.filter((p) => p.location === filters.location);
-    }
-
-    // Property type filter
-    if (filters.propertyType !== "all") {
-      result = result.filter((p) => p.type === filters.propertyType);
-    }
-
-    // Price range filter
-    if (filters.priceRange !== "all") {
-      const range = priceRanges.find((r) => r.value === filters.priceRange);
-      if (range) {
-        result = result.filter(
-          (p) => p.price >= range.min && p.price <= range.max,
-        );
-      }
-    }
-
-    // Amenities filter
+    // Amenities filter (API only handles wifi; rest are client-side)
     if (filters.amenities.length > 0) {
       result = result.filter((p) =>
         filters.amenities.every((a) => p.amenities.includes(a)),
       );
     }
 
-    // Quick filters
+    // Quick filters not sent to API
     if (filters.availableOnly) {
       result = result.filter((p) => p.available);
-    }
-    if (filters.furnishedOnly) {
-      result = result.filter((p) => p.furnished);
     }
     if (filters.verifiedOnly) {
       result = result.filter((p) => p.landlord.verified);
     }
 
-    // Sorting
+    // Sorting (client-side only)
     switch (filters.sortBy) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);

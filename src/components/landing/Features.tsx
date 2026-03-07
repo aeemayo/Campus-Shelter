@@ -6,7 +6,6 @@ import {
   Calendar,
   Star,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 const features = [
   {
@@ -48,54 +47,22 @@ const features = [
 ];
 
 const Features = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" as const },
-    },
-  };
-
   return (
     <section className="py-24 lg:py-28 bg-muted/30">
       <div className="container mx-auto px-4">
-        <motion.div
-          className="max-w-2xl mx-auto text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="max-w-2xl mx-auto text-center mb-16">
           <p className="text-primary text-sm font-semibold uppercase tracking-wider mb-3">
             Why CampusShelter
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             Everything you need to find home
           </h2>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 rounded-xl overflow-hidden border border-border/60"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 rounded-xl overflow-hidden border border-border/60">
           {features.map((feature) => (
-            <motion.div
+            <div
               key={feature.title}
-              variants={itemVariants}
               className="bg-card p-8 lg:p-10"
             >
               <div className="w-10 h-10 rounded-lg bg-primary/8 flex items-center justify-center mb-5">
@@ -107,9 +74,9 @@ const Features = () => {
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {feature.description}
               </p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
