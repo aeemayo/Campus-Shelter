@@ -142,7 +142,7 @@ const Profile = () => {
                     {initials}
                   </span>
                 </motion.div>
-                {user?.verified && (
+                {user?.verifiedAt && (
                   <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-success border-2 border-background shadow-sm flex items-center justify-center z-20">
                     <Shield className="w-3.5 h-3.5 text-white" />
                   </div>
@@ -178,7 +178,7 @@ const Profile = () => {
                             : "Verification Pending"}
                     </Badge>
                   ) : (
-                    user?.verified && (
+                    user?.verifiedAt && (
                       <Badge variant="success">
                         <Shield className="w-3 h-3 mr-1" />
                         Verified
@@ -251,7 +251,7 @@ const Profile = () => {
                           : user.landlordStatus === "REJECTED"
                             ? "Rejected"
                             : "Pending"
-                      : user?.verified
+                      : user?.verifiedAt
                         ? "Verified"
                         : "Active",
                   icon: Shield,
@@ -437,9 +437,9 @@ const Profile = () => {
                             </Badge>
                           ) : (
                             <Badge
-                              className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verified ? "bg-success text-white" : "bg-muted text-muted-foreground"}`}
+                              className={`px-4 py-1.5 font-bold text-[10px] uppercase border-none shadow-sm ${user?.verifiedAt ? "bg-success text-white" : "bg-muted text-muted-foreground"}`}
                             >
-                              {user?.verified ? "Verified" : "Unverified"}
+                              {user?.verifiedAt ? "Verified" : "Unverified"}
                             </Badge>
                           )}
                         </div>
@@ -690,7 +690,7 @@ function StudentIdUploadSection({ onVerified }: { onVerified: (u: any) => void }
   const [isUploading, setIsUploading] = useState(false);
   const [submitted, setSubmitted] = useState(!!user?.idCardUrl);
 
-  if (user?.verified) {
+  if (user?.verifiedAt) {
     return (
       <Card className="border-success/20 bg-success/5">
         <CardContent className="p-5 flex items-center gap-3">

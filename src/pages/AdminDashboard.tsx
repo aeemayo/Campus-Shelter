@@ -1468,7 +1468,7 @@ function UsersTab({
                         >
                           {u.role}
                         </Badge>
-                        {u.flagged && (
+                        {u.flaggedAt && (
                           <Badge
                             variant="destructive"
                             className="text-[9px] px-1.5 py-0 shrink-0"
@@ -1501,7 +1501,7 @@ function UsersTab({
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    {u.role === "STUDENT" && u.idCardUrl && !u.verified && (
+                    {u.role === "STUDENT" && u.idCardUrl && !u.verifiedAt && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -1562,14 +1562,14 @@ function UsersTab({
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`h-8 text-xs ${u.flagged ? "text-warning border-warning/20 hover:bg-warning/10" : "text-orange-500 border-orange-200 hover:bg-orange-50"}`}
+                      className={`h-8 text-xs ${u.flaggedAt ? "text-warning border-warning/20 hover:bg-warning/10" : "text-orange-500 border-orange-200 hover:bg-orange-50"}`}
                       onClick={async () => {
-                        await onFlag(u.id, !u.flagged);
+                        await onFlag(u.id, !u.flaggedAt);
                         refetch();
                       }}
                     >
                       <Flag className="w-3 h-3 mr-1" />
-                      {u.flagged ? "Unflag" : "Flag"}
+                      {u.flaggedAt ? "Unflag" : "Flag"}
                     </Button>
                     <Button
                       variant="outline"
@@ -1611,7 +1611,7 @@ function UsersTab({
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           <Link to={`/admin/users/${u.id}/review`} className="font-medium hover:text-primary hover:underline transition-colors">{u.name}</Link>
-                          {u.flagged && (
+                          {u.flaggedAt && (
                             <Badge
                               variant="destructive"
                               className="text-[9px] px-1.5 py-0"
@@ -1643,14 +1643,14 @@ function UsersTab({
                             {u.landlordStatus || "PENDING"}
                           </Badge>
                         ) : (
-                          <Badge variant={u.verified ? "success" : u.idCardUrl ? "warning" : "outline"}>
-                            {u.verified ? "Verified" : u.idCardUrl ? "ID Submitted" : "Active"}
+                          <Badge variant={u.verifiedAt ? "success" : u.idCardUrl ? "warning" : "outline"}>
+                            {u.verifiedAt ? "Verified" : u.idCardUrl ? "ID Submitted" : "Active"}
                           </Badge>
                         )}
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {u.role === "STUDENT" && u.idCardUrl && !u.verified && (
+                          {u.role === "STUDENT" && u.idCardUrl && !u.verifiedAt && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -1725,13 +1725,13 @@ function UsersTab({
                             >
                               <DropdownMenuItem
                                 onClick={async () => {
-                                  await onFlag(u.id, !u.flagged);
+                                  await onFlag(u.id, !u.flaggedAt);
                                   refetch();
                                 }}
                                 className="cursor-pointer"
                               >
                                 <Flag className="w-4 h-4 mr-2 text-orange-500" />
-                                {u.flagged ? "Remove Flag" : "Flag Account"}
+                                {u.flaggedAt ? "Remove Flag" : "Flag Account"}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -1785,7 +1785,7 @@ function StudentsTab() {
   const students = response?.data || [];
 
   const pendingCount = students.filter(
-    (s: any) => s.idCardUrl && !s.verified,
+    (s: any) => s.idCardUrl && !s.verifiedAt,
   ).length;
 
   const allFilteredStudents = students.filter((s: any) => {
@@ -1796,9 +1796,9 @@ function StudentsTab() {
 
     let matchesFilter = true;
     if (filter === "pending") {
-      matchesFilter = !!s.idCardUrl && !s.verified;
+      matchesFilter = !!s.idCardUrl && !s.verifiedAt;
     } else if (filter === "verified") {
-      matchesFilter = !!s.verified;
+      matchesFilter = !!s.verifiedAt;
     } else if (filter === "unverified") {
       matchesFilter = !s.idCardUrl;
     }
@@ -1829,7 +1829,7 @@ function StudentsTab() {
   };
 
   const getStatusBadge = (student: any) => {
-    if (student.verified) {
+    if (student.verifiedAt) {
       return <Badge variant="success">Verified</Badge>;
     }
     if (student.idCardUrl) {
@@ -1839,7 +1839,7 @@ function StudentsTab() {
   };
 
   const getStatusBadgeMobile = (student: any) => {
-    if (student.verified) {
+    if (student.verifiedAt) {
       return (
         <Badge variant="success" className="text-[9px] px-1.5 py-0 shrink-0">
           Verified
@@ -1977,7 +1977,7 @@ function StudentsTab() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {!student.verified && (
+                    {!student.verifiedAt && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -1993,7 +1993,7 @@ function StudentsTab() {
                         Verify
                       </Button>
                     )}
-                    {student.verified && (
+                    {student.verifiedAt && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -2068,7 +2068,7 @@ function StudentsTab() {
                       </td>
                       <td className="py-5 px-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {!student.verified && (
+                          {!student.verifiedAt && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -2082,7 +2082,7 @@ function StudentsTab() {
                               Verify
                             </Button>
                           )}
-                          {student.verified && (
+                          {student.verifiedAt && (
                             <Button
                               variant="outline"
                               size="sm"

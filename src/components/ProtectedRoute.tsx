@@ -42,7 +42,7 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
   }
 
   // Block users who haven't verified their email
-  if (!user.emailVerified && user.role !== "ADMIN") {
+  if (!user.emailVerifiedAt && user.role !== "ADMIN") {
     return <EmailNotVerifiedBlock logout={logout} email={user.email} />;
   }
 
@@ -101,7 +101,7 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
   if (
     user.role === "STUDENT" &&
     !allowUnverifiedStudent &&
-    !user.verified
+    !user.verifiedAt
   ) {
     const hasIdCard = !!user.idCardUrl;
 

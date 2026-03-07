@@ -75,7 +75,7 @@ export interface Property {
     name: string;
     email?: string;
     phone?: string;
-    verified: boolean;
+    verifiedAt: string | null;
     landlordStatus?: string;
     idCardUrl?: string;
     avatar?: string;

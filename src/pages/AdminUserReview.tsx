@@ -135,10 +135,10 @@ export default function AdminUserReview() {
   const handleFlag = async () => {
     setIsFlagging(true);
     try {
-      await adminFlagUser(id!, !user.flagged);
+      await adminFlagUser(id!, !user.flaggedAt);
       toast({
-        title: user.flagged ? "Flag Removed" : "Account Flagged",
-        description: user.flagged
+        title: user.flaggedAt ? "Flag Removed" : "Account Flagged",
+        description: user.flaggedAt
           ? "The flag has been removed from this account."
           : "This account has been flagged for review.",
       });
@@ -240,7 +240,7 @@ export default function AdminUserReview() {
         </Badge>
       );
     }
-    if (user.verified) {
+    if (user.verifiedAt) {
       return (
         <Badge variant="success" className="text-sm px-3 py-1">
           Verified
@@ -302,7 +302,7 @@ export default function AdminUserReview() {
                     {user.name}
                   </h1>
                   {getStatusBadge()}
-                  {user.flagged && (
+                  {user.flaggedAt && (
                     <Badge variant="destructive" className="text-xs">
                       <Flag className="w-3 h-3 mr-1" />
                       Flagged
@@ -333,7 +333,7 @@ export default function AdminUserReview() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              {isStudent && !user.verified && (
+              {isStudent && !user.verifiedAt && (
                 <Button
                   size="sm"
                   className="gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -348,7 +348,7 @@ export default function AdminUserReview() {
                   Verify Student
                 </Button>
               )}
-              {isStudent && user.verified && (
+              {isStudent && user.verifiedAt && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -425,7 +425,7 @@ export default function AdminUserReview() {
                 ) : (
                   <Flag className="w-3.5 h-3.5 text-orange-500" />
                 )}
-                {user.flagged ? "Unflag" : "Flag"}
+                {user.flaggedAt ? "Unflag" : "Flag"}
               </Button>
 
               <Button
@@ -598,7 +598,7 @@ export default function AdminUserReview() {
                   <div className="flex items-center justify-between text-sm py-2">
                     <span className="text-muted-foreground">Flagged</span>
                     <span className="font-medium text-foreground">
-                      {user.flagged ? "Yes" : "No"}
+                      {user.flaggedAt ? "Yes" : "No"}
                     </span>
                   </div>
                 </CardContent>

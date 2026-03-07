@@ -161,7 +161,7 @@ const Properties = () => {
       result = result.filter((p) => p.available);
     }
     if (filters.verifiedOnly) {
-      result = result.filter((p) => p.landlord.verified);
+      result = result.filter((p) => p.landlord.verifiedAt);
     }
 
     // Sorting (client-side only)

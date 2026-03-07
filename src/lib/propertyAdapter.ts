@@ -74,10 +74,10 @@ export function toFrontendProperty(p: ApiProperty): Property {
       name: p.landlord.name,
       email: p.landlord.email,
       phone: p.landlord.phone,
-      verified: true,
+      verifiedAt: "true",
     } : {
       name: "Landlord",
-      verified: true
+      verifiedAt: "true"
     },
     available: new Date(p.availableFrom) <= new Date(),
     featured: false,

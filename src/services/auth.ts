@@ -12,8 +12,9 @@ export interface User {
   email: string;
   phone?: string;
   role: UserRole;
-  verified: boolean;
-  emailVerified: boolean;
+  verifiedAt: string | null;
+  emailVerifiedAt: string | null;
+  flaggedAt?: string | null;
   landlordStatus?: LandlordStatus;
   suspensionReason?: string;
   idCardUrl?: string;

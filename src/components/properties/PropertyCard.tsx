@@ -112,7 +112,7 @@ const PropertyCard = ({
         </div>
 
         {/* Verified */}
-        {property.landlord?.verified && (
+        {property.landlord?.verifiedAt && (
           <div className="absolute bottom-3 right-3">
             <Badge variant="success" className="text-[10px] rounded-md">
               <Shield className="w-3 h-3 mr-1" />

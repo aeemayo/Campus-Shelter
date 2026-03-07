@@ -433,7 +433,7 @@ export default function AdminPropertyReview() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{property.landlord?.name || "Unknown"}</p>
-                      {property.landlord?.verified && (
+                      {property.landlord?.verifiedAt && (
                         <Badge variant="outline" className="text-[10px] mt-0.5 text-emerald-600 border-emerald-200">
                           <ShieldCheck className="w-3 h-3 mr-1" />
                           Verified

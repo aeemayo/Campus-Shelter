@@ -575,7 +575,7 @@ export default function RentalDetailsPage() {
             </Tabs>
 
             {/* Verified badge */}
-            {property.landlord?.verified && (
+            {property.landlord?.verifiedAt && (
               <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
                 <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <div>
@@ -739,7 +739,7 @@ export default function RentalDetailsPage() {
                         <p className="font-medium text-foreground text-sm">
                           {property.landlord.name}
                         </p>
-                        {property.landlord.verified && (
+                        {property.landlord.verifiedAt && (
                           <div className="flex items-center gap-1 mt-0.5">
                             <ShieldCheck className="w-3 h-3 text-primary" />
                             <span className="text-xs text-primary">
@@ -824,7 +824,7 @@ export default function RentalDetailsPage() {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          {isAuthenticated && user?.role === "STUDENT" && !user?.verified && (
+                          {isAuthenticated && user?.role === "STUDENT" && !user?.verifiedAt && (
                             <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
                               <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
                               <div className="space-y-1">
