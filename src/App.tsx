@@ -73,17 +73,9 @@ const App = () => (
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
 
-              {/* Student routes */}
-              <Route path="/properties" element={
-                <ProtectedRoute allowedRoles={["STUDENT"]} allowUnverifiedStudent>
-                  <Properties />
-                </ProtectedRoute>
-              } />
-              <Route path="/properties/:id" element={
-                <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD", "ADMIN"]} allowUnverifiedLandlord allowUnverifiedStudent>
-                  <PropertyDetails />
-                </ProtectedRoute>
-              } />
+              {/* Public property browsing */}
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/properties/:id" element={<PropertyDetails />} />
               <Route path="/my-bookings" element={
                 <ProtectedRoute allowedRoles={["STUDENT"]}>
                   <MyBookings />
