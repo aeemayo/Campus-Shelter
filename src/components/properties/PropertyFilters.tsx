@@ -17,7 +17,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SlidersHorizontal, RotateCcw } from "lucide-react";
-import { locations, propertyTypes, amenitiesList, priceRanges } from "@/services/properties";
+import { propertyTypes, amenitiesList, priceRanges } from "@/services/properties";
+import { useLocations } from "@/hooks/use-properties";
 
 export interface FilterState {
   search: string;
@@ -38,6 +39,7 @@ interface PropertyFiltersProps {
 }
 
 const PropertyFilters = ({ filters, onFilterChange, resultCount }: PropertyFiltersProps) => {
+  const locations = ["All Locations", ...useLocations()];
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFilterChange({ ...filters, [key]: value });
   };

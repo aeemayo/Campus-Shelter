@@ -97,6 +97,7 @@ export interface PropertyQueryParams {
   limit?: number;
   minPrice?: number;
   maxPrice?: number;
+  search?: string;
   location?: string;
   wifi?: boolean;
   furnished?: boolean;
@@ -116,6 +117,7 @@ export async function fetchProperties(params: PropertyQueryParams = {}) {
   if (params.landlordId) query.set("landlordId", params.landlordId);
   if (params.minPrice) query.set("minPrice", String(params.minPrice));
   if (params.maxPrice) query.set("maxPrice", String(params.maxPrice));
+  if (params.search) query.set("search", params.search);
   if (params.location) query.set("location", params.location);
   if (params.wifi) query.set("wifi", "true");
   if (params.furnished) query.set("furnished", "true");
@@ -214,10 +216,15 @@ export async function adminDeleteUser(id: string) {
   });
 }
 
-// ─── Filter Metadata ─────────────────────────────────────────
+// ─── Locations (dynamic from DB) ─────────────────────────────
 
-export const locations = [
-  "All Locations",
+export async function fetchLocations(): Promise<string[]> {
+  const res = await apiFetch<ApiSuccess<{ locations: string[] }>>("/api/properties/locations");
+  return res.data.locations;
+}
+
+// Fallback static list used while the API request is in-flight
+export const fallbackLocations = [
   "Ilesha Road",
   "FUTA South Gate",
   "North Gate",
@@ -225,6 +232,11 @@ export const locations = [
   "Odogbo",
   "Obanla",
 ];
+
+// For backwards compat — components that import `locations` still work
+export const locations = ["All Locations", ...fallbackLocations];
+
+// ─── Filter Metadata ─────────────────────────────────────────
 
 export const propertyTypes = [
   { label: "All Types", value: "all" },

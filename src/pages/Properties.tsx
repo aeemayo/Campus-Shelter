@@ -98,7 +98,13 @@ const Properties = () => {
   // ─── Build API query params from current filters ───────────
   const apiParams = useMemo(() => {
     const p: Record<string, unknown> = { limit: 50 };
-    if (filters.location !== "All Locations") p.location = filters.location;
+    if (filters.search.trim()) {
+      // Server-side search across title, location, and description
+      p.search = filters.search.trim();
+    }
+    if (filters.location !== "All Locations") {
+      p.location = filters.location;
+    }
     if (filters.furnishedOnly) p.furnished = true;
     if (filters.amenities.includes("Wi-Fi")) p.wifi = true;
     if (filters.priceRange !== "all") {

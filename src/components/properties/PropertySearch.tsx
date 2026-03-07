@@ -16,7 +16,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { locations } from "@/services/properties";
+import { useLocations } from "@/hooks/use-properties";
 
 interface PropertySearchProps {
   search: string;
@@ -33,8 +33,6 @@ const sortOptions = [
   { value: "rating", label: "Highest Rated" },
   { value: "newest", label: "Newest First" },
 ];
-
-const locationItems = locations.filter((l) => l !== "All Locations");
 
 const propertyTypeItems = ["Self-Contained", "Mini Flat", "Single Room"];
 
@@ -53,6 +51,7 @@ const PropertySearch = ({
   onSortChange,
   resultCount,
 }: PropertySearchProps) => {
+  const locationItems = useLocations();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
