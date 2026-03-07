@@ -72,12 +72,12 @@ const App = () => (
 
               {/* Student routes */}
               <Route path="/properties" element={
-                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                <ProtectedRoute allowedRoles={["STUDENT"]} allowUnverifiedStudent>
                   <Properties />
                 </ProtectedRoute>
               } />
               <Route path="/properties/:id" element={
-                <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD", "ADMIN"]} allowUnverifiedLandlord>
+                <ProtectedRoute allowedRoles={["STUDENT", "LANDLORD", "ADMIN"]} allowUnverifiedLandlord allowUnverifiedStudent>
                   <PropertyDetails />
                 </ProtectedRoute>
               } />
@@ -133,7 +133,7 @@ const App = () => (
 
               {/* Shared authenticated routes */}
               <Route path="/profile" element={
-                <ProtectedRoute allowUnverifiedLandlord>
+                <ProtectedRoute allowUnverifiedLandlord allowUnverifiedStudent>
                   <Profile />
                 </ProtectedRoute>
               } />

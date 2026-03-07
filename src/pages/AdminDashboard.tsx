@@ -42,6 +42,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
+  GraduationCap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -245,6 +246,13 @@ const AdminDashboard = () => {
                 >
                   <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   Landlords
+                </TabsTrigger>
+                <TabsTrigger
+                  value="students"
+                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                >
+                  <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  Students
                 </TabsTrigger>
                 <TabsTrigger
                   value="users"
@@ -503,6 +511,18 @@ const AdminDashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <LandlordsTab onVerify={handleVerifyLandlord} />
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="students" className="mt-0 outline-none">
+                <motion.div
+                  key="students-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <StudentsTab />
                 </motion.div>
               </TabsContent>
 
@@ -1703,6 +1723,351 @@ function UsersTab({
           <div className="py-12 text-center text-muted-foreground">
             <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
             <p className="font-medium">No users found.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StudentsTab() {
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "pending" | "verified" | "unverified">("all");
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  const {
+    data: response,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["admin-students"],
+    queryFn: () => fetchAdminUsers("STUDENT"),
+  });
+
+  const students = response?.data || [];
+
+  const pendingCount = students.filter(
+    (s: any) => s.idCardUrl && !s.verified,
+  ).length;
+
+  const filteredStudents = students.filter((s: any) => {
+    // Search filter
+    const matchesSearch =
+      !searchQuery ||
+      s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filter
+    let matchesFilter = true;
+    if (filter === "pending") {
+      matchesFilter = !!s.idCardUrl && !s.verified;
+    } else if (filter === "verified") {
+      matchesFilter = !!s.verified;
+    } else if (filter === "unverified") {
+      matchesFilter = !s.idCardUrl;
+    }
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleVerify = async (id: string, verified: boolean) => {
+    setVerifyingId(id);
+    try {
+      await adminVerifyStudent(id, verified);
+      toast({
+        title: verified ? "Student Verified" : "Verification Removed",
+        description: `The student has been ${verified ? "verified" : "unverified"} successfully.`,
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update student verification.",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
+  const getStatusBadge = (student: any) => {
+    if (student.verified) {
+      return <Badge variant="success">Verified</Badge>;
+    }
+    if (student.idCardUrl) {
+      return <Badge variant="warning">Pending Review</Badge>;
+    }
+    return <Badge variant="secondary">Unverified</Badge>;
+  };
+
+  const getStatusBadgeMobile = (student: any) => {
+    if (student.verified) {
+      return (
+        <Badge variant="success" className="text-[9px] px-1.5 py-0 shrink-0">
+          Verified
+        </Badge>
+      );
+    }
+    if (student.idCardUrl) {
+      return (
+        <Badge variant="warning" className="text-[9px] px-1.5 py-0 shrink-0">
+          Pending Review
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 shrink-0">
+        Unverified
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Card className="border-border/60">
+      <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">
+              Student Verification
+            </CardTitle>
+            <CardDescription className="font-medium text-muted-foreground/70 text-sm">
+              Review and verify student accounts.
+            </CardDescription>
+          </div>
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Search by name or email..."
+              className="pl-10 h-9 w-full md:w-64 rounded-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            className="h-8 rounded-xl text-xs font-bold"
+            onClick={() => setFilter("all")}
+          >
+            All ({students.length})
+          </Button>
+          <Button
+            variant={filter === "pending" ? "default" : "outline"}
+            size="sm"
+            className="h-8 rounded-xl text-xs font-bold"
+            onClick={() => setFilter("pending")}
+          >
+            Pending
+            {pendingCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="ml-1.5 text-[9px] px-1.5 py-0 min-w-[18px] justify-center"
+              >
+                {pendingCount}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            variant={filter === "verified" ? "default" : "outline"}
+            size="sm"
+            className="h-8 rounded-xl text-xs font-bold"
+            onClick={() => setFilter("verified")}
+          >
+            Verified
+          </Button>
+          <Button
+            variant={filter === "unverified" ? "default" : "outline"}
+            size="sm"
+            className="h-8 rounded-xl text-xs font-bold"
+            onClick={() => setFilter("unverified")}
+          >
+            Unverified
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {filteredStudents.length > 0 ? (
+          <>
+            {/* Mobile card layout */}
+            <div className="md:hidden divide-y divide-border/40">
+              {filteredStudents.map((student: any) => (
+                <div key={student.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-sm truncate">
+                          {student.name}
+                        </p>
+                        {getStatusBadgeMobile(student)}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {student.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Joined {new Date(student.createdAt).toLocaleDateString()}
+                      </p>
+                      <div className="mt-1.5">
+                        {student.idCardUrl ? (
+                          <a
+                            href={student.idCardUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-xs hover:underline flex items-center gap-1 w-fit"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            View ID Card
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">
+                            No ID uploaded
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {student.idCardUrl && !student.verified && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1 text-success border-success/20 hover:bg-success/10 rounded-xl"
+                        disabled={verifyingId === student.id}
+                        onClick={() => handleVerify(student.id, true)}
+                      >
+                        {verifyingId === student.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        Verify
+                      </Button>
+                    )}
+                    {student.verified && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 rounded-xl"
+                        disabled={verifyingId === student.id}
+                        onClick={() => handleVerify(student.id, false)}
+                      >
+                        {verifyingId === student.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        Unverify
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60 text-muted-foreground">
+                    <th className="text-left font-medium py-4 px-3">Name</th>
+                    <th className="text-left font-medium py-4 px-3">Email</th>
+                    <th className="text-left font-medium py-4 px-3">Joined</th>
+                    <th className="text-left font-medium py-4 px-3">ID Card</th>
+                    <th className="text-left font-medium py-4 px-3">Status</th>
+                    <th className="text-right font-medium py-4 px-3">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredStudents.map((student: any) => (
+                    <tr
+                      key={student.id}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="py-5 px-3 font-medium">{student.name}</td>
+                      <td className="py-5 px-3 text-muted-foreground">
+                        {student.email}
+                      </td>
+                      <td className="py-5 px-3 text-muted-foreground">
+                        {new Date(student.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-5 px-3">
+                        {student.idCardUrl ? (
+                          <a
+                            href={student.idCardUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            View ID
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground italic">
+                            No ID uploaded
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-5 px-3">
+                        {getStatusBadge(student)}
+                      </td>
+                      <td className="py-5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {student.idCardUrl && !student.verified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-success border-success/20 hover:bg-success/10"
+                              disabled={verifyingId === student.id}
+                              onClick={() => handleVerify(student.id, true)}
+                            >
+                              {verifyingId === student.id ? (
+                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              ) : null}
+                              Verify
+                            </Button>
+                          )}
+                          {student.verified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10"
+                              disabled={verifyingId === student.id}
+                              onClick={() => handleVerify(student.id, false)}
+                            >
+                              {verifyingId === student.id ? (
+                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              ) : null}
+                              Unverify
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            <GraduationCap className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+            <p className="font-medium">
+              {searchQuery || filter !== "all"
+                ? "No students match your filters."
+                : "No students registered yet."}
+            </p>
           </div>
         )}
       </CardContent>

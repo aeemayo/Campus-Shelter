@@ -3,12 +3,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/services/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, XCircle, LogOut, ShieldCheck } from "lucide-react";
+import { Clock, XCircle, LogOut, ShieldCheck, Upload } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
   allowUnverifiedLandlord?: boolean;
+  allowUnverifiedStudent?: boolean;
 }
 
 const roleHomeMap: Record<UserRole, string> = {
@@ -17,7 +18,7 @@ const roleHomeMap: Record<UserRole, string> = {
   ADMIN: "/admin",
 };
 
-export default function ProtectedRoute({ children, allowedRoles, allowUnverifiedLandlord }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, allowedRoles, allowUnverifiedLandlord, allowUnverifiedStudent }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
 
@@ -75,6 +76,53 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
                 <Link to="/profile">
                   <ShieldCheck className="w-4 h-4 mr-2" />
                   {isSuspended ? "View Profile & Appeal" : "View Profile"}
+                </Link>
+              </Button>
+              <Button variant="ghost" className="text-destructive" onClick={logout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Block unverified students from restricted routes (bookings, messages)
+  if (
+    user.role === "STUDENT" &&
+    !allowUnverifiedStudent &&
+    !user.verified
+  ) {
+    const hasIdCard = !!user.idCardUrl;
+
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className={`max-w-md w-full border-2 ${hasIdCard ? "border-warning/30" : "border-primary/30"}`}>
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className={`w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center ${hasIdCard ? "bg-warning/10" : "bg-primary/10"}`}>
+              {hasIdCard ? (
+                <Clock className="w-8 h-8 text-warning" />
+              ) : (
+                <Upload className="w-8 h-8 text-primary" />
+              )}
+            </div>
+
+            <h2 className="text-xl font-bold tracking-tight mb-2">
+              {hasIdCard ? "Verification Pending" : "Verify Your Account"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              {hasIdCard
+                ? "Your student ID is under review by our team. You'll be able to access this feature once your identity is verified."
+                : "Please upload your student ID to verify your account. You need to be verified to access bookings and messages."}
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/profile">
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  {hasIdCard ? "View Profile" : "Upload Student ID"}
                 </Link>
               </Button>
               <Button variant="ghost" className="text-destructive" onClick={logout}>

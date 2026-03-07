@@ -123,17 +123,23 @@ const Hero = () => {
                   </CommandEmpty>
 
                   <CommandGroup heading="Locations">
-                    {locationItems.map((loc) => (
-                      <CommandItem
-                        key={loc}
-                        value={loc}
-                        onSelect={handleSelect}
-                        className="group gap-2.5 py-2.5 px-3 cursor-pointer"
-                      >
-                        <MapPin className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
-                        <span className="text-sm">{loc}</span>
-                      </CommandItem>
-                    ))}
+                    {locationItems.length > 0 ? (
+                      locationItems.map((loc) => (
+                        <CommandItem
+                          key={loc}
+                          value={loc}
+                          onSelect={handleSelect}
+                          className="group gap-2.5 py-2.5 px-3 cursor-pointer"
+                        >
+                          <MapPin className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
+                          <span className="text-sm">{loc}</span>
+                        </CommandItem>
+                      ))
+                    ) : (
+                      <p className="py-3 px-3 text-sm text-muted-foreground">
+                        No property locations yet
+                      </p>
+                    )}
                   </CommandGroup>
 
                   <CommandSeparator />

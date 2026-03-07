@@ -112,23 +112,36 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
-      let idCardUrl = "";
-      if (values.role === "LANDLORD" && values.idCard) {
-        const { uploadDocument } = await import("@/services/documents");
-        const { compressImage } = await import("@/lib/image-compress");
-        const compressedFile = await compressImage(values.idCard);
-        const res = await uploadDocument(compressedFile, "ID_CARD");
-        idCardUrl = res.data.url;
-      }
-
+      // Register user first (so we have an auth token for uploads)
       await registerUser({
         name: values.fullName,
         email: values.email,
         password: values.password,
         phone: values.phone || undefined,
         role: values.role,
-        idCardUrl: idCardUrl || undefined,
       });
+
+      // Upload ID card after registration (now we have a valid token)
+      if (values.role === "LANDLORD" && values.idCard) {
+        try {
+          const { uploadDocument } = await import("@/services/documents");
+          const { compressImage } = await import("@/lib/image-compress");
+          const { updateProfile } = await import("@/services/auth");
+          const compressedFile = await compressImage(values.idCard);
+          const res = await uploadDocument(compressedFile, "ID_CARD");
+          await updateProfile({ idCardUrl: res.data.url });
+        } catch {
+          // Registration succeeded but upload failed — user can re-upload later
+          toast({
+            title: "Account created",
+            description: "Your ID upload failed. Please re-upload from your profile.",
+            variant: "destructive",
+          });
+          navigate("/profile");
+          return;
+        }
+      }
+
       toast({
         title: "Account created!",
         description: "Welcome to CampusShelter.",
