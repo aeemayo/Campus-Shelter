@@ -1,4 +1,5 @@
-import { Input } from "@/components/ui/input";
+import { useState, useRef, useEffect } from "react";
+import { ArrowUpDown, MapPin, Home, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -6,8 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, ArrowUpDown } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { locations } from "@/services/properties";
 
 interface PropertySearchProps {
@@ -19,20 +27,23 @@ interface PropertySearchProps {
 }
 
 const sortOptions = [
-  { value: 'featured', label: 'Featured First' },
-  { value: 'price-low', label: 'Price: Low to High' },
-  { value: 'price-high', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'newest', label: 'Newest First' },
+  { value: "featured", label: "Featured First" },
+  { value: "price-low", label: "Price: Low to High" },
+  { value: "price-high", label: "Price: High to Low" },
+  { value: "rating", label: "Highest Rated" },
+  { value: "newest", label: "Newest First" },
 ];
 
-const searchSuggestions = [
-  ...locations.filter((l) => l !== "All Locations"),
-  "Self-Contained",
-  "Mini Flat",
-  "Single Room",
+const locationItems = locations.filter((l) => l !== "All Locations");
+
+const propertyTypeItems = ["Self-Contained", "Mini Flat", "Single Room"];
+
+const amenityItems = [
   "Furnished",
   "Wi-Fi",
+  "Electricity Backup",
+  "Water Supply",
+  "Security",
 ];
 
 const PropertySearch = ({
@@ -42,70 +53,108 @@ const PropertySearch = ({
   onSortChange,
   resultCount,
 }: PropertySearchProps) => {
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const filtered = search.trim()
-    ? searchSuggestions.filter(
-        (s) =>
-          s.toLowerCase().includes(search.toLowerCase()) &&
-          s.toLowerCase() !== search.toLowerCase(),
-      )
-    : [];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const selectItem = (value: string) => {
+    onSearchChange(value);
+    setOpen(false);
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
       <div ref={wrapperRef} className="relative flex-1 w-full sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or location..."
-          value={search}
-          onChange={(e) => { onSearchChange(e.target.value); setShowSuggestions(true); }}
-          onFocus={() => setShowSuggestions(true)}
-          onKeyDown={(e) => {
-            if (e.key === "Tab" && filtered.length > 0) {
-              e.preventDefault();
-              onSearchChange(filtered[0]);
-              setShowSuggestions(false);
-            } else if (e.key === "Escape") {
-              setShowSuggestions(false);
-            }
-          }}
-          className="pl-10 bg-background border-border/60 rounded-lg"
-        />
-        {showSuggestions && filtered.length > 0 && (
-          <div className="absolute z-50 top-full mt-1 w-full bg-background border border-border/60 rounded-lg shadow-lg overflow-hidden">
-            {filtered.slice(0, 6).map((suggestion) => (
-              <button
-                key={suggestion}
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  onSearchChange(suggestion);
-                  setShowSuggestions(false);
-                }}
-              >
-                <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
+        <Command
+          className="rounded-lg border border-border/60 bg-background shadow-sm overflow-visible"
+          shouldFilter={true}
+        >
+          <CommandInput
+            placeholder="Search locations, property types..."
+            value={search}
+            onValueChange={(value) => {
+              onSearchChange(value);
+              if (!open) setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setOpen(false);
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+          />
+          {open && (
+            <CommandList className="absolute z-50 top-full left-0 right-0 mt-1 rounded-lg border border-border/60 bg-background shadow-lg">
+              <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">
+                No results found. Try a different search.
+              </CommandEmpty>
+
+              <CommandGroup heading="Locations">
+                {locationItems.map((loc) => (
+                  <CommandItem
+                    key={loc}
+                    value={loc}
+                    onSelect={selectItem}
+                    className="gap-2.5 py-2.5 px-3 cursor-pointer"
+                  >
+                    <MapPin className="w-4 h-4 text-primary/60 shrink-0" />
+                    <span className="text-sm">{loc}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+
+              <CommandSeparator />
+
+              <CommandGroup heading="Property Types">
+                {propertyTypeItems.map((type) => (
+                  <CommandItem
+                    key={type}
+                    value={type}
+                    onSelect={selectItem}
+                    className="gap-2.5 py-2.5 px-3 cursor-pointer"
+                  >
+                    <Home className="w-4 h-4 text-primary/60 shrink-0" />
+                    <span className="text-sm">{type}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+
+              <CommandSeparator />
+
+              <CommandGroup heading="Amenities">
+                {amenityItems.map((amenity) => (
+                  <CommandItem
+                    key={amenity}
+                    value={amenity}
+                    onSelect={selectItem}
+                    className="gap-2.5 py-2.5 px-3 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-primary/60 shrink-0" />
+                    <span className="text-sm">{amenity}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          )}
+        </Command>
       </div>
 
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {resultCount} {resultCount === 1 ? 'property' : 'properties'}
+          {resultCount} {resultCount === 1 ? "property" : "properties"}
         </span>
         <div className="flex items-center gap-2">
           <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
