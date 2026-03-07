@@ -737,27 +737,36 @@ export default function RentalDetailsPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    {isAuthenticated ? (
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          className="w-full gradient-primary rounded-lg h-10"
+                          onClick={() =>
+                            (window.location.href = `tel:${property.landlord.phone || "+2348000000000"}`)
+                          }
+                        >
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call Landlord
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full rounded-lg h-10"
+                          asChild
+                        >
+                          <Link to={`/messages/${property.landlord.id}`}>
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Send Message
+                          </Link>
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
                         className="w-full gradient-primary rounded-lg h-10"
-                        onClick={() =>
-                          (window.location.href = `tel:${property.landlord.phone || "+2348000000000"}`)
-                        }
+                        onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
                       >
-                        <Phone className="w-4 h-4 mr-2" />
-                        Call Landlord
+                        Sign in to contact landlord
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-lg h-10"
-                        asChild
-                      >
-                        <Link to={`/messages/${property.landlord.id}`}>
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Send Message
-                        </Link>
-                      </Button>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
