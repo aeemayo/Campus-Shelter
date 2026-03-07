@@ -24,6 +24,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const LandlordDashboard = lazy(() => import("./pages/LandlordDashboard"));
 const AdminPropertyForm = lazy(() => import("./components/admin/AdminPropertyForm"));
 const AdminDocumentUpload = lazy(() => import("./components/admin/AdminDocumentUpload"));
+const AdminPropertyReview = lazy(() => import("./pages/AdminPropertyReview"));
 const Messages = lazy(() => import("./pages/Messages"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -117,6 +118,11 @@ const App = () => (
               <Route path="/admin/properties/edit/:id" element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
                   <AdminPropertyForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/properties/:id/review" element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminPropertyReview />
                 </ProtectedRoute>
               } />
               <Route path="/admin/documents/upload" element={

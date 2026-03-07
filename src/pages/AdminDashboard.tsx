@@ -359,9 +359,12 @@ const AdminDashboard = () => {
                                         />
                                       </div>
                                       <div className="space-y-0.5">
-                                        <p className="font-semibold text-sm leading-tight">
+                                        <Link
+                                          to={`/admin/properties/${property.id}/review`}
+                                          className="font-semibold text-sm leading-tight hover:text-primary transition-colors hover:underline"
+                                        >
                                           {property.title}
-                                        </p>
+                                        </Link>
                                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                                           <MapPin className="w-3 h-3" />
                                           {property.location}
@@ -433,11 +436,11 @@ const AdminDashboard = () => {
                                             className="rounded-lg h-10 px-3 cursor-pointer"
                                           >
                                             <Link
-                                              to={`/properties/${property.id}`}
+                                              to={`/admin/properties/${property.id}/review`}
                                               className="flex items-center gap-2 font-medium"
                                             >
                                               <ExternalLink className="w-4 h-4 text-primary" />
-                                              Public Preview
+                                              Review
                                             </Link>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem
