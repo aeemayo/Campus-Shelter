@@ -14,7 +14,9 @@ import {
   Plus,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchUnreadCount } from "@/services/messages";
 import logo1 from "../../../public/CampusShelter4.png";
 import logo2 from "../../../public/CampusShelter5.png";
 
@@ -75,6 +77,14 @@ const Header = ({ bgColor = "" }) => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["unread-messages"],
+    queryFn: fetchUnreadCount,
+    enabled: isAuthenticated && user?.role !== "ADMIN",
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -144,7 +154,14 @@ const Header = ({ bgColor = "" }) => {
               )}
               {isAuthenticated && user?.role !== "ADMIN" && (
                 <Link to="/messages" className={navLinkClass("/messages")}>
-                  Messages
+                  <span className="flex items-center gap-1.5">
+                    Messages
+                    {unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-primary text-white text-[10px] font-bold leading-none">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               )}
             </nav>
@@ -266,7 +283,7 @@ const Header = ({ bgColor = "" }) => {
                 <MobileLink
                   to="/messages"
                   icon={MessageSquare}
-                  label="Messages"
+                  label={unreadCount > 0 ? `Messages (${unreadCount > 99 ? "99+" : unreadCount})` : "Messages"}
                   active={isActive("/messages")}
                   onClick={() => setIsMenuOpen(false)}
                 />

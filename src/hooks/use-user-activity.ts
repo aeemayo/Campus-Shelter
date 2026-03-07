@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FilterState } from "@/components/properties/PropertyFilters";
+import { fetchFavoriteIds, toggleFavoriteApi } from "@/services/favorites";
 
-interface UserActivityState {
-  favorites: string[];
+interface LocalActivityState {
   viewedPropertyIds: string[];
   lastFilters: FilterState | null;
   lastSearch: string;
   updatedAt: string | null;
 }
 
-const DEFAULT_ACTIVITY: UserActivityState = {
-  favorites: [],
+const DEFAULT_LOCAL: LocalActivityState = {
   viewedPropertyIds: [],
   lastFilters: null,
   lastSearch: "",
@@ -21,107 +21,175 @@ function getStorageKey(userId: string) {
   return `cs_activity_user_${userId}`;
 }
 
-function readActivity(userId: string): UserActivityState {
+function readLocal(userId: string): LocalActivityState {
   try {
     const raw = localStorage.getItem(getStorageKey(userId));
-    if (!raw) return DEFAULT_ACTIVITY;
-
-    const parsed = JSON.parse(raw) as Partial<UserActivityState>;
+    if (!raw) return DEFAULT_LOCAL;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
     return {
-      favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
       viewedPropertyIds: Array.isArray(parsed.viewedPropertyIds)
-        ? parsed.viewedPropertyIds
+        ? (parsed.viewedPropertyIds as string[])
         : [],
-      lastFilters: parsed.lastFilters ?? null,
+      lastFilters: (parsed.lastFilters as FilterState) ?? null,
       lastSearch: typeof parsed.lastSearch === "string" ? parsed.lastSearch : "",
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : null,
     };
   } catch {
-    return DEFAULT_ACTIVITY;
+    return DEFAULT_LOCAL;
   }
 }
 
-function writeActivity(userId: string, data: UserActivityState) {
+function writeLocal(userId: string, data: LocalActivityState) {
   localStorage.setItem(getStorageKey(userId), JSON.stringify(data));
+}
+
+// Legacy: read favorites that were stored in localStorage before DB migration
+function readLegacyFavorites(userId: string): string[] {
+  try {
+    const raw = localStorage.getItem(getStorageKey(userId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return Array.isArray(parsed.favorites) ? (parsed.favorites as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function clearLegacyFavorites(userId: string) {
+  try {
+    const raw = localStorage.getItem(getStorageKey(userId));
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    delete parsed.favorites;
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(parsed));
+  } catch {
+    // ignore
+  }
 }
 
 export function useUserActivity(userId?: string) {
   const resolvedUserId = useMemo(() => userId ?? "guest", [userId]);
-  const [activity, setActivity] = useState<UserActivityState>(DEFAULT_ACTIVITY);
+  const isAuthenticated = !!userId;
+  const queryClient = useQueryClient();
+
+  const [local, setLocal] = useState<LocalActivityState>(DEFAULT_LOCAL);
 
   useEffect(() => {
-    setActivity(readActivity(resolvedUserId));
+    setLocal(readLocal(resolvedUserId));
   }, [resolvedUserId]);
 
-  const update = useCallback(
-    (updater: (prev: UserActivityState) => UserActivityState) => {
-      setActivity((prev) => {
-        const next = {
-          ...updater(prev),
-          updatedAt: new Date().toISOString(),
-        };
-        writeActivity(resolvedUserId, next);
+  // ── DB-backed favorites (authenticated users) ──
+  const { data: dbFavorites } = useQuery({
+    queryKey: ["favorites", userId],
+    queryFn: async () => {
+      const ids = await fetchFavoriteIds();
+      // Migrate any legacy localStorage favorites to DB on first load
+      const legacy = readLegacyFavorites(userId!);
+      if (legacy.length > 0) {
+        for (const id of legacy) {
+          if (!ids.includes(id)) {
+            try {
+              await toggleFavoriteApi(id);
+            } catch {
+              // skip silently if property no longer exists
+            }
+          }
+        }
+        clearLegacyFavorites(userId!);
+        return [...new Set([...ids, ...legacy])];
+      }
+      return ids;
+    },
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Guest favorites stay in localStorage ──
+  const [guestFavorites, setGuestFavorites] = useState<string[]>([]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setGuestFavorites(readLegacyFavorites("guest"));
+    }
+  }, [isAuthenticated]);
+
+  const favorites = isAuthenticated ? (dbFavorites ?? []) : guestFavorites;
+
+  const toggleFavorite = useCallback(
+    async (propertyId: string) => {
+      if (isAuthenticated) {
+        // Optimistic update
+        queryClient.setQueryData<string[]>(["favorites", userId], (prev = []) =>
+          prev.includes(propertyId)
+            ? prev.filter((id) => id !== propertyId)
+            : [...prev, propertyId],
+        );
+        try {
+          await toggleFavoriteApi(propertyId);
+          queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
+        } catch {
+          // Revert on error
+          queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
+        }
+      } else {
+        setGuestFavorites((prev) => {
+          const next = prev.includes(propertyId)
+            ? prev.filter((id) => id !== propertyId)
+            : [...prev, propertyId];
+          const raw = localStorage.getItem(getStorageKey("guest"));
+          const parsed = raw ? JSON.parse(raw) : {};
+          localStorage.setItem(
+            getStorageKey("guest"),
+            JSON.stringify({ ...parsed, favorites: next }),
+          );
+          return next;
+        });
+      }
+    },
+    [isAuthenticated, userId, queryClient],
+  );
+
+  // ── Local-only state updates ──
+  const updateLocal = useCallback(
+    (updater: (prev: LocalActivityState) => LocalActivityState) => {
+      setLocal((prev) => {
+        const next = { ...updater(prev), updatedAt: new Date().toISOString() };
+        writeLocal(resolvedUserId, next);
         return next;
       });
     },
-    [resolvedUserId]
-  );
-
-  const toggleFavorite = useCallback(
-    (propertyId: string) => {
-      update((prev) => {
-        const exists = prev.favorites.includes(propertyId);
-        return {
-          ...prev,
-          favorites: exists
-            ? prev.favorites.filter((id) => id !== propertyId)
-            : [...prev.favorites, propertyId],
-        };
-      });
-    },
-    [update]
+    [resolvedUserId],
   );
 
   const markViewed = useCallback(
     (propertyId: string) => {
-      update((prev) => {
-        // Remove if already exists to move to front, then slice to 20
+      updateLocal((prev) => {
         const filtered = prev.viewedPropertyIds.filter((id) => id !== propertyId);
-        return {
-          ...prev,
-          viewedPropertyIds: [propertyId, ...filtered].slice(0, 20),
-        };
+        return { ...prev, viewedPropertyIds: [propertyId, ...filtered].slice(0, 20) };
       });
     },
-    [update]
+    [updateLocal],
   );
 
   const saveFilters = useCallback(
     (filters: FilterState) => {
-      update((prev) => ({
-        ...prev,
-        lastFilters: filters,
-      }));
+      updateLocal((prev) => ({ ...prev, lastFilters: filters }));
     },
-    [update]
+    [updateLocal],
   );
 
   const saveSearch = useCallback(
     (search: string) => {
-      update((prev) => ({
-        ...prev,
-        lastSearch: search,
-      }));
+      updateLocal((prev) => ({ ...prev, lastSearch: search }));
     },
-    [update]
+    [updateLocal],
   );
 
   return {
-    favorites: activity.favorites,
-    viewedPropertyIds: activity.viewedPropertyIds,
-    lastFilters: activity.lastFilters,
-    lastSearch: activity.lastSearch,
-    updatedAt: activity.updatedAt,
+    favorites,
+    viewedPropertyIds: local.viewedPropertyIds,
+    lastFilters: local.lastFilters,
+    lastSearch: local.lastSearch,
+    updatedAt: local.updatedAt,
     toggleFavorite,
     markViewed,
     saveFilters,

@@ -32,6 +32,14 @@ export async function fetchMessages(partnerId?: string, page = 1) {
 }
 
 /**
+ * Fetch unread message count for the authenticated user.
+ */
+export async function fetchUnreadCount() {
+  const res = await apiFetch<ApiSuccess<{ count: number }>>("/api/messages/unread");
+  return res.data.count;
+}
+
+/**
  * Send a new message.
  */
 export async function sendMessage(data: SendMessageData) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
@@ -50,13 +50,37 @@ const MyBookings = () => {
   const [issueTarget, setIssueTarget] = useState<Booking | null>(null);
   const [issueDescription, setIssueDescription] = useState("");
 
+  const prevStatusMap = useRef<Record<string, string>>({});
+
   const { data: response, isLoading } = useQuery({
     queryKey: ["my-bookings"],
     queryFn: fetchMyBookings,
     enabled: isAuthenticated,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const bookings = response?.data || [];
+
+  // Notify when a booking status changes
+  useEffect(() => {
+    bookings.forEach((b) => {
+      const prev = prevStatusMap.current[b.id];
+      if (prev && prev !== b.status) {
+        const title = b.status === "APPROVED" ? "Booking approved! 🎉" : "Booking update";
+        const description =
+          b.status === "APPROVED"
+            ? `Your booking for "${b.property?.title}" was approved by the landlord.`
+            : `Your booking for "${b.property?.title}" was ${b.status.toLowerCase()}.`;
+        toast({
+          title,
+          description,
+          variant: b.status === "REJECTED" ? "destructive" : "default",
+        });
+      }
+      prevStatusMap.current[b.id] = b.status;
+    });
+  }, [bookings, toast]);
 
   const reviewMutation = useMutation({
     mutationFn: () =>

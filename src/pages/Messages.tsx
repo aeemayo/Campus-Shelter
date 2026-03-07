@@ -67,12 +67,17 @@ const Messages = () => {
     );
   }, [messagesResponse, user?.id]);
 
-  // Selected conversation messages
+  // Selected conversation messages — fetching also marks messages as read server-side
   const { data: conversationResponse, isLoading: conversationLoading } = useQuery({
     queryKey: ["messages", partnerId],
-    queryFn: () => fetchMessages(partnerId),
+    queryFn: async () => {
+      const result = await fetchMessages(partnerId);
+      // After fetching (which marks messages read), update unread badge
+      queryClient.invalidateQueries({ queryKey: ["unread-messages"] });
+      return result;
+    },
     enabled: !!partnerId && isAuthenticated,
-    refetchInterval: 3000, // Poll faster when in active chat
+    refetchInterval: 3000,
   });
 
   const activeMessages = useMemo(() => {
@@ -93,6 +98,7 @@ const Messages = () => {
       setMessageInput("");
       queryClient.invalidateQueries({ queryKey: ["messages", partnerId] });
       queryClient.invalidateQueries({ queryKey: ["messages"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-messages"] });
     },
     onError: (err: any) => {
       toast({ title: "Failed to send message", description: err.message, variant: "destructive" });
