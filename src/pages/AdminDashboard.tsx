@@ -254,67 +254,63 @@ const AdminDashboard = () => {
             onValueChange={setActiveTab}
             className="space-y-6 md:space-y-8"
           >
-            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-              <TabsList className="bg-muted/40 p-1 rounded-xl h-auto border border-border/40 inline-flex w-full md:w-auto">
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
+              <TabsList className="bg-muted/40 p-1 rounded-xl h-auto border border-border/40 inline-flex gap-0.5 w-max md:w-auto">
                 <TabsTrigger
                   value="properties"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Properties</span>
-                  <span className="sm:hidden">Props</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="landlords"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  Landlords
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Landlords</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="students"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <GraduationCap className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  Students
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="hidden sm:inline">Students</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="users"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <ShieldAlert className="w-4 h-4" />
                   <span className="hidden sm:inline">Users</span>
-                  <span className="sm:hidden">Users</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="documents"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  Docs
+                  <FileText className="w-4 h-4" />
+                  <span className="hidden sm:inline">Docs</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="appeals"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  Appeals
+                  <ShieldAlert className="w-4 h-4" />
+                  <span className="hidden sm:inline">Appeals</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="analytics"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">Analytics</span>
-                  <span className="sm:hidden">Stats</span>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Stats</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="settings"
-                  className="gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm flex-1 md:flex-none"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
                 >
-                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <MapPin className="w-4 h-4" />
                   <span className="hidden sm:inline">Settings</span>
-                  <span className="sm:hidden">Config</span>
                 </TabsTrigger>
               </TabsList>
             </div>
