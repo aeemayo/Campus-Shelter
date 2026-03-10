@@ -72,7 +72,11 @@ const PropertyCard = ({
               Featured
             </Badge>
           )}
-          {!property.available && <Badge variant="destructive" className="text-[10px] rounded-md">Occupied</Badge>}
+          {!property.available && (
+            <Badge variant="destructive" className="text-[10px] rounded-md">
+              Occupied
+            </Badge>
+          )}
         </div>
 
         {/* Favorite */}
@@ -94,7 +98,9 @@ const PropertyCard = ({
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isFavorite ? "fill-destructive text-destructive" : "text-foreground/40"
+              isFavorite
+                ? "fill-destructive text-destructive"
+                : "text-foreground/40"
             }`}
           />
         </button>
@@ -129,7 +135,10 @@ const PropertyCard = ({
             <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors text-[15px]">
               {property.title}
             </h3>
-            <Badge variant="outline" className="shrink-0 text-[10px] rounded-md font-medium">
+            <Badge
+              variant="outline"
+              className="shrink-0 text-[10px] rounded-md font-medium"
+            >
               {typeLabels[property.type]}
             </Badge>
           </div>
@@ -147,7 +156,7 @@ const PropertyCard = ({
         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
           <div className="flex items-center gap-1.5">
             <Bed className="w-3.5 h-3.5" />
-            <span>{property.bedrooms} Bed</span>
+            <span>{property.bedrooms} Bedroom</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Bath className="w-3.5 h-3.5" />
@@ -185,9 +194,7 @@ const PropertyCard = ({
             asChild
             className="gradient-primary hover:opacity-90 w-full rounded-lg h-9"
           >
-            <Link to={`/properties/${property.id}`}>
-              View Details
-            </Link>
+            <Link to={`/properties/${property.id}`}>View Details</Link>
           </Button>
         </div>
       </CardContent>
