@@ -298,7 +298,7 @@ export default function RentalDetailsPage() {
 
         {/* Lightbox */}
         <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-          <DialogContent className="max-w-[95vw] h-[90vh] p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
+          <DialogContent className="h-[90vh] object-contain p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
             <DialogHeader className="p-6 absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent">
               <DialogTitle className="text-white font-semibold">
                 {property.title}
@@ -491,7 +491,9 @@ export default function RentalDetailsPage() {
                     <CardContent className="p-5">
                       <div className="flex items-center gap-2 mb-2">
                         <StickyNote className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-semibold text-foreground">Landlord Notes</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          Landlord Notes
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                         {property.notes}
@@ -619,8 +621,8 @@ export default function RentalDetailsPage() {
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Add the times you're available for inspections. Students will
-                    pick from these slots.
+                    Add the times you're available for inspections. Students
+                    will pick from these slots.
                   </p>
 
                   {/* Existing slots */}
@@ -689,13 +691,13 @@ export default function RentalDetailsPage() {
                     onClick={async () => {
                       setIsSavingSlots(true);
                       try {
-                        const { updateInspectionSlots } = await import(
-                          "@/services/properties"
-                        );
+                        const { updateInspectionSlots } =
+                          await import("@/services/properties");
                         await updateInspectionSlots(property.id, localSlots);
                         toast({
                           title: "Slots saved",
-                          description: "Students can now pick from your available times.",
+                          description:
+                            "Students can now pick from your available times.",
                         });
                       } catch (err: any) {
                         toast({
@@ -775,7 +777,11 @@ export default function RentalDetailsPage() {
                     ) : (
                       <Button
                         className="w-full gradient-primary rounded-lg h-10"
-                        onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
+                        onClick={() =>
+                          navigate(
+                            `/login?redirect=${encodeURIComponent(location.pathname)}`,
+                          )
+                        }
                       >
                         Sign in to contact landlord
                       </Button>
@@ -824,23 +830,29 @@ export default function RentalDetailsPage() {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          {isAuthenticated && user?.role === "STUDENT" && !user?.verifiedAt && (
-                            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
-                              <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">
-                                  Verify your student ID first
-                                </p>
-                                <p className="text-xs text-yellow-700 dark:text-yellow-400/80">
-                                  Upload your FUTA ID on your{" "}
-                                  <Link to="/profile" className="underline font-medium">
-                                    profile
-                                  </Link>{" "}
-                                  to build trust with landlords. You can still book without it.
-                                </p>
+                          {isAuthenticated &&
+                            user?.role === "STUDENT" &&
+                            !user?.verifiedAt && (
+                              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
+                                <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">
+                                    Verify your student ID first
+                                  </p>
+                                  <p className="text-xs text-yellow-700 dark:text-yellow-400/80">
+                                    Upload your FUTA ID on your{" "}
+                                    <Link
+                                      to="/profile"
+                                      className="underline font-medium"
+                                    >
+                                      profile
+                                    </Link>{" "}
+                                    to build trust with landlords. You can still
+                                    book without it.
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                               <Label className="text-sm">Move-in date</Label>
@@ -1010,12 +1022,10 @@ export default function RentalDetailsPage() {
                         }
                         setIsInspectionLoading(true);
                         try {
-                          const { sendMessage } = await import(
-                            "@/services/messages"
-                          );
+                          const { sendMessage } =
+                            await import("@/services/messages");
                           const slotText =
-                            selectedSlot ||
-                            "a time convenient for both of us";
+                            selectedSlot || "a time convenient for both of us";
                           const content = `Hello, I'd like to schedule an inspection for "${property.title}" at ${slotText}. Please confirm if this works. Thank you.`;
                           await sendMessage({
                             receiverId: property.landlord.id,
