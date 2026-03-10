@@ -14,7 +14,13 @@ import {
 } from "@/components/ui/command";
 import { useLocations } from "@/hooks/use-properties";
 const propertyTypeItems = ["Self-Contained", "Mini Flat", "Single Room"];
-const amenityItems = ["Furnished", "Wi-Fi", "Electricity Backup", "Water Supply", "Security"];
+const amenityItems = [
+  "Furnished",
+  "Wi-Fi",
+  "Electricity Backup",
+  "Water Supply",
+  "Security",
+];
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -25,7 +31,10 @@ const Hero = () => {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -58,146 +67,162 @@ const Hero = () => {
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="flex items-center justify-between gap-12">
-        <div className="max-w-3xl flex-1">
-          {/* Trust signal */}
-          <div className="anim-fade-up anim-stagger-1 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8">
-            <Shield className="w-3.5 h-3.5 text-white/80" />
-            <span className="text-white/80 text-xs font-medium tracking-wide">
-              Trusted by 2,000+ FUTA students
-            </span>
-          </div>
+          <div className="max-w-3xl flex-1">
+            {/* Trust signal */}
+            <div className="anim-fade-up anim-stagger-1 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8">
+              <Shield className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-white/80 text-xs font-medium tracking-wide">
+                Trusted Accomodation Platform
+              </span>
+            </div>
 
-          <h1 className="anim-fade-up anim-stagger-2 font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.08] tracking-tighter mb-6">
-            Student housing,
-            <br />
-            without the stress.
-          </h1>
+            <h1 className="anim-fade-up anim-stagger-2 font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.08] tracking-tighter mb-6">
+              Student housing,
+              <br />
+              without the stress.
+            </h1>
 
-          <p className="anim-fade-up anim-stagger-3 text-white/60 text-lg max-w-xl mb-12 leading-relaxed">
-            Verified landlords, real photos, secure payments. Find your next place near FUTA in minutes.
-          </p>
+            <p className="anim-fade-up anim-stagger-3 text-white/60 text-lg max-w-xl mb-12 leading-relaxed">
+              Verified landlords, real photos, secure payments. Find your next
+              place near FUTA in minutes.
+            </p>
 
-          {/* Search */}
-          <div ref={wrapperRef} className="relative max-w-2xl">
-            <Command
-              className="overflow-visible bg-transparent"
-              shouldFilter={true}
-            >
-              <div className="anim-fade-up anim-stagger-4 bg-white rounded-xl p-2 shadow-primary-xl">
-                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
-                  <div className="flex-1 rounded-lg bg-muted/40 [&_[cmdk-input-wrapper]]:border-0">
-                    <CommandInput
-                      placeholder="Search locations, room types, amenities..."
-                      value={searchValue}
-                      onValueChange={(value) => {
-                        setSearchValue(value);
-                        if (!open) setOpen(true);
-                      }}
-                      onFocus={() => setOpen(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setOpen(false);
-                          (e.target as HTMLInputElement).blur();
-                        }
-                        if (e.key === "Enter" && !open) {
-                          handleSearch();
-                        }
-                      }}
-                      className="h-11 text-sm"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="h-11 px-6 gradient-primary hover:opacity-90 rounded-lg shrink-0"
+            {/* Search */}
+            <div ref={wrapperRef} className="relative max-w-2xl">
+              <Command
+                className="overflow-visible bg-transparent"
+                shouldFilter={true}
+              >
+                <div className="anim-fade-up anim-stagger-4 bg-white rounded-xl p-2 shadow-primary-xl">
+                  <form
+                    onSubmit={handleSearch}
+                    className="flex flex-col sm:flex-row gap-2"
                   >
-                    <Search className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Search</span>
-                  </Button>
-                </form>
-              </div>
+                    <div className="flex-1 rounded-lg bg-muted/40 [&_[cmdk-input-wrapper]]:border-0">
+                      <CommandInput
+                        placeholder="Search locations, room types, amenities..."
+                        value={searchValue}
+                        onValueChange={(value) => {
+                          setSearchValue(value);
+                          if (!open) setOpen(true);
+                        }}
+                        onFocus={() => setOpen(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setOpen(false);
+                            (e.target as HTMLInputElement).blur();
+                          }
+                          if (e.key === "Enter" && !open) {
+                            handleSearch();
+                          }
+                        }}
+                        className="h-11 text-sm"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="h-11 px-6 gradient-primary hover:opacity-90 rounded-lg shrink-0"
+                    >
+                      <Search className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Search</span>
+                    </Button>
+                  </form>
+                </div>
 
-              {open && (
-                <CommandList className="absolute z-50 top-full left-0 right-0 mt-2 max-h-[280px] overflow-y-auto rounded-xl border border-border bg-white p-1 shadow-xl ring-1 ring-black/5">
-                  <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">
-                    No results found. Try a different search.
-                  </CommandEmpty>
+                {open && (
+                  <CommandList className="absolute z-50 top-full left-0 right-0 mt-2 max-h-[280px] overflow-y-auto rounded-xl border border-border bg-white p-1 shadow-xl ring-1 ring-black/5">
+                    <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">
+                      No results found. Try a different search.
+                    </CommandEmpty>
 
-                  <CommandGroup heading="Locations">
-                    {locationItems.length > 0 ? (
-                      locationItems.map((loc) => (
+                    <CommandGroup heading="Locations">
+                      {locationItems.length > 0 ? (
+                        locationItems.map((loc) => (
+                          <CommandItem
+                            key={loc}
+                            value={loc}
+                            onSelect={handleSelect}
+                            className="group gap-2.5 py-2.5 px-3 cursor-pointer"
+                          >
+                            <MapPin className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
+                            <span className="text-sm">{loc}</span>
+                          </CommandItem>
+                        ))
+                      ) : (
+                        <p className="py-3 px-3 text-sm text-muted-foreground">
+                          No property locations yet
+                        </p>
+                      )}
+                    </CommandGroup>
+
+                    <CommandSeparator />
+
+                    <CommandGroup heading="Property Types">
+                      {propertyTypeItems.map((type) => (
                         <CommandItem
-                          key={loc}
-                          value={loc}
+                          key={type}
+                          value={type}
                           onSelect={handleSelect}
                           className="group gap-2.5 py-2.5 px-3 cursor-pointer"
                         >
-                          <MapPin className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
-                          <span className="text-sm">{loc}</span>
+                          <Home className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
+                          <span className="text-sm">{type}</span>
                         </CommandItem>
-                      ))
-                    ) : (
-                      <p className="py-3 px-3 text-sm text-muted-foreground">
-                        No property locations yet
-                      </p>
-                    )}
-                  </CommandGroup>
+                      ))}
+                    </CommandGroup>
 
-                  <CommandSeparator />
+                    <CommandSeparator />
 
-                  <CommandGroup heading="Property Types">
-                    {propertyTypeItems.map((type) => (
-                      <CommandItem
-                        key={type}
-                        value={type}
-                        onSelect={handleSelect}
-                        className="group gap-2.5 py-2.5 px-3 cursor-pointer"
-                      >
-                        <Home className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
-                        <span className="text-sm">{type}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-
-                  <CommandSeparator />
-
-                  <CommandGroup heading="Amenities">
-                    {amenityItems.map((amenity) => (
-                      <CommandItem
-                        key={amenity}
-                        value={amenity}
-                        onSelect={handleSelect}
-                        className="group gap-2.5 py-2.5 px-3 cursor-pointer"
-                      >
-                        <Sparkles className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
-                        <span className="text-sm">{amenity}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              )}
-            </Command>
-          </div>
-
-          {/* Stats */}
-          <div className="anim-fade-up anim-stagger-5 flex flex-wrap items-center gap-x-10 gap-y-3 mt-12 text-sm">
-            <div className="flex items-center gap-2 text-white/60">
-              <Home className="w-4 h-4" />
-              <span><strong className="text-white font-semibold">500+</strong> properties</span>
+                    <CommandGroup heading="Amenities">
+                      {amenityItems.map((amenity) => (
+                        <CommandItem
+                          key={amenity}
+                          value={amenity}
+                          onSelect={handleSelect}
+                          className="group gap-2.5 py-2.5 px-3 cursor-pointer"
+                        >
+                          <Sparkles className="w-4 h-4 text-primary/60 group-data-[selected=true]:text-accent-foreground shrink-0" />
+                          <span className="text-sm">{amenity}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                )}
+              </Command>
             </div>
-            <div className="flex items-center gap-2 text-white/60">
-              <Shield className="w-4 h-4" />
-              <span><strong className="text-white font-semibold">150+</strong> verified landlords</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/60">
-              <Users className="w-4 h-4" />
-              <span><strong className="text-white font-semibold">2,000+</strong> students housed</span>
+
+            {/* Stats */}
+            <div className="anim-fade-up anim-stagger-5 flex flex-wrap items-center gap-x-10 gap-y-3 mt-12 text-sm">
+              <div className="flex items-center gap-2 text-white/60">
+                <Home className="w-4 h-4" />
+                <span>
+                  <strong className="text-white font-semibold">
+                    Student friendly housing
+                  </strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-white/60">
+                <Shield className="w-4 h-4" />
+                <span>
+                  <strong className="text-white font-semibold">
+                    verified landlords
+                  </strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-white/60">
+                <Users className="w-4 h-4" />
+                <span>
+                  <strong className="text-white font-semibold">
+                    verified listings
+                  </strong>{" "}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="anim-fade-up anim-stagger-4 hidden lg:block flex-shrink-0 w-[400px] xl:w-[480px]">
-          <HeroIllustration className="w-full h-auto drop-shadow-2xl" />
-        </div>
+          <div className="anim-fade-up anim-stagger-4 hidden lg:block flex-shrink-0 w-[400px] xl:w-[480px]">
+            <HeroIllustration className="w-full h-auto drop-shadow-2xl" />
+          </div>
         </div>
       </div>
     </section>
