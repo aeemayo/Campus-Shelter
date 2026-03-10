@@ -5,10 +5,10 @@ import { useProperties } from "@/hooks/use-properties";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 
 const LOCATION_CONFIG = [
-  { name: "Ilesha Road",    keywords: ["ilesha"],       image: "/images/property1/hallway.png",    tag: "Most Popular"    },
-  { name: "FUTA South Gate",keywords: ["south gate"],   image: "/images/property3/frontyard.jpeg", tag: "Student Favorite" },
-  { name: "North Gate",     keywords: ["north gate"],   image: "/images/property2/frontyard.jpeg", tag: null              },
-  { name: "Aule",           keywords: ["aule"],         image: "/images/property4/frontyard.jpeg", tag: "Growing Fast"    },
+  { name: "Ilesha Road",    keywords: ["ilesha"],       image: "/images/locations/ilesha-road.png",  tag: "Most Popular"    },
+  { name: "FUTA South Gate",keywords: ["south gate"],   image: "/images/locations/south-gate.png",   tag: "Student Favorite" },
+  { name: "North Gate",     keywords: ["north gate"],   image: "/images/locations/north-gate.png",   tag: null              },
+  { name: "Aule",           keywords: ["aule"],         image: "/images/locations/aule.png",         tag: "Growing Fast"    },
 ];
 
 const FALLBACK_IMAGE =
