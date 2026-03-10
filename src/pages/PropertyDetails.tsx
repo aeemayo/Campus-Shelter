@@ -298,7 +298,7 @@ export default function RentalDetailsPage() {
 
         {/* Lightbox */}
         <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-          <DialogContent className="h-[90vh] w-full sm:w-auto object-contain p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
+          <DialogContent className="h-[90vh] w-full md:w-auto object-contain p-0 bg-black/95 border-none flex flex-col overflow-hidden rounded-2xl">
             <DialogHeader className="p-6 absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent">
               <DialogTitle className="text-white font-semibold">
                 {property.title}
