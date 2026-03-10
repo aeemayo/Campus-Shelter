@@ -390,7 +390,7 @@ export default function RentalDetailsPage() {
                 />
                 <Stat
                   label="Bedrooms"
-                  value={`${property.bedrooms} bed`}
+                  value={`${property.bedrooms} bedroom`}
                   icon={Bed}
                 />
                 <Stat
