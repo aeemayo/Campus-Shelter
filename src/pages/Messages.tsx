@@ -22,6 +22,8 @@ import {
   MessageSquare,
   ArrowLeft,
   User,
+  AlertTriangle,
+  ShieldAlert,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -246,6 +248,14 @@ const Messages = () => {
                   </div>
                 </div>
 
+                {/* Safety Notice */}
+                <div className="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/60 dark:border-amber-800/40 flex items-start gap-2.5">
+                  <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                    <span className="font-semibold">Safety reminder:</span> Never share bank details or make payments outside CampusShelter. All transactions should go through our secure payment system to protect both parties.
+                  </p>
+                </div>
+
                 {/* Messages Area */}
                 <ScrollArea className="flex-1 p-4" ref={scrollRef}>
                   {conversationLoading && activeMessages.length === 0 ? (
@@ -280,13 +290,23 @@ const Messages = () => {
                                   </Avatar>
                                 )}
                                 <div className="space-y-1">
-                                  <div className={`p-3 rounded-xl text-sm shadow-primary-sm ${
-                                    isMe
-                                      ? 'gradient-primary text-white rounded-br-none'
-                                      : 'bg-muted/80 backdrop-blur-sm text-foreground rounded-bl-none'
-                                  }`}>
-                                    {msg.content}
-                                  </div>
+                                  {msg.flaggedAt ? (
+                                    <div className="p-3 rounded-xl text-sm shadow-primary-sm bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-br-none">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                        <span className="font-semibold text-xs">Message Flagged</span>
+                                      </div>
+                                      <p className="text-xs opacity-90">{msg.flagReason}</p>
+                                    </div>
+                                  ) : (
+                                    <div className={`p-3 rounded-xl text-sm shadow-primary-sm ${
+                                      isMe
+                                        ? 'gradient-primary text-white rounded-br-none'
+                                        : 'bg-muted/80 backdrop-blur-sm text-foreground rounded-bl-none'
+                                    }`}>
+                                      {msg.content}
+                                    </div>
+                                  )}
                                   <p className={`text-[9px] text-muted-foreground ${isMe ? 'text-right' : 'text-left'}`}>
                                     {format(new Date(msg.createdAt), 'HH:mm')}
                                   </p>

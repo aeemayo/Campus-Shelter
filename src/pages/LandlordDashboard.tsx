@@ -10,6 +10,7 @@ import { fetchProperties, deleteProperty, updatePropertyNotes } from "@/services
 import {
   fetchMyBookings,
   updateBookingStatus,
+  evictBooking,
   type Booking,
 } from "@/services/bookings";
 import {
@@ -17,6 +18,8 @@ import {
   updateMaintenanceStatus,
   type MaintenanceRequest,
 } from "@/services/maintenance";
+import { fetchPayments, type Payment } from "@/services/payments";
+import { fetchBankDetails } from "@/services/bank-details";
 import { uploadDocument } from "@/services/documents";
 import { compressImage } from "@/lib/image-compress";
 import { createLease } from "@/services/leases";
@@ -59,6 +62,11 @@ import {
   ChevronUp,
   StickyNote,
   Save,
+  Users,
+  Ban,
+  CreditCard,
+  ChevronLeft,
+  Landmark,
 } from "lucide-react";
 import {
   Dialog,
@@ -90,6 +98,10 @@ const LandlordDashboard = () => {
   const [activeTab, setActiveTab] = useState("properties");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [evictTarget, setEvictTarget] = useState<Booking | null>(null);
+  const [evictReason, setEvictReason] = useState("");
+  const [isEvicting, setIsEvicting] = useState(false);
+  const [paymentsPage, setPaymentsPage] = useState(1);
 
   // Fetch landlord's properties
   const { data: propertiesResponse, isLoading: propsLoading } = useQuery({
@@ -122,6 +134,24 @@ const LandlordDashboard = () => {
   );
 
   const maintenanceRequests = maintenanceResponse?.data || [];
+
+  // Fetch payments
+  const { data: paymentsResponse, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["landlord-payments", paymentsPage],
+    queryFn: () => fetchPayments(paymentsPage, 20),
+    enabled: isAuthenticated && user?.role === "LANDLORD",
+  });
+
+  const payments = paymentsResponse?.data || [];
+  const paymentsMeta = paymentsResponse?.meta;
+
+  // Check if landlord has bank details set up
+  const { data: bankDetailsResponse } = useQuery({
+    queryKey: ["landlord-bank-details"],
+    queryFn: fetchBankDetails,
+    enabled: isAuthenticated && user?.role === "LANDLORD",
+  });
+  const hasBankDetails = !!bankDetailsResponse?.data;
 
   // Booking status mutation
   const bookingMutation = useMutation({
@@ -242,6 +272,9 @@ const LandlordDashboard = () => {
   >(null);
   const [leaseFile, setLeaseFile] = useState<File | null>(null);
   const [leaseUploading, setLeaseUploading] = useState(false);
+  const [leaseGracePeriod, setLeaseGracePeriod] = useState(0);
+  const [leaseTerms, setLeaseTerms] = useState("");
+  const [leaseDuration, setLeaseDuration] = useState("");
 
   // Expanded maintenance descriptions
   const [expandedMaintenance, setExpandedMaintenance] = useState<Set<string>>(new Set());
@@ -255,6 +288,9 @@ const LandlordDashboard = () => {
       await createLease({
         bookingId: leaseUploadBookingId,
         documentUrl: uploadRes.data.url,
+        gracePeriodDays: leaseGracePeriod,
+        ...(leaseTerms.trim() && { terms: leaseTerms.trim() }),
+        ...(leaseDuration.trim() && { duration: leaseDuration.trim() }),
       });
       toast({
         title: "Lease Created",
@@ -262,6 +298,9 @@ const LandlordDashboard = () => {
       });
       setLeaseUploadBookingId(null);
       setLeaseFile(null);
+      setLeaseGracePeriod(0);
+      setLeaseTerms("");
+      setLeaseDuration("");
       queryClient.invalidateQueries({ queryKey: ["landlord-bookings"] });
     } catch (err: any) {
       toast({
@@ -351,6 +390,33 @@ const LandlordDashboard = () => {
                           ? "Your account has been suspended. Visit your profile to submit an appeal."
                           : "Your account is being reviewed. You can list properties once verified."}
                     </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Bank details prompt */}
+          {user?.landlordStatus === "VERIFIED" && !hasBankDetails && (
+            <Card className="mb-6 md:mb-8 border-2 border-amber-300/40 bg-amber-50/60 dark:bg-amber-950/20">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl shrink-0 bg-amber-100 dark:bg-amber-900/30">
+                    <Landmark className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm md:text-base mb-1 text-amber-900 dark:text-amber-200">
+                      Set Up Your Bank Details
+                    </p>
+                    <p className="text-xs md:text-sm text-amber-800/80 dark:text-amber-300/80 mb-3">
+                      You need to add your bank account before you can approve bookings. Students won't be able to pay until your bank details are configured.
+                    </p>
+                    <Button size="sm" className="gradient-primary rounded-lg" asChild>
+                      <Link to="/profile">
+                        <Landmark className="w-3.5 h-3.5 mr-1.5" />
+                        Add Bank Details
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -586,7 +652,7 @@ const LandlordDashboard = () => {
             onValueChange={setActiveTab}
             className="space-y-4 md:space-y-6"
           >
-            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-3 md:inline-flex">
+            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-5 md:inline-flex">
               <TabsTrigger
                 value="properties"
                 className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
@@ -602,11 +668,25 @@ const LandlordDashboard = () => {
                 <span>Bookings</span>
               </TabsTrigger>
               <TabsTrigger
+                value="tenants"
+                className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
+              >
+                <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Tenants</span>
+              </TabsTrigger>
+              <TabsTrigger
                 value="maintenance"
                 className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
               >
                 <Wrench className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 <span>Repairs</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="payments"
+                className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
+              >
+                <CreditCard className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Payments</span>
               </TabsTrigger>
             </TabsList>
 
@@ -683,6 +763,12 @@ const LandlordDashboard = () => {
                                     </Badge>
                                   )}
                                 </div>
+                                {property.status === "REJECTED" && property.rejectionNote && (
+                                  <p className="text-[10px] text-destructive/80 flex items-center gap-1 mb-0.5 line-clamp-2">
+                                    <AlertCircle className="w-3 h-3 shrink-0" />
+                                    {property.rejectionNote}
+                                  </p>
+                                )}
                                 <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
                                   <MapPin className="w-3 h-3 text-primary" />
                                   {property.location}
@@ -790,12 +876,19 @@ const LandlordDashboard = () => {
                                         Approved
                                       </Badge>
                                     ) : property.status === "REJECTED" ? (
-                                      <Badge
-                                        variant="destructive"
-                                        className="px-3 py-1 font-bold text-[10px] uppercase tracking-wide"
-                                      >
-                                        Rejected
-                                      </Badge>
+                                      <div>
+                                        <Badge
+                                          variant="destructive"
+                                          className="px-3 py-1 font-bold text-[10px] uppercase tracking-wide"
+                                        >
+                                          Rejected
+                                        </Badge>
+                                        {property.rejectionNote && (
+                                          <p className="text-[10px] text-destructive/70 mt-1 max-w-[200px] line-clamp-2">
+                                            {property.rejectionNote}
+                                          </p>
+                                        )}
+                                      </div>
                                     ) : (
                                       <Badge
                                         variant="warning"
@@ -855,11 +948,11 @@ const LandlordDashboard = () => {
                                             variant="outline"
                                             size="sm"
                                             asChild
-                                            className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                            className={`rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5 ${property.status === "REJECTED" ? "border-destructive/30 text-destructive hover:bg-destructive/5" : ""}`}
                                           >
                                             <Link to={`/properties/edit/${property.id}`}>
                                               <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                                              Edit
+                                              {property.status === "REJECTED" ? "Edit & Resubmit" : "Edit"}
                                             </Link>
                                           </Button>
                                           <Button
@@ -1070,20 +1163,27 @@ const LandlordDashboard = () => {
                               <div className="hidden md:flex items-center gap-3">
                                 {booking.status === "PENDING" && (
                                   <>
-                                    <Button
-                                      size="sm"
-                                      className="bg-success hover:bg-success/90 text-success-foreground rounded-xl px-5 h-11"
-                                      disabled={bookingMutation.isPending}
-                                      onClick={() =>
-                                        bookingMutation.mutate({
-                                          id: booking.id,
-                                          status: "APPROVED",
-                                        })
-                                      }
-                                    >
-                                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                                      Approve
-                                    </Button>
+                                    <div className="flex flex-col items-end gap-1">
+                                      <Button
+                                        size="sm"
+                                        className="bg-success hover:bg-success/90 text-success-foreground rounded-xl px-5 h-11"
+                                        disabled={bookingMutation.isPending || !hasBankDetails}
+                                        onClick={() =>
+                                          bookingMutation.mutate({
+                                            id: booking.id,
+                                            status: "APPROVED",
+                                          })
+                                        }
+                                      >
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        Approve
+                                      </Button>
+                                      {!hasBankDetails && (
+                                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                                          Add bank details first
+                                        </p>
+                                      )}
+                                    </div>
                                     <Button
                                       size="sm"
                                       variant="destructive"
@@ -1134,36 +1234,43 @@ const LandlordDashboard = () => {
                             {/* Mobile actions - full width */}
                             <div className="md:hidden">
                               {booking.status === "PENDING" && (
-                                <div className="grid grid-cols-2 gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-11 w-full"
-                                    disabled={bookingMutation.isPending}
-                                    onClick={() =>
-                                      bookingMutation.mutate({
-                                        id: booking.id,
-                                        status: "APPROVED",
-                                      })
-                                    }
-                                  >
-                                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="rounded-xl h-11 w-full"
-                                    disabled={bookingMutation.isPending}
-                                    onClick={() =>
-                                      bookingMutation.mutate({
-                                        id: booking.id,
-                                        status: "REJECTED",
-                                      })
-                                    }
-                                  >
-                                    <XCircle className="w-4 h-4 mr-1.5" />
-                                    Reject
-                                  </Button>
+                                <div className="space-y-2">
+                                  {!hasBankDetails && (
+                                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium text-center">
+                                      Add bank details to approve bookings
+                                    </p>
+                                  )}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Button
+                                      size="sm"
+                                      className="bg-success hover:bg-success/90 text-success-foreground rounded-xl h-11 w-full"
+                                      disabled={bookingMutation.isPending || !hasBankDetails}
+                                      onClick={() =>
+                                        bookingMutation.mutate({
+                                          id: booking.id,
+                                          status: "APPROVED",
+                                        })
+                                      }
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="rounded-xl h-11 w-full"
+                                      disabled={bookingMutation.isPending}
+                                      onClick={() =>
+                                        bookingMutation.mutate({
+                                          id: booking.id,
+                                          status: "REJECTED",
+                                        })
+                                      }
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1.5" />
+                                      Reject
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
                               {booking.status === "APPROVED" && (
@@ -1270,6 +1377,45 @@ const LandlordDashboard = () => {
                           </div>
                         </div>
                       </div>
+                      {/* Lease Agreement Fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <Label htmlFor="lease-duration" className="text-xs font-semibold mb-1.5 block">Duration Summary</Label>
+                          <Input
+                            id="lease-duration"
+                            placeholder="e.g. 12 months"
+                            value={leaseDuration}
+                            onChange={(e) => setLeaseDuration(e.target.value)}
+                            className="rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lease-grace" className="text-xs font-semibold mb-1.5 block">Grace Period (days after lease ends)</Label>
+                          <Input
+                            id="lease-grace"
+                            type="number"
+                            min={0}
+                            max={365}
+                            value={leaseGracePeriod}
+                            onChange={(e) => setLeaseGracePeriod(Number(e.target.value))}
+                            className="rounded-xl"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="lease-terms" className="text-xs font-semibold mb-1.5 block">Lease Terms & Conditions</Label>
+                        <Textarea
+                          id="lease-terms"
+                          placeholder="Enter any terms, conditions, or agreements for the tenant..."
+                          value={leaseTerms}
+                          onChange={(e) => setLeaseTerms(e.target.value)}
+                          rows={3}
+                          maxLength={5000}
+                          className="resize-none rounded-xl"
+                        />
+                        <p className="text-[10px] text-muted-foreground text-right mt-1">{leaseTerms.length}/5000</p>
+                      </div>
+
                       <div className="flex gap-3">
                         <Button
                           className="gradient-primary rounded-xl px-8 h-12 shadow-md shadow-primary/20"
@@ -1300,6 +1446,174 @@ const LandlordDashboard = () => {
                   </Card>
                 </motion.div>
               )}
+            </TabsContent>
+
+            {/* ── Tenants Tab ── */}
+            <TabsContent value="tenants" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-lg overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24 blur-3xl opacity-40" />
+                  <CardHeader className="border-b border-border/40 relative">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg font-bold font-display flex items-center gap-2">
+                          <Users className="w-5 h-5 text-primary" />
+                          Active Tenants
+                        </CardTitle>
+                        <CardDescription className="text-xs mt-1">
+                          Students currently residing in your properties
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {(() => {
+                      const activeTenants = bookings.filter(
+                        (b) => b.status === "APPROVED"
+                      );
+                      const evictedTenants = bookings.filter(
+                        (b) => b.status === "EVICTED"
+                      );
+
+                      if (activeTenants.length === 0 && evictedTenants.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+                            <Users className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                            <h3 className="font-bold text-lg mb-1.5">No Tenants</h3>
+                            <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                              No students are currently residing in your properties. Approve bookings to onboard tenants.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="divide-y divide-border/30">
+                          {activeTenants.map((booking) => (
+                            <div key={booking.id} className="p-4 md:p-6 hover:bg-muted/20 transition-colors">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1.5">
+                                    <p className="font-bold text-sm">{booking.student?.name}</p>
+                                    <Badge variant="success" className="text-[9px] px-1.5 py-0 uppercase font-bold">
+                                      Active
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mb-1">
+                                    {booking.property?.title} · {booking.property?.location}
+                                  </p>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                                    {booking.student?.email && (
+                                      <span className="flex items-center gap-1">
+                                        <Mail className="w-3 h-3" /> {booking.student.email}
+                                      </span>
+                                    )}
+                                    {booking.student?.phone && (
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="w-3 h-3" /> {booking.student.phone}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs">
+                                    <span className="text-muted-foreground">
+                                      <Clock className="w-3 h-3 inline mr-1" />
+                                      {new Date(booking.leaseStart).toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" })}
+                                      {" → "}
+                                      {new Date(booking.leaseEnd).toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" })}
+                                    </span>
+                                    {booking.lease?.gracePeriodDays && booking.lease.gracePeriodDays > 0 && (
+                                      <span className="text-primary/70">
+                                        +{booking.lease.gracePeriodDays}d grace
+                                      </span>
+                                    )}
+                                    {booking.lease?.duration && (
+                                      <span className="text-muted-foreground">{booking.lease.duration}</span>
+                                    )}
+                                  </div>
+                                  {booking.lease?.terms && (
+                                    <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-2 max-w-md">
+                                      <FileText className="w-3 h-3 inline mr-1" />
+                                      {booking.lease.terms}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {booking.student?.id && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      asChild
+                                      className="rounded-xl text-xs"
+                                    >
+                                      <Link to={`/messages/${booking.student.id}`}>
+                                        <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                        Message
+                                      </Link>
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-xl text-xs border-destructive/30 text-destructive hover:bg-destructive/5"
+                                    onClick={() => {
+                                      setEvictTarget(booking);
+                                      setEvictReason("");
+                                    }}
+                                  >
+                                    <Ban className="w-3.5 h-3.5 mr-1" />
+                                    Evict
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {evictedTenants.length > 0 && (
+                            <>
+                              <div className="px-4 md:px-6 py-3 bg-muted/30">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Evicted ({evictedTenants.length})
+                                </p>
+                              </div>
+                              {evictedTenants.map((booking) => (
+                                <div key={booking.id} className="p-4 md:p-6 opacity-60">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <p className="font-bold text-sm">{booking.student?.name}</p>
+                                        <Badge variant="destructive" className="text-[9px] px-1.5 py-0 uppercase font-bold">
+                                          Evicted
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground mb-1">
+                                        {booking.property?.title}
+                                      </p>
+                                      {booking.evictionReason && (
+                                        <p className="text-xs text-destructive/70">
+                                          Reason: {booking.evictionReason}
+                                        </p>
+                                      )}
+                                      {booking.evictionDate && (
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                                          Evicted on {new Date(booking.evictionDate).toLocaleDateString("en-NG")}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
 
             {/* ── Maintenance Tab ── */}
@@ -1439,6 +1753,158 @@ const LandlordDashboard = () => {
                 </Card>
               </motion.div>
             </TabsContent>
+
+            {/* ── Payments Tab ── */}
+            <TabsContent value="payments" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold font-display tracking-tight">
+                      Payments Received
+                    </CardTitle>
+                    <CardDescription>
+                      Track payments from student bookings on your properties.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {paymentsLoading ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Loading payments...
+                        </p>
+                      </div>
+                    ) : payments.length > 0 ? (
+                      <>
+                        <div className="space-y-3 md:space-y-4">
+                          {payments.map((payment) => (
+                            <div
+                              key={payment.id}
+                              className="group flex flex-col gap-4 md:gap-6 p-4 md:p-6 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300"
+                            >
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                                <div className="flex-1 space-y-2 md:space-y-3">
+                                  <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                                    <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/5 text-primary">
+                                      <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
+                                    </div>
+                                    <p className="font-bold text-base md:text-lg tracking-tight">
+                                      {payment.booking?.property?.title || "Property"}
+                                    </p>
+                                    <Badge
+                                      variant={
+                                        payment.paystackStatus === "success"
+                                          ? "default"
+                                          : payment.refundedAt
+                                            ? "destructive"
+                                            : "secondary"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {payment.refundedAt
+                                        ? "Refunded"
+                                        : payment.paystackStatus === "success"
+                                          ? "Paid"
+                                          : payment.paystackStatus || "Pending"}
+                                    </Badge>
+                                  </div>
+
+                                  {payment.booking?.student && (
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pl-0 md:pl-1">
+                                      <span className="font-semibold text-foreground">
+                                        {payment.booking.student.name}
+                                      </span>
+                                      <a
+                                        href={`mailto:${payment.booking.student.email}`}
+                                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                                      >
+                                        <Mail className="w-3 h-3" />
+                                        {payment.booking.student.email}
+                                      </a>
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pl-0 md:pl-1">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {payment.paidAt
+                                        ? new Date(payment.paidAt).toLocaleDateString("en-NG", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                          })
+                                        : new Date(payment.createdAt).toLocaleDateString("en-NG", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                          })}
+                                    </span>
+                                    <span>Ref: {payment.paystackReference}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col items-end gap-1 text-right min-w-[140px]">
+                                  <p className="text-lg md:text-xl font-bold text-primary tracking-tight">
+                                    ₦{payment.landlordAmount.toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Total: ₦{payment.amount.toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Fee: ₦{payment.platformFee.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {paymentsMeta && paymentsMeta.totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-2 pt-6">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={paymentsPage <= 1}
+                              onClick={() => setPaymentsPage((p) => Math.max(1, p - 1))}
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground px-2">
+                              Page {paymentsMeta.page} of {paymentsMeta.totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={paymentsPage >= paymentsMeta.totalPages}
+                              onClick={() => setPaymentsPage((p) => p + 1)}
+                            >
+                              Next
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <div className="p-3 rounded-full bg-muted/50">
+                          <CreditCard className="w-8 h-8 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                          No payments received yet. Payments will appear here
+                          once students pay for bookings on your properties.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -1512,6 +1978,61 @@ const LandlordDashboard = () => {
           </Dialog>
         );
       })()}
+
+      {/* Eviction confirmation dialog */}
+      <Dialog open={!!evictTarget} onOpenChange={(open) => { if (!open) { setEvictTarget(null); setEvictReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Ban className="w-5 h-5" />
+              Evict Tenant
+            </DialogTitle>
+            <DialogDescription>
+              Evict <span className="font-semibold text-foreground">{evictTarget?.student?.name}</span> from{" "}
+              <span className="font-semibold text-foreground">{evictTarget?.property?.title}</span>. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label htmlFor="evict-reason">Reason for eviction</Label>
+            <Textarea
+              id="evict-reason"
+              placeholder="Explain the reason for this eviction (min 10 characters)..."
+              value={evictReason}
+              onChange={(e) => setEvictReason(e.target.value)}
+              rows={3}
+              className="resize-none"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEvictTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={evictReason.trim().length < 10 || isEvicting}
+              onClick={async () => {
+                if (!evictTarget) return;
+                setIsEvicting(true);
+                try {
+                  await evictBooking(evictTarget.id, evictReason.trim());
+                  toast({ title: "Tenant Evicted", description: `${evictTarget.student?.name} has been evicted.` });
+                  setEvictTarget(null);
+                  setEvictReason("");
+                  queryClient.invalidateQueries({ queryKey: ["landlord-bookings"] });
+                } catch {
+                  toast({ title: "Error", description: "Failed to evict tenant.", variant: "destructive" });
+                } finally {
+                  setIsEvicting(false);
+                }
+              }}
+            >
+              {isEvicting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Ban className="w-3.5 h-3.5 mr-1" />}
+              Confirm Eviction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile FAB - Add Property */}
       {user?.landlordStatus === "VERIFIED" && (
