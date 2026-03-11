@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchMyBookings, type Booking } from "@/services/bookings";
+import { fetchMyBookings, cancelBooking, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
 import { initializePayment, fetchPayments, type Payment } from "@/services/payments";
@@ -38,6 +38,8 @@ import {
   ShieldAlert,
   CheckCircle2,
   Wallet,
+  XCircle,
+  TriangleAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
@@ -49,7 +51,7 @@ import { cn } from "@/lib/utils";
 const STEPS = ["Requested", "Approved", "Paid", "Active"] as const;
 
 function getStepIndex(booking: Booking): number {
-  if (booking.status === "REJECTED" || booking.status === "EVICTED") return -1;
+  if (booking.status === "REJECTED" || booking.status === "EVICTED" || booking.status === "CANCELLED") return -1;
   if (booking.paymentStatus === "PAID" && booking.status === "APPROVED") return 3; // Active
   if (booking.paymentStatus === "PAID") return 2;
   if (booking.status === "APPROVED") return 1;
@@ -119,6 +121,8 @@ const MyBookings = () => {
 
   const [issueTarget, setIssueTarget] = useState<Booking | null>(null);
   const [issueDescription, setIssueDescription] = useState("");
+
+  const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
 
   const prevStatusMap = useRef<Record<string, string>>({});
 
@@ -223,6 +227,18 @@ const MyBookings = () => {
     },
     onError: (err: any) => {
       toast({ title: "Wallet payment failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (bookingId: string) => cancelBooking(bookingId),
+    onSuccess: () => {
+      toast({ title: "Booking cancelled", description: "Your booking has been cancelled." });
+      setCancelTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Cancellation failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -360,6 +376,29 @@ const MyBookings = () => {
                           </div>
                         )}
 
+                        {/* Lease expiry warning banner */}
+                        {booking.status === "APPROVED" && (() => {
+                          const leaseEnd = new Date(booking.leaseEnd);
+                          const now = new Date();
+                          const daysRemaining = Math.ceil((leaseEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                          if (daysRemaining > 0 && daysRemaining <= 30) {
+                            return (
+                              <div className="mb-4 p-3.5 rounded-xl border border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20">
+                                <div className="flex items-start gap-2.5">
+                                  <TriangleAlert className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                                    <span className="font-semibold">Lease expiring soon — </span>
+                                    Your lease expires on{" "}
+                                    {leaseEnd.toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}{" "}
+                                    — <span className="font-semibold">{daysRemaining} day{daysRemaining !== 1 ? "s" : ""} remaining</span>
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
                         {/* Lease terms display */}
                         {booking.status === "APPROVED" && booking.lease && (
                           <div className="mb-4 space-y-2">
@@ -462,11 +501,24 @@ const MyBookings = () => {
                         )}
 
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/60">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/properties/${booking.propertyId}`}>
-                              View Listing
-                            </Link>
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/properties/${booking.propertyId}`}>
+                                View Listing
+                              </Link>
+                            </Button>
+                            {booking.status === "PENDING" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-lg gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/5 hover:border-destructive/60"
+                                onClick={() => setCancelTarget(booking)}
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                                Cancel Booking
+                              </Button>
+                            )}
+                          </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
                             {booking.status === "APPROVED" && (
@@ -731,6 +783,48 @@ const MyBookings = () => {
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               )}
               Send Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Cancel booking confirmation dialog ── */}
+      <Dialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+      >
+        <DialogContent className="sm:max-w-[420px] rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-destructive" />
+              Cancel Booking
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your booking for{" "}
+              <span className="font-semibold text-foreground">
+                {cancelTarget?.property?.title}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setCancelTarget(null)}
+              disabled={cancelMutation.isPending}
+            >
+              Keep Booking
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-lg"
+              disabled={cancelMutation.isPending}
+              onClick={() => cancelTarget && cancelMutation.mutate(cancelTarget.id)}
+            >
+              {cancelMutation.isPending && (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              )}
+              Yes, Cancel It
             </Button>
           </DialogFooter>
         </DialogContent>

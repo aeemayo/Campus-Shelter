@@ -5,7 +5,7 @@ export interface Booking {
   id: string;
   studentId: string;
   propertyId: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "EVICTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EVICTED" | "CANCELLED";
   paymentStatus?: "UNPAID" | "PENDING_PAYMENT" | "PAID" | "REFUNDED";
   leaseStart: string;
   leaseEnd: string;
@@ -59,6 +59,13 @@ export async function updateBookingStatus(
   return apiFetch<ApiSuccess<Booking>>(`/api/bookings/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
+  });
+}
+
+export async function cancelBooking(id: string) {
+  return apiFetch<ApiSuccess<Booking>>(`/api/bookings/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "CANCELLED" }),
   });
 }
 

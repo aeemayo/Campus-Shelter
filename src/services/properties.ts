@@ -249,6 +249,41 @@ export async function adminDeleteUser(id: string) {
   });
 }
 
+// ─── Room Management ─────────────────────────────────────────
+
+export interface RoomInput {
+  name: string;
+  roomType: RoomType;
+  priceMonthly: number;
+  furnished: boolean;
+  isAvailable: boolean;
+  description?: string;
+}
+
+export async function fetchPropertyRooms(propertyId: string) {
+  return apiFetch<ApiSuccess<Room[]>>(`/api/properties/${propertyId}/rooms`);
+}
+
+export async function addRoom(propertyId: string, room: RoomInput) {
+  return apiFetch<ApiSuccess<Room>>(`/api/properties/${propertyId}/rooms`, {
+    method: "POST",
+    body: JSON.stringify(room),
+  });
+}
+
+export async function updateRoom(propertyId: string, roomId: string, data: Partial<RoomInput>) {
+  return apiFetch<ApiSuccess<Room>>(`/api/properties/${propertyId}/rooms/${roomId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteRoom(propertyId: string, roomId: string) {
+  return apiFetch<ApiSuccess<any>>(`/api/properties/${propertyId}/rooms/${roomId}`, {
+    method: "DELETE",
+  });
+}
+
 // ─── Locations (dynamic from DB) ─────────────────────────────
 
 export async function fetchLocations(): Promise<string[]> {

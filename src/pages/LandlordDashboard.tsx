@@ -6,7 +6,17 @@ import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import { fetchProperties, deleteProperty, updatePropertyNotes } from "@/services/properties";
+import {
+  fetchProperties,
+  deleteProperty,
+  updatePropertyNotes,
+  fetchPropertyRooms,
+  addRoom,
+  updateRoom,
+  deleteRoom,
+  type Room,
+  type RoomInput,
+} from "@/services/properties";
 import {
   fetchMyBookings,
   updateBookingStatus,
@@ -67,6 +77,7 @@ import {
   CreditCard,
   ChevronLeft,
   Landmark,
+  BedDouble,
 } from "lucide-react";
 import {
   Dialog,
@@ -76,6 +87,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/lib/status-badge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -222,6 +240,21 @@ const LandlordDashboard = () => {
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesText, setNotesText] = useState("");
 
+  // Room management state
+  const [roomsPropertyId, setRoomsPropertyId] = useState<string | null>(null);
+  const [roomsPropertyTitle, setRoomsPropertyTitle] = useState("");
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [deleteRoomTarget, setDeleteRoomTarget] = useState<Room | null>(null);
+  const [showAddRoom, setShowAddRoom] = useState(false);
+  const [newRoom, setNewRoom] = useState<RoomInput>({
+    name: "",
+    roomType: "SINGLE",
+    priceMonthly: 0,
+    furnished: false,
+    isAvailable: true,
+    description: "",
+  });
+
   const notesMutation = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string | null }) =>
       updatePropertyNotes(id, notes),
@@ -232,6 +265,55 @@ const LandlordDashboard = () => {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update notes.", variant: "destructive" });
+    },
+  });
+
+  // Room management queries and mutations
+  const { data: roomsResponse, isLoading: roomsLoading, refetch: refetchRooms } = useQuery({
+    queryKey: ["property-rooms", roomsPropertyId],
+    queryFn: () => fetchPropertyRooms(roomsPropertyId!),
+    enabled: !!roomsPropertyId,
+  });
+  const propertyRooms = roomsResponse?.data || [];
+
+  const addRoomMutation = useMutation({
+    mutationFn: (room: RoomInput) => addRoom(roomsPropertyId!, room),
+    onSuccess: () => {
+      toast({ title: "Room Added", description: "New room has been added successfully." });
+      refetchRooms();
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      setShowAddRoom(false);
+      setNewRoom({ name: "", roomType: "SINGLE", priceMonthly: 0, furnished: false, isAvailable: true, description: "" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add room.", variant: "destructive" });
+    },
+  });
+
+  const updateRoomMutation = useMutation({
+    mutationFn: ({ roomId, data }: { roomId: string; data: Partial<RoomInput> }) =>
+      updateRoom(roomsPropertyId!, roomId, data),
+    onSuccess: () => {
+      toast({ title: "Room Updated", description: "Room details have been saved." });
+      refetchRooms();
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      setEditingRoom(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update room.", variant: "destructive" });
+    },
+  });
+
+  const deleteRoomMutation = useMutation({
+    mutationFn: (roomId: string) => deleteRoom(roomsPropertyId!, roomId),
+    onSuccess: () => {
+      toast({ title: "Room Deleted", description: "Room has been removed." });
+      refetchRooms();
+      queryClient.invalidateQueries({ queryKey: ["landlord-properties"] });
+      setDeleteRoomTarget(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete room.", variant: "destructive" });
     },
   });
 
@@ -956,6 +1038,21 @@ const LandlordDashboard = () => {
                                       >
                                         <StickyNote className="w-3.5 h-3.5 mr-1.5" />
                                         Notes
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
+                                        onClick={() => {
+                                          setRoomsPropertyId(property.id);
+                                          setRoomsPropertyTitle(property.title);
+                                          setShowAddRoom(false);
+                                          setEditingRoom(null);
+                                          setDeleteRoomTarget(null);
+                                        }}
+                                      >
+                                        <BedDouble className="w-3.5 h-3.5 mr-1.5" />
+                                        Rooms
                                       </Button>
                                       {user?.landlordStatus === "VERIFIED" && (
                                         <>
@@ -1987,6 +2084,325 @@ const LandlordDashboard = () => {
       </main>
 
       <Footer />
+
+      {/* ── Manage Rooms Dialog ── */}
+      <Dialog
+        open={!!roomsPropertyId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRoomsPropertyId(null);
+            setEditingRoom(null);
+            setShowAddRoom(false);
+            setDeleteRoomTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl rounded-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BedDouble className="w-5 h-5 text-primary" />
+              Manage Rooms — {roomsPropertyTitle}
+            </DialogTitle>
+            <DialogDescription>
+              View, add, edit or remove rooms for this property.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {roomsLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-50" />
+              </div>
+            ) : (
+              <>
+                {/* Existing rooms list */}
+                {propertyRooms.length > 0 ? (
+                  <div className="space-y-2">
+                    {propertyRooms.map((room) => (
+                      <div key={room.id}>
+                        {editingRoom?.id === room.id ? (
+                          /* Inline edit form */
+                          <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                            <p className="text-xs font-semibold text-primary uppercase tracking-wider">Editing Room</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="col-span-2">
+                                <Label className="text-xs mb-1 block">Room Name</Label>
+                                <Input
+                                  value={editingRoom.name}
+                                  onChange={(e) => setEditingRoom({ ...editingRoom, name: e.target.value })}
+                                  className="rounded-lg h-9 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs mb-1 block">Room Type</Label>
+                                <Select
+                                  value={editingRoom.roomType}
+                                  onValueChange={(v) => setEditingRoom({ ...editingRoom, roomType: v as any })}
+                                >
+                                  <SelectTrigger className="h-9 rounded-lg text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="SINGLE">Single</SelectItem>
+                                    <SelectItem value="SELF_CON">Self-Contained</SelectItem>
+                                    <SelectItem value="MINI_FLAT">Mini Flat</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-xs mb-1 block">Annual Price (₦)</Label>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={editingRoom.priceMonthly}
+                                  onChange={(e) => setEditingRoom({ ...editingRoom, priceMonthly: Number(e.target.value) })}
+                                  className="rounded-lg h-9 text-sm"
+                                />
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={editingRoom.furnished}
+                                    onChange={(e) => setEditingRoom({ ...editingRoom, furnished: e.target.checked })}
+                                    className="rounded"
+                                  />
+                                  Furnished
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={editingRoom.isAvailable}
+                                    onChange={(e) => setEditingRoom({ ...editingRoom, isAvailable: e.target.checked })}
+                                    className="rounded"
+                                  />
+                                  Available
+                                </label>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button
+                                size="sm"
+                                className="gradient-primary rounded-lg"
+                                disabled={updateRoomMutation.isPending || !editingRoom.name.trim()}
+                                onClick={() => updateRoomMutation.mutate({
+                                  roomId: editingRoom.id,
+                                  data: {
+                                    name: editingRoom.name,
+                                    roomType: editingRoom.roomType as any,
+                                    priceMonthly: editingRoom.priceMonthly,
+                                    furnished: editingRoom.furnished,
+                                    isAvailable: editingRoom.isAvailable,
+                                  },
+                                })}
+                              >
+                                {updateRoomMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Save className="w-3.5 h-3.5 mr-1" />}
+                                Save Changes
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="rounded-lg"
+                                onClick={() => setEditingRoom(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Room row */
+                          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border/40 hover:border-primary/20 hover:bg-muted/30 transition-all group">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-sm">{room.name}</p>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/20 bg-primary/5 text-primary">
+                                  {({ SINGLE: "Single", SELF_CON: "Self-Con", MINI_FLAT: "Mini Flat" } as Record<string, string>)[room.roomType] ?? room.roomType}
+                                </Badge>
+                                {room.furnished && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">Furnished</Badge>
+                                )}
+                                <Badge variant={room.isAvailable ? "success" : "secondary"} className="text-[10px] px-1.5 py-0">
+                                  {room.isAvailable ? "Available" : "Occupied"}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                ₦{room.priceMonthly.toLocaleString()}/yr
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+                                onClick={() => {
+                                  setEditingRoom(room);
+                                  setShowAddRoom(false);
+                                }}
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-primary" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/10"
+                                onClick={() => setDeleteRoomTarget(room)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center rounded-xl border-2 border-dashed border-border/40">
+                    <BedDouble className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No rooms added yet.</p>
+                  </div>
+                )}
+
+                {/* Delete room confirmation inline */}
+                {deleteRoomTarget && (
+                  <div className="p-4 rounded-xl border-2 border-destructive/30 bg-destructive/5 space-y-3">
+                    <p className="text-sm font-semibold text-destructive">
+                      Delete "{deleteRoomTarget.name}"?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      This room will be permanently removed. Rooms with active bookings cannot be deleted.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="rounded-lg"
+                        disabled={deleteRoomMutation.isPending}
+                        onClick={() => deleteRoomMutation.mutate(deleteRoomTarget.id)}
+                      >
+                        {deleteRoomMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
+                        Delete Room
+                      </Button>
+                      <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => setDeleteRoomTarget(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Room form */}
+                {showAddRoom ? (
+                  <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wider">New Room</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <Label className="text-xs mb-1 block">Room Name</Label>
+                        <Input
+                          placeholder="e.g. Room A, Unit 1"
+                          value={newRoom.name}
+                          onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+                          className="rounded-lg h-9 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1 block">Room Type</Label>
+                        <Select
+                          value={newRoom.roomType}
+                          onValueChange={(v) => setNewRoom({ ...newRoom, roomType: v as any })}
+                        >
+                          <SelectTrigger className="h-9 rounded-lg text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="SINGLE">Single</SelectItem>
+                            <SelectItem value="SELF_CON">Self-Contained</SelectItem>
+                            <SelectItem value="MINI_FLAT">Mini Flat</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1 block">Annual Price (₦)</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={newRoom.priceMonthly || ""}
+                          onChange={(e) => setNewRoom({ ...newRoom, priceMonthly: Number(e.target.value) })}
+                          placeholder="e.g. 120000"
+                          className="rounded-lg h-9 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm">
+                          <input
+                            type="checkbox"
+                            checked={newRoom.furnished}
+                            onChange={(e) => setNewRoom({ ...newRoom, furnished: e.target.checked })}
+                            className="rounded"
+                          />
+                          Furnished
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-sm">
+                          <input
+                            type="checkbox"
+                            checked={newRoom.isAvailable}
+                            onChange={(e) => setNewRoom({ ...newRoom, isAvailable: e.target.checked })}
+                            className="rounded"
+                          />
+                          Available
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        className="gradient-primary rounded-lg"
+                        disabled={addRoomMutation.isPending || !newRoom.name.trim() || newRoom.priceMonthly <= 0}
+                        onClick={() => addRoomMutation.mutate(newRoom)}
+                      >
+                        {addRoomMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Plus className="w-3.5 h-3.5 mr-1" />}
+                        Add Room
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-lg"
+                        onClick={() => {
+                          setShowAddRoom(false);
+                          setNewRoom({ name: "", roomType: "SINGLE", priceMonthly: 0, furnished: false, isAvailable: true, description: "" });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full rounded-xl border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 text-primary gap-1.5"
+                    onClick={() => {
+                      setShowAddRoom(true);
+                      setEditingRoom(null);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Room
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRoomsPropertyId(null)}
+              className="rounded-lg"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirmation dialog */}
       {(() => {
