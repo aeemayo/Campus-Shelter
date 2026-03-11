@@ -27,6 +27,7 @@ export interface ApiProperty {
   availableFrom: string;
   status: string;
   approved: boolean;
+  rejectionNote?: string | null;
   images: string[];
   inspectionSlots: string[];
   landlordId: string;
@@ -68,6 +69,7 @@ export interface Property {
   availableFrom?: string;
   status?: string;
   approved?: boolean;
+  rejectionNote?: string | null;
   landlordId?: string;
   inspectionSlots?: string[];
   landlord?: {
@@ -158,10 +160,10 @@ export async function deleteProperty(id: string) {
   });
 }
 
-export async function adminApproveProperty(id: string, status: string) {
+export async function adminApproveProperty(id: string, status: string, rejectionNote?: string) {
   const res = await apiFetch<ApiSuccess<Property>>(`/api/admin/properties/${id}/approve`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...(rejectionNote ? { rejectionNote } : {}) }),
   });
   return res.data;
 }

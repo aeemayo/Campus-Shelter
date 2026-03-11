@@ -4,9 +4,12 @@ export interface Booking {
   id: string;
   studentId: string;
   propertyId: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EVICTED";
+  paymentStatus?: "UNPAID" | "PENDING_PAYMENT" | "PAID" | "REFUNDED";
   leaseStart: string;
   leaseEnd: string;
+  evictionReason?: string;
+  evictionDate?: string;
   createdAt: string;
   student?: {
     id: string;
@@ -19,12 +22,15 @@ export interface Booking {
     title: string;
     location: string;
     priceMonthly: number;
-    images: string[];
+    images?: string[];
   };
   lease?: {
     id: string;
     documentUrl: string;
-    status: string;
+    gracePeriodDays?: number;
+    terms?: string;
+    duration?: string;
+    status?: string;
   };
 }
 
@@ -50,5 +56,12 @@ export async function updateBookingStatus(
   return apiFetch<ApiSuccess<Booking>>(`/api/bookings/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
+  });
+}
+
+export async function evictBooking(id: string, reason: string) {
+  return apiFetch<ApiSuccess<Booking>>(`/api/bookings/${id}/evict`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
   });
 }

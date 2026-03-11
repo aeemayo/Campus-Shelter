@@ -30,12 +30,76 @@ import {
   FileText,
   Star,
   Wrench,
+  AlertCircle,
+  Ban,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+/* ── Booking Progress Stepper ── */
+const STEPS = ["Requested", "Approved", "Paid", "Active"] as const;
+
+function getStepIndex(booking: Booking): number {
+  if (booking.status === "REJECTED" || booking.status === "CANCELLED" || booking.status === "EVICTED") return -1;
+  if (booking.paymentStatus === "PAID" && booking.status === "APPROVED") return 3; // Active
+  if (booking.paymentStatus === "PAID") return 2;
+  if (booking.status === "APPROVED") return 1;
+  return 0; // PENDING = Requested
+}
+
+function BookingStepper({ booking }: { booking: Booking }) {
+  const current = getStepIndex(booking);
+  if (current === -1) return null; // Don't show for rejected/cancelled/evicted
+
+  return (
+    <div className="flex items-center gap-1 w-full mb-4">
+      {STEPS.map((step, i) => {
+        const done = i <= current;
+        const active = i === current;
+        return (
+          <div key={step} className="flex items-center flex-1 gap-1">
+            <div className="flex flex-col items-center gap-1 flex-1">
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
+                  done
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                  active && "ring-2 ring-primary/30 ring-offset-1",
+                )}
+              >
+                {done && i < current ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-[10px] font-medium leading-none",
+                  done ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {step}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={cn(
+                  "h-0.5 flex-1 rounded-full -mt-4",
+                  i < current ? "bg-primary" : "bg-muted",
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const MyBookings = () => {
   const { isAuthenticated } = useAuth();
@@ -220,6 +284,58 @@ const MyBookings = () => {
                             </div>
                           </div>
                         </div>
+
+                        {/* Booking progress stepper */}
+                        <BookingStepper booking={booking} />
+
+                        {/* Eviction banner */}
+                        {booking.status === "EVICTED" && (
+                          <div className="mb-4 p-4 rounded-xl border-2 border-destructive/30 bg-destructive/5">
+                            <div className="flex items-start gap-3">
+                              <Ban className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                              <div>
+                                <p className="font-semibold text-sm text-destructive">You have been evicted</p>
+                                {booking.evictionReason && (
+                                  <p className="text-sm text-destructive/80 mt-1">{booking.evictionReason}</p>
+                                )}
+                                {booking.evictionDate && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Evicted on {new Date(booking.evictionDate).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Lease terms display */}
+                        {booking.status === "APPROVED" && booking.lease && (
+                          <div className="mb-4 space-y-2">
+                            {booking.lease.gracePeriodDays && booking.lease.gracePeriodDays > 0 ? (
+                              <p className="text-xs text-primary/80 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                Grace period: {booking.lease.gracePeriodDays} days after lease ends
+                              </p>
+                            ) : null}
+                            {booking.lease.duration && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                Duration: {booking.lease.duration}
+                              </p>
+                            )}
+                            {booking.lease.terms && (
+                              <details className="text-xs">
+                                <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1.5">
+                                  <FileText className="w-3.5 h-3.5" />
+                                  View Lease Terms
+                                </summary>
+                                <p className="mt-2 p-3 rounded-lg bg-muted/30 text-muted-foreground whitespace-pre-wrap">
+                                  {booking.lease.terms}
+                                </p>
+                              </details>
+                            )}
+                          </div>
+                        )}
 
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/60">
                           <Button variant="ghost" size="sm" asChild>

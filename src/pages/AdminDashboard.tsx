@@ -107,6 +107,13 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [propsPage, setPropsPage] = useState(1);
 
+  // Fetch analytics for quick-access cards
+  const { data: analyticsResponse } = useQuery({
+    queryKey: ["admin-analytics"],
+    queryFn: fetchAdminAnalytics,
+  });
+  const flaggedCount = analyticsResponse?.data?.overview?.flaggedMessages ?? 0;
+
   // Fetch all properties
   const { data: apiResponse, refetch } = useProperties({ limit: 100 });
 
@@ -248,6 +255,39 @@ const AdminDashboard = () => {
               </p>
             </motion.div>
           </div>
+
+          {/* Flagged messages shortcut */}
+          {flaggedCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <Link to="/admin/flagged-messages">
+                <Card className="border-2 border-destructive/20 bg-destructive/5 hover:border-destructive/40 transition-all cursor-pointer group">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
+                        <Flag className="w-5 h-5 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">Flagged Messages</p>
+                        <p className="text-xs text-muted-foreground">
+                          {flaggedCount} message{flaggedCount !== 1 ? "s" : ""} flagged for review
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="text-xs font-bold">
+                        {flaggedCount}
+                      </Badge>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          )}
 
           <Tabs
             value={activeTab}

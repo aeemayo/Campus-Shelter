@@ -41,6 +41,7 @@ import {
   GripVertical,
   MapPin,
   Keyboard,
+  AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -199,6 +200,8 @@ const AdminPropertyForm = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [landlords, setLandlords] = useState<any[]>([]);
+  const [propertyStatus, setPropertyStatus] = useState<string | null>(null);
+  const [existingRejectionNote, setExistingRejectionNote] = useState<string | null>(null);
   const isEditMode = !!id;
   const isLandlord = user?.role === "LANDLORD";
 
@@ -319,6 +322,8 @@ const AdminPropertyForm = () => {
         const response = await fetchProperty(id);
         if (response.data) {
           const p = response.data;
+          setPropertyStatus(p.status);
+          setExistingRejectionNote(p.rejectionNote ?? null);
           form.reset({
             title: p.title,
             description: p.description,
@@ -452,6 +457,21 @@ const AdminPropertyForm = () => {
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
+
+          {propertyStatus === "REJECTED" && existingRejectionNote && (
+            <div className="mb-6 p-4 rounded-xl border-2 border-destructive/30 bg-destructive/5">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm text-destructive">Property Rejected</p>
+                  <p className="text-sm text-destructive/80 mt-1">{existingRejectionNote}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Make the requested changes and submit to resubmit for approval.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-lg overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />

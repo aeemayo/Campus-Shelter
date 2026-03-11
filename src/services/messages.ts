@@ -7,9 +7,11 @@ export interface ApiMessage {
   receiverId: string;
   propertyId: string | null;
   content: string;
+  flaggedAt: string | null;
+  flagReason: string | null;
   createdAt: string;
-  sender?: { id: string; name: string };
-  receiver?: { id: string; name: string };
+  sender?: { id: string; name: string; email?: string };
+  receiver?: { id: string; name: string; email?: string };
 }
 
 export interface SendMessageData {
@@ -47,4 +49,15 @@ export async function sendMessage(data: SendMessageData) {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+/**
+ * Admin: fetch flagged messages.
+ */
+export async function fetchFlaggedMessages(page = 1, search?: string) {
+  const query = new URLSearchParams();
+  query.set("page", String(page));
+  query.set("limit", "20");
+  if (search) query.set("search", search);
+  return apiFetch<ApiPaginated<ApiMessage>>(`/api/admin/messages/flagged?${query.toString()}`);
 }
