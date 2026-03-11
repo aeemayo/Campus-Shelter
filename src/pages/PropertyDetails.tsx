@@ -789,6 +789,14 @@ export default function RentalDetailsPage() {
                   </CardContent>
                 </Card>
 
+                {/* Safety Notice */}
+                <div className="rounded-lg border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-3.5 flex items-start gap-2.5">
+                  <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                    <span className="font-semibold">Stay safe:</span> Never pay or share bank details outside CampusShelter. All bookings and payments should go through our platform to protect you.
+                  </p>
+                </div>
+
                 {/* Book */}
                 <Card className="border-border/60">
                   <CardContent className="p-5 space-y-4">
