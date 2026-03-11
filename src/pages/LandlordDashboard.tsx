@@ -1110,9 +1110,18 @@ const LandlordDashboard = () => {
                                   <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/5 text-primary">
                                     <Building2 className="w-4 h-4 md:w-5 md:h-5" />
                                   </div>
-                                  <p className="font-bold text-base md:text-lg tracking-tight">
-                                    {booking.property?.title || "Property"}
-                                  </p>
+                                  <div>
+                                    <p className="font-bold text-base md:text-lg tracking-tight">
+                                      {booking.property?.title || "Property"}
+                                    </p>
+                                    {booking.room && (
+                                      <p className="text-xs text-primary font-medium">
+                                        {booking.room.name}
+                                        {" · "}
+                                        {({ SINGLE: "Single", SELF_CON: "Self Con", MINI_FLAT: "Mini Flat" } as Record<string, string>)[booking.room.roomType] ?? booking.room.roomType}
+                                      </p>
+                                    )}
+                                  </div>
                                   <StatusBadge status={booking.status} />
                                 </div>
 
@@ -1519,7 +1528,11 @@ const LandlordDashboard = () => {
                                     </Badge>
                                   </div>
                                   <p className="text-xs text-muted-foreground mb-1">
-                                    {booking.property?.title} · {booking.property?.location}
+                                    {booking.property?.title}
+                                    {booking.room && (
+                                      <span className="text-primary"> · {booking.room.name}</span>
+                                    )}
+                                    {booking.property?.location && ` · ${booking.property.location}`}
                                   </p>
                                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
                                     {booking.student?.email && (
@@ -1606,6 +1619,9 @@ const LandlordDashboard = () => {
                                       </div>
                                       <p className="text-xs text-muted-foreground mb-1">
                                         {booking.property?.title}
+                                        {booking.room && (
+                                          <span className="text-primary"> · {booking.room.name}</span>
+                                        )}
                                       </p>
                                       {booking.evictionReason && (
                                         <p className="text-xs text-destructive/70">

@@ -5,6 +5,17 @@ import { apiFetch, type ApiPaginated, type ApiSuccess } from "@/lib/api";
 
 export type RoomType = "SINGLE" | "SELF_CON" | "MINI_FLAT";
 
+export interface Room {
+  id: string;
+  name: string;
+  roomType: string;
+  priceMonthly: number;
+  priceWeekly?: number;
+  furnished: boolean;
+  isAvailable: boolean;
+  description?: string;
+}
+
 export interface ApiProperty {
   id: string;
   title: string;
@@ -33,6 +44,8 @@ export interface ApiProperty {
   landlordId: string;
   createdAt: string;
   updatedAt: string;
+  roomUnits?: Room[];
+  availableRooms?: number;
   landlord?: {
     id: string;
     name: string;
@@ -72,6 +85,8 @@ export interface Property {
   rejectionNote?: string | null;
   landlordId?: string;
   inspectionSlots?: string[];
+  roomUnits?: Room[];
+  availableRooms?: number;
   landlord?: {
     id?: string;
     name: string;

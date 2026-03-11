@@ -286,6 +286,13 @@ const MyBookings = () => {
                             <h3 className="text-xl font-bold text-foreground mb-1 tracking-tight">
                               {booking.property?.title || "Property Listing"}
                             </h3>
+                            {booking.room && (
+                              <p className="text-xs font-medium text-primary mb-0.5">
+                                {booking.room.name}
+                                {" · "}
+                                {({ SINGLE: "Single", SELF_CON: "Self Con", MINI_FLAT: "Mini Flat" } as Record<string, string>)[booking.room.roomType] ?? booking.room.roomType}
+                              </p>
+                            )}
                             <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
                               <MapPin className="w-4 h-4 text-primary" />
                               {booking.property?.location || "FUTA Area"}

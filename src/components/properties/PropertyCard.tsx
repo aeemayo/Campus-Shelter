@@ -169,6 +169,16 @@ const PropertyCard = ({
           )}
         </div>
 
+        {/* Room availability indicator */}
+        {(property as any).roomUnits && (property as any).roomUnits.length > 1 && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${(property as any).availableRooms > 0 ? "bg-emerald-500" : "bg-destructive"}`} />
+            <span className="text-[11px] text-muted-foreground">
+              {(property as any).availableRooms ?? 0}/{(property as any).roomUnits.length} rooms available
+            </span>
+          </div>
+        )}
+
         {/* Amenities */}
         <div className="flex flex-wrap gap-1.5 mt-3">
           {property.amenities.slice(0, 3).map((amenity) => (

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma db push)",
+      "Bash(npx prisma migrate dev --name add-appeal-audit-and-suspension-reason --create-only)",
+      "Bash(npm install leaflet react-leaflet @types/leaflet)",
+      "Bash(npm install leaflet react-leaflet @types/leaflet --legacy-peer-deps)",
+      "Bash(ls /Users/lope/Desktop/school/campus-shelter/src/app/api/properties/[id]/)",
+      "Bash(npx ts-node --transpile-only -e \":*)",
+      "Bash(npx prisma:*)",
+      "Bash(find /Users/lope/Desktop/school/campus-shelter/src/app/api -name *.ts -type f)"
+    ],
+    "additionalDirectories": [
+      "/Users/lope/Desktop/school/campus-shelter/.next",
+      "/Users/lope/Desktop/school/campus-shelter/src/app/api/bookings/[id]",
+      "/Users/lope/Desktop/school/campus-shelter/src/app/api/admin/payments/[id]",
+      "/tmp",
+      "/Users/lope/Desktop/school/campus-shelter/src/app/api/admin/messages/[id]"
+    ]
+  }
+}

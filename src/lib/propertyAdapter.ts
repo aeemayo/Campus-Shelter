@@ -87,5 +87,7 @@ export function toFrontendProperty(p: ApiProperty): Property {
     rejectionNote: p.rejectionNote ?? null,
     status: p.status,
     inspectionSlots: p.inspectionSlots ?? [],
+    roomUnits: p.roomUnits,
+    availableRooms: p.availableRooms,
   };
 }

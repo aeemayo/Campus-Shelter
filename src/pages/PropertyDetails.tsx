@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Shield, Plus, X, Clock, StickyNote } from "lucide-react";
+import { Calendar, Shield, Plus, X, Clock, StickyNote, DoorOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -81,6 +81,8 @@ export default function RentalDetailsPage() {
   const [newSlotInput, setNewSlotInput] = useState("");
   const [localSlots, setLocalSlots] = useState<string[]>([]);
   const [isSavingSlots, setIsSavingSlots] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | undefined>(undefined);
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const slotsInitialized = useRef(false);
 
   const {
@@ -579,6 +581,82 @@ export default function RentalDetailsPage() {
               </TabsContent>
             </Tabs>
 
+            {/* Available Rooms */}
+            {property.roomUnits && property.roomUnits.length > 0 && user?.role !== "LANDLORD" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <DoorOpen className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold text-foreground text-sm">
+                    Available Rooms
+                    {property.availableRooms !== undefined && (
+                      <span className="ml-2 text-xs text-muted-foreground font-normal">
+                        ({property.availableRooms} of {property.roomUnits.length} available)
+                      </span>
+                    )}
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {property.roomUnits.map((room) => {
+                    const roomTypeLabel: Record<string, string> = {
+                      SINGLE: "Single",
+                      SELF_CON: "Self Con",
+                      MINI_FLAT: "Mini Flat",
+                    };
+                    return (
+                      <Card
+                        key={room.id}
+                        className={`border-border/60 ${!room.isAvailable ? "opacity-60" : ""}`}
+                      >
+                        <CardContent className="p-4 space-y-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-semibold text-sm text-foreground leading-tight">
+                              {room.name}
+                            </p>
+                            <Badge
+                              variant={room.isAvailable ? "success" : "destructive"}
+                              className="text-[10px] rounded-md shrink-0"
+                            >
+                              {room.isAvailable ? "Available" : "Occupied"}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-[10px] rounded-md">
+                              {roomTypeLabel[room.roomType] ?? room.roomType}
+                            </Badge>
+                            {room.furnished && (
+                              <Badge variant="secondary" className="text-[10px] rounded-md">
+                                Furnished
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm font-bold text-foreground">
+                            {formatNaira(room.priceMonthly)}
+                            <span className="text-xs text-muted-foreground font-normal ml-0.5">/yr</span>
+                          </p>
+                          {room.description && (
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                              {room.description}
+                            </p>
+                          )}
+                          <Button
+                            size="sm"
+                            className="w-full gradient-primary rounded-lg h-8 text-xs"
+                            disabled={!room.isAvailable}
+                            onClick={() => {
+                              setSelectedRoomId(room.id);
+                              setIsBookingDialogOpen(true);
+                            }}
+                          >
+                            Book This Room
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Verified badge */}
             {property.landlord?.verifiedAt && (
               <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
@@ -824,136 +902,15 @@ export default function RentalDetailsPage() {
                       )}
                     </div>
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button className="w-full gradient-primary rounded-lg h-10">
-                          Book Now
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[440px] rounded-xl">
-                        <DialogHeader>
-                          <DialogTitle className="text-lg font-semibold">
-                            Request Booking
-                          </DialogTitle>
-                          <DialogDescription className="text-sm text-muted-foreground">
-                            Choose your lease start and end dates. The landlord
-                            will confirm within 24 hours.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          {isAuthenticated &&
-                            user?.role === "STUDENT" &&
-                            !user?.verifiedAt && (
-                              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
-                                <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                                <div className="space-y-1">
-                                  <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">
-                                    Verify your student ID first
-                                  </p>
-                                  <p className="text-xs text-yellow-700 dark:text-yellow-400/80">
-                                    Upload your FUTA ID on your{" "}
-                                    <Link
-                                      to="/profile"
-                                      className="underline font-medium"
-                                    >
-                                      profile
-                                    </Link>{" "}
-                                    to build trust with landlords. You can still
-                                    book without it.
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                              <Label className="text-sm">Move-in date</Label>
-                              <Input
-                                type="date"
-                                className="rounded-lg h-10"
-                                value={bookingDates.start}
-                                onChange={(e) =>
-                                  setBookingDates({
-                                    ...bookingDates,
-                                    start: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-sm">Move-out date</Label>
-                              <Input
-                                type="date"
-                                className="rounded-lg h-10"
-                                value={bookingDates.end}
-                                onChange={(e) =>
-                                  setBookingDates({
-                                    ...bookingDates,
-                                    end: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
-                            <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              Your contact details will be shared with the
-                              landlord to process this booking.
-                            </p>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button
-                            className="w-full gradient-primary rounded-lg h-10"
-                            onClick={async () => {
-                              if (!isAuthenticated) {
-                                toast({
-                                  title: "Sign in required",
-                                  description:
-                                    "Please sign in to book a property.",
-                                  variant: "destructive",
-                                });
-                                navigate("/login");
-                                return;
-                              }
-                              setIsBookingLoading(true);
-                              try {
-                                await createBooking({
-                                  propertyId: property.id,
-                                  leaseStart: new Date(
-                                    bookingDates.start + "T00:00:00.000Z",
-                                  ).toISOString(),
-                                  leaseEnd: new Date(
-                                    bookingDates.end + "T00:00:00.000Z",
-                                  ).toISOString(),
-                                });
-                                toast({
-                                  title: "Booking request sent!",
-                                  description:
-                                    "The landlord will contact you shortly.",
-                                });
-                                navigate("/my-bookings");
-                              } catch (err: any) {
-                                toast({
-                                  title: "Booking failed",
-                                  description: err.message,
-                                  variant: "destructive",
-                                });
-                              } finally {
-                                setIsBookingLoading(false);
-                              }
-                            }}
-                            disabled={isBookingLoading}
-                          >
-                            {isBookingLoading && (
-                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            )}
-                            Confirm Booking
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <Button
+                      className="w-full gradient-primary rounded-lg h-10"
+                      onClick={() => {
+                        setSelectedRoomId(undefined);
+                        setIsBookingDialogOpen(true);
+                      }}
+                    >
+                      Book Now
+                    </Button>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
                       <Shield className="w-3.5 h-3.5" />
@@ -1074,6 +1031,123 @@ export default function RentalDetailsPage() {
         </div>
       </div>
       <Footer />
+
+      {/* ── Booking Dialog (shared between "Book Now" and "Book This Room") ── */}
+      <Dialog open={isBookingDialogOpen} onOpenChange={(open) => {
+        setIsBookingDialogOpen(open);
+        if (!open) setSelectedRoomId(undefined);
+      }}>
+        <DialogContent className="sm:max-w-[440px] rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              Request Booking
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {selectedRoomId && property.roomUnits
+                ? `Booking: ${property.roomUnits.find((r) => r.id === selectedRoomId)?.name ?? "Room"} · `
+                : ""}
+              Choose your lease start and end dates. The landlord will confirm within 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {isAuthenticated &&
+              user?.role === "STUDENT" &&
+              !user?.verifiedAt && (
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800/40">
+                  <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">
+                      Verify your student ID first
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400/80">
+                      Upload your FUTA ID on your{" "}
+                      <Link to="/profile" className="underline font-medium">
+                        profile
+                      </Link>{" "}
+                      to build trust with landlords. You can still book without it.
+                    </p>
+                  </div>
+                </div>
+              )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm">Move-in date</Label>
+                <Input
+                  type="date"
+                  className="rounded-lg h-10"
+                  value={bookingDates.start}
+                  onChange={(e) =>
+                    setBookingDates({ ...bookingDates, start: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm">Move-out date</Label>
+                <Input
+                  type="date"
+                  className="rounded-lg h-10"
+                  value={bookingDates.end}
+                  onChange={(e) =>
+                    setBookingDates({ ...bookingDates, end: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border/60">
+              <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Your contact details will be shared with the landlord to process this booking.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full gradient-primary rounded-lg h-10"
+              onClick={async () => {
+                if (!isAuthenticated) {
+                  toast({
+                    title: "Sign in required",
+                    description: "Please sign in to book a property.",
+                    variant: "destructive",
+                  });
+                  navigate("/login");
+                  return;
+                }
+                setIsBookingLoading(true);
+                try {
+                  await createBooking({
+                    propertyId: property.id,
+                    leaseStart: new Date(bookingDates.start + "T00:00:00.000Z").toISOString(),
+                    leaseEnd: new Date(bookingDates.end + "T00:00:00.000Z").toISOString(),
+                    ...(selectedRoomId ? { roomId: selectedRoomId } : {}),
+                  });
+                  toast({
+                    title: "Booking request sent!",
+                    description: "The landlord will contact you shortly.",
+                  });
+                  setIsBookingDialogOpen(false);
+                  setSelectedRoomId(undefined);
+                  navigate("/my-bookings");
+                } catch (err: any) {
+                  toast({
+                    title: "Booking failed",
+                    description: err.message,
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsBookingLoading(false);
+                }
+              }}
+              disabled={isBookingLoading}
+            >
+              {isBookingLoading && (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              )}
+              Confirm Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

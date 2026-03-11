@@ -32,6 +32,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
   Loader2,
@@ -42,6 +43,8 @@ import {
   MapPin,
   Keyboard,
   AlertCircle,
+  Plus,
+  DoorOpen,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -49,6 +52,7 @@ import {
   createProperty,
   updateProperty,
   fetchAdminUsers,
+  type Room,
 } from "@/services/properties";
 import { compressImage } from "@/lib/image-compress";
 import { apiFetch } from "@/lib/api";
@@ -168,6 +172,15 @@ interface ImageItem {
   uploaded: boolean; // true when already on the server
 }
 
+interface RoomUnitDraft {
+  _key: string; // local-only id for React keys
+  name: string;
+  roomType: "SINGLE" | "SELF_CON" | "MINI_FLAT";
+  priceMonthly: number | "";
+  furnished: boolean;
+  description: string;
+}
+
 const propertyFormSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -204,6 +217,16 @@ const AdminPropertyForm = () => {
   const [existingRejectionNote, setExistingRejectionNote] = useState<string | null>(null);
   const isEditMode = !!id;
   const isLandlord = user?.role === "LANDLORD";
+
+  // ── Room units state ──
+  const [roomUnits, setRoomUnits] = useState<RoomUnitDraft[]>([{
+    _key: `room-${Date.now()}`,
+    name: "Room 1",
+    roomType: "SINGLE",
+    priceMonthly: "",
+    furnished: false,
+    description: "",
+  }]);
 
   // ── Image upload state ──
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -355,6 +378,28 @@ const AdminPropertyForm = () => {
               })),
             );
           }
+          // Load existing room units if available; otherwise seed one from property defaults
+          if (p.roomUnits && p.roomUnits.length > 0) {
+            setRoomUnits(
+              p.roomUnits.map((r, idx) => ({
+                _key: `room-${idx}-${r.id}`,
+                name: r.name,
+                roomType: (r.roomType as "SINGLE" | "SELF_CON" | "MINI_FLAT"),
+                priceMonthly: r.priceMonthly,
+                furnished: r.furnished,
+                description: r.description ?? "",
+              }))
+            );
+          } else {
+            setRoomUnits([{
+              _key: `room-0`,
+              name: "Room 1",
+              roomType: (p.roomType as "SINGLE" | "SELF_CON" | "MINI_FLAT") ?? "SINGLE",
+              priceMonthly: p.priceMonthly,
+              furnished: p.furnished,
+              description: "",
+            }]);
+          }
         }
       } catch (error) {
         toast({
@@ -417,6 +462,9 @@ const AdminPropertyForm = () => {
         ...values,
         availableFrom: new Date(values.availableFrom).toISOString(),
         images: imageUrls,
+        roomUnits: roomUnits
+          .filter((r) => r.name.trim() && r.priceMonthly !== "")
+          .map(({ _key, ...r }) => ({ ...r, priceMonthly: Number(r.priceMonthly) })),
       };
 
       if (isEditMode) {
@@ -965,6 +1013,158 @@ const AdminPropertyForm = () => {
                             </span>
                           </motion.div>
                         )}
+                      </div>
+                    </div>
+                    {/* ── Section: Room Units ── */}
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-6 w-1 bg-primary rounded-full" />
+                          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">
+                            Room Units
+                          </h3>
+                          <span className="text-xs font-medium text-muted-foreground bg-muted/50 rounded-full px-2.5 py-0.5">
+                            {roomUnits.length} room{roomUnits.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 rounded-lg h-8 text-xs"
+                          onClick={() =>
+                            setRoomUnits((prev) => [
+                              ...prev,
+                              {
+                                _key: `room-${Date.now()}`,
+                                name: `Room ${prev.length + 1}`,
+                                roomType: "SINGLE",
+                                priceMonthly: "",
+                                furnished: false,
+                                description: "",
+                              },
+                            ])
+                          }
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Room
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground -mt-3">
+                        Define bookable rooms/units in this property. Each room can have its own type, price and furnishing.
+                      </p>
+                      <div className="space-y-4">
+                        {roomUnits.map((room, idx) => (
+                          <div
+                            key={room._key}
+                            className="p-5 rounded-2xl bg-muted/30 border border-border/40 hover:border-primary/20 transition-all space-y-4"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <DoorOpen className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-bold text-foreground">
+                                  Room {idx + 1}
+                                </span>
+                              </div>
+                              {roomUnits.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive rounded-lg"
+                                  onClick={() =>
+                                    setRoomUnits((prev) => prev.filter((_, i) => i !== idx))
+                                  }
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-foreground">Room Name</label>
+                                <Input
+                                  className="h-10 rounded-xl bg-background/50 text-sm"
+                                  placeholder="e.g. Room 1, Ground Floor Unit"
+                                  value={room.name}
+                                  onChange={(e) =>
+                                    setRoomUnits((prev) =>
+                                      prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r)
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-foreground">Room Type</label>
+                                <select
+                                  className="w-full h-10 rounded-xl border border-input bg-background/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                  value={room.roomType}
+                                  onChange={(e) =>
+                                    setRoomUnits((prev) =>
+                                      prev.map((r, i) =>
+                                        i === idx
+                                          ? { ...r, roomType: e.target.value as "SINGLE" | "SELF_CON" | "MINI_FLAT" }
+                                          : r
+                                      )
+                                    )
+                                  }
+                                >
+                                  <option value="SINGLE">Single Room</option>
+                                  <option value="SELF_CON">Self-Contained</option>
+                                  <option value="MINI_FLAT">Mini Flat</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-foreground">Yearly Rent (₦)</label>
+                                <Input
+                                  className="h-10 rounded-xl bg-background/50 text-sm font-bold text-primary"
+                                  type="number"
+                                  placeholder="e.g. 250000"
+                                  value={room.priceMonthly}
+                                  onChange={(e) =>
+                                    setRoomUnits((prev) =>
+                                      prev.map((r, i) =>
+                                        i === idx ? { ...r, priceMonthly: e.target.value === "" ? "" : Number(e.target.value) } : r
+                                      )
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="flex items-center gap-3 h-10 mt-auto">
+                                <input
+                                  id={`furnished-${room._key}`}
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-primary/30 accent-primary cursor-pointer"
+                                  checked={room.furnished}
+                                  onChange={(e) =>
+                                    setRoomUnits((prev) =>
+                                      prev.map((r, i) => i === idx ? { ...r, furnished: e.target.checked } : r)
+                                    )
+                                  }
+                                />
+                                <label htmlFor={`furnished-${room._key}`} className="text-sm font-bold cursor-pointer">
+                                  Furnished
+                                </label>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-foreground">
+                                Description{" "}
+                                <span className="font-normal text-muted-foreground">(optional)</span>
+                              </label>
+                              <Textarea
+                                className="rounded-xl border-border/40 bg-muted/20 text-sm min-h-[64px] resize-none"
+                                placeholder="Brief description of this room..."
+                                value={room.description}
+                                onChange={(e) =>
+                                  setRoomUnits((prev) =>
+                                    prev.map((r, i) => i === idx ? { ...r, description: e.target.value } : r)
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </motion.div>

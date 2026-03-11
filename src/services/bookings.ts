@@ -1,4 +1,5 @@
 import { apiFetch, type ApiPaginated, type ApiSuccess } from "@/lib/api";
+import type { Room } from "@/services/properties";
 
 export interface Booking {
   id: string;
@@ -32,12 +33,14 @@ export interface Booking {
     duration?: string;
     status?: string;
   };
+  room?: Pick<Room, "id" | "name" | "roomType" | "priceMonthly" | "furnished" | "isAvailable">;
 }
 
 export async function createBooking(data: {
   propertyId: string;
   leaseStart: string;
   leaseEnd: string;
+  roomId?: string;
 }) {
   return apiFetch<ApiSuccess<Booking>>("/api/bookings", {
     method: "POST",
