@@ -35,6 +35,8 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const PaymentVerify = lazy(() => import("./pages/PaymentVerify"));
+const WalletPage = lazy(() => import("./pages/WalletPage"));
+const WalletVerify = lazy(() => import("./pages/WalletVerify"));
 
 const PageLoader = () => (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -77,6 +79,16 @@ const App = () => (
               <Route path="/payments/verify" element={
                 <ProtectedRoute allowedRoles={["STUDENT"]}>
                   <PaymentVerify />
+                </ProtectedRoute>
+              } />
+              <Route path="/wallet" element={
+                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                  <WalletPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/wallet/verify" element={
+                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                  <WalletVerify />
                 </ProtectedRoute>
               } />
 
