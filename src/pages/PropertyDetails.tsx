@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFutaGates } from "@/hooks/useFutaGates";
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Shield, Plus, X, Clock, StickyNote } from "lucide-react";
@@ -14,8 +16,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { fetchMyBookings } from "@/services/bookings";
 import { fetchProperty } from "@/services/properties";
-import { fetchPropertyReviews } from "@/services/reviews";
+import { fetchPropertyReviews, createReview } from "@/services/reviews";
 import { toFrontendProperty } from "@/lib/propertyAdapter";
 import {
   Loader2,
@@ -1076,9 +1079,59 @@ export default function RentalDetailsPage() {
 }
 
 function PropertyReviews({ propertyId }: { propertyId: string }) {
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+
   const { data: response, isLoading } = useQuery({
     queryKey: ["property-reviews", propertyId],
     queryFn: () => fetchPropertyReviews(propertyId),
+  });
+
+  const { data: bookingsResponse } = useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: fetchMyBookings,
+    enabled: isAuthenticated && user?.role === "STUDENT",
+  });
+
+  const hasApprovedBooking = useMemo(() => {
+    if (!bookingsResponse?.data) return false;
+    return bookingsResponse.data.some(
+      (b) => b.propertyId === propertyId && b.status === "APPROVED",
+    );
+  }, [bookingsResponse, propertyId]);
+
+  const alreadyReviewed = useMemo(() => {
+    if (!response?.data || !user) return false;
+    return response.data.some((r) => r.studentId === user.id);
+  }, [response, user]);
+
+  const canReview =
+    isAuthenticated &&
+    user?.role === "STUDENT" &&
+    hasApprovedBooking &&
+    !alreadyReviewed;
+
+  const { mutate: submitReview, isPending: isSubmitting } = useMutation({
+    mutationFn: () =>
+      createReview({ propertyId, rating, comment }),
+    onSuccess: () => {
+      toast({ title: "Review submitted!", description: "Thanks for your feedback." });
+      setRating(0);
+      setComment("");
+      queryClient.invalidateQueries({ queryKey: ["property-reviews", propertyId] });
+      queryClient.invalidateQueries({ queryKey: ["property", propertyId] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to submit review",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const reviews = response?.data || [];
@@ -1103,7 +1156,64 @@ function PropertyReviews({ propertyId }: { propertyId: string }) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-5">
+      <CardContent className="p-5 space-y-5">
+        {canReview && (
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
+            <p className="text-sm font-medium text-foreground">Leave a review</p>
+
+            {/* Star picker */}
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="focus:outline-none"
+                  aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}
+                >
+                  <Star
+                    className={cn(
+                      "w-6 h-6 transition-colors",
+                      star <= (hoverRating || rating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-muted-foreground/30",
+                    )}
+                  />
+                </button>
+              ))}
+              {rating > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Comment <span className="text-muted-foreground/50">(optional)</span>
+              </Label>
+              <Textarea
+                placeholder="Share your experience with this property..."
+                className="rounded-lg text-sm resize-none min-h-[80px]"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </div>
+
+            <Button
+              size="sm"
+              className="gradient-primary rounded-lg h-9 px-4"
+              disabled={rating === 0 || isSubmitting}
+              onClick={() => submitReview()}
+            >
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />}
+              Submit Review
+            </Button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

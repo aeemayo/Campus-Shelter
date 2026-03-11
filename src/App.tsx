@@ -34,6 +34,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const PaymentVerify = lazy(() => import("./pages/PaymentVerify"));
 
 const PageLoader = () => (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -73,6 +74,11 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/payments/verify" element={
+                <ProtectedRoute allowedRoles={["STUDENT"]}>
+                  <PaymentVerify />
+                </ProtectedRoute>
+              } />
 
               {/* Public property browsing */}
               <Route path="/properties" element={<Properties />} />

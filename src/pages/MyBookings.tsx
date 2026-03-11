@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
+import { initializePayment, fetchPayments, type Payment } from "@/services/payments";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -32,6 +33,9 @@ import {
   Wrench,
   AlertCircle,
   Ban,
+  CreditCard,
+  ShieldAlert,
+  CheckCircle2,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
@@ -43,7 +47,7 @@ import { cn } from "@/lib/utils";
 const STEPS = ["Requested", "Approved", "Paid", "Active"] as const;
 
 function getStepIndex(booking: Booking): number {
-  if (booking.status === "REJECTED" || booking.status === "CANCELLED" || booking.status === "EVICTED") return -1;
+  if (booking.status === "REJECTED" || booking.status === "EVICTED") return -1;
   if (booking.paymentStatus === "PAID" && booking.status === "APPROVED") return 3; // Active
   if (booking.paymentStatus === "PAID") return 2;
   if (booking.status === "APPROVED") return 1;
@@ -126,6 +130,14 @@ const MyBookings = () => {
 
   const bookings = response?.data || [];
 
+  // Fetch student's payment history
+  const { data: paymentsResponse } = useQuery({
+    queryKey: ["my-payments"],
+    queryFn: () => fetchPayments(1, 50),
+    enabled: isAuthenticated,
+  });
+  const myPayments = paymentsResponse?.data || [];
+
   // Notify when a booking status changes
   useEffect(() => {
     bookings.forEach((b) => {
@@ -178,6 +190,16 @@ const MyBookings = () => {
     },
     onError: (err: any) => {
       toast({ title: "Couldn't report issue", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const payMutation = useMutation({
+    mutationFn: (bookingId: string) => initializePayment(bookingId),
+    onSuccess: (res) => {
+      window.location.href = res.data.authorizationUrl;
+    },
+    onError: (err: any) => {
+      toast({ title: "Payment failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -337,6 +359,56 @@ const MyBookings = () => {
                           </div>
                         )}
 
+                        {/* Payment status + Pay button */}
+                        {booking.status === "APPROVED" && (
+                          <div className="mb-4">
+                            {(!booking.paymentStatus || booking.paymentStatus === "UNPAID") && (
+                              <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5">
+                                  <CreditCard className="w-4.5 h-4.5 text-primary" />
+                                  <div>
+                                    <p className="text-sm font-semibold">Payment required</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Pay ₦{(booking.property?.priceMonthly || 0).toLocaleString()} to secure your booking
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  className="gradient-primary rounded-lg shrink-0"
+                                  size="sm"
+                                  disabled={payMutation.isPending}
+                                  onClick={() => payMutation.mutate(booking.id)}
+                                >
+                                  {payMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                                  ) : (
+                                    <CreditCard className="w-4 h-4 mr-1.5" />
+                                  )}
+                                  Pay Now
+                                </Button>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PENDING_PAYMENT" && (
+                              <div className="p-3 rounded-xl border border-amber-200/60 bg-amber-50/50 dark:bg-amber-950/20 flex items-center gap-2.5">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                                <p className="text-sm text-amber-800 dark:text-amber-300">Payment processing...</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PAID" && (
+                              <div className="p-3 rounded-xl border border-emerald-200/60 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-2.5">
+                                <CreditCard className="w-4 h-4 text-emerald-600" />
+                                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Payment confirmed</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "REFUNDED" && (
+                              <div className="p-3 rounded-xl border border-blue-200/60 bg-blue-50/50 dark:bg-blue-950/20 flex items-center gap-2.5">
+                                <ShieldAlert className="w-4 h-4 text-blue-600" />
+                                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Payment refunded</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/60">
                           <Button variant="ghost" size="sm" asChild>
                             <Link to={`/properties/${booking.propertyId}`}>
@@ -416,6 +488,71 @@ const MyBookings = () => {
                 <Button asChild>
                   <Link to="/properties">Browse Properties</Link>
                 </Button>
+              </div>
+            )}
+            {/* ── Payment History ── */}
+            {myPayments.length > 0 && (
+              <div className="mt-10">
+                <h2 className="text-xl font-display font-bold text-foreground tracking-tight mb-4">
+                  Payment <span className="text-primary">History</span>
+                </h2>
+                <Card className="border-border/40 overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border/40">
+                      {myPayments.map((payment) => (
+                        <div
+                          key={payment.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                              <CreditCard className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {payment.booking?.property?.title || "Property"}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {payment.paidAt
+                                  ? new Date(payment.paidAt).toLocaleDateString("en-NG", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : new Date(payment.createdAt).toLocaleDateString("en-NG", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                {" · "}Ref: {payment.paystackReference.slice(0, 8)}...
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 pl-12 sm:pl-0">
+                            <Badge
+                              variant={
+                                payment.refundedAt
+                                  ? "destructive"
+                                  : payment.paystackStatus === "success"
+                                    ? "default"
+                                    : "secondary"
+                              }
+                            >
+                              {payment.refundedAt
+                                ? "Refunded"
+                                : payment.paystackStatus === "success"
+                                  ? "Paid"
+                                  : payment.paystackStatus || "Pending"}
+                            </Badge>
+                            <p className="font-bold text-sm whitespace-nowrap">
+                              ₦{payment.amount.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
