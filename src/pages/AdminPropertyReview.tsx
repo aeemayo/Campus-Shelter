@@ -48,7 +48,9 @@ import {
   Pencil,
   Star,
   Image as ImageIcon,
+  AlertCircle,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminPropertyReview() {
   const { id } = useParams<{ id: string }>();
@@ -59,6 +61,8 @@ export default function AdminPropertyReview() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectionNote, setRejectionNote] = useState("");
 
   const {
     data: response,
@@ -97,14 +101,21 @@ export default function AdminPropertyReview() {
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = () => {
+    setRejectionNote("");
+    setShowRejectDialog(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectionNote.trim()) return;
     setIsRejecting(true);
     try {
-      await adminApproveProperty(id!, "REJECTED");
+      await adminApproveProperty(id!, "REJECTED", rejectionNote.trim());
       toast({
         title: "Property Rejected",
-        description: "The listing has been rejected.",
+        description: "The listing has been rejected with a note.",
       });
+      setShowRejectDialog(false);
       refetch();
     } catch {
       toast({
@@ -499,6 +510,21 @@ export default function AdminPropertyReview() {
 
             {/* Right column - Property details + Landlord info */}
             <div className="space-y-6">
+              {/* Rejection note banner */}
+              {raw.rejectionNote && (
+                <Card className="border-destructive/30 bg-destructive/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm text-destructive flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Rejection Reason
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-destructive/80 whitespace-pre-wrap">{raw.rejectionNote}</p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Quick facts */}
               <Card className="border-border/60">
                 <CardHeader className="pb-3">
@@ -701,6 +727,49 @@ export default function AdminPropertyReview() {
           </div>
         </div>
       </main>
+
+      {/* Rejection Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Property</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting this listing. The landlord will see this note and can edit &amp; resubmit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Textarea
+              placeholder="Explain why this property is being rejected..."
+              value={rejectionNote}
+              onChange={(e) => setRejectionNote(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {rejectionNote.length}/2000
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowRejectDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmReject}
+              disabled={!rejectionNote.trim() || isRejecting}
+            >
+              {isRejecting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+              ) : (
+                <XCircle className="w-3.5 h-3.5 mr-1" />
+              )}
+              Reject Property
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>

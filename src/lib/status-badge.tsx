@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, XCircle, Ban, Archive, Wrench } from "lucide-react";
 
-type Status = "APPROVED" | "PENDING" | "PENDING_APPROVAL" | "REJECTED" | "SUSPENDED" | "ARCHIVED" | "OPEN" | "IN_PROGRESS" | "RESOLVED" | "VERIFIED";
+type Status = "APPROVED" | "PENDING" | "PENDING_APPROVAL" | "REJECTED" | "SUSPENDED" | "ARCHIVED" | "OPEN" | "IN_PROGRESS" | "RESOLVED" | "VERIFIED" | "EVICTED";
 
 const statusConfig: Record<Status, { variant: "success" | "destructive" | "warning" | "outline"; icon: typeof CheckCircle2; label: string }> = {
   APPROVED: { variant: "success", icon: CheckCircle2, label: "Approved" },
@@ -10,6 +10,7 @@ const statusConfig: Record<Status, { variant: "success" | "destructive" | "warni
   PENDING_APPROVAL: { variant: "warning", icon: Clock, label: "Pending Approval" },
   REJECTED: { variant: "destructive", icon: XCircle, label: "Rejected" },
   SUSPENDED: { variant: "destructive", icon: Ban, label: "Suspended" },
+  EVICTED: { variant: "destructive", icon: Ban, label: "Evicted" },
   ARCHIVED: { variant: "outline", icon: Archive, label: "Archived" },
   OPEN: { variant: "destructive", icon: Wrench, label: "Open" },
   IN_PROGRESS: { variant: "warning", icon: Clock, label: "In Progress" },

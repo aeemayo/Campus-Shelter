@@ -242,6 +242,9 @@ const LandlordDashboard = () => {
   >(null);
   const [leaseFile, setLeaseFile] = useState<File | null>(null);
   const [leaseUploading, setLeaseUploading] = useState(false);
+  const [leaseGracePeriod, setLeaseGracePeriod] = useState(0);
+  const [leaseTerms, setLeaseTerms] = useState("");
+  const [leaseDuration, setLeaseDuration] = useState("");
 
   // Expanded maintenance descriptions
   const [expandedMaintenance, setExpandedMaintenance] = useState<Set<string>>(new Set());
@@ -255,6 +258,9 @@ const LandlordDashboard = () => {
       await createLease({
         bookingId: leaseUploadBookingId,
         documentUrl: uploadRes.data.url,
+        gracePeriodDays: leaseGracePeriod,
+        ...(leaseTerms.trim() && { terms: leaseTerms.trim() }),
+        ...(leaseDuration.trim() && { duration: leaseDuration.trim() }),
       });
       toast({
         title: "Lease Created",
@@ -262,6 +268,9 @@ const LandlordDashboard = () => {
       });
       setLeaseUploadBookingId(null);
       setLeaseFile(null);
+      setLeaseGracePeriod(0);
+      setLeaseTerms("");
+      setLeaseDuration("");
       queryClient.invalidateQueries({ queryKey: ["landlord-bookings"] });
     } catch (err: any) {
       toast({
@@ -586,7 +595,7 @@ const LandlordDashboard = () => {
             onValueChange={setActiveTab}
             className="space-y-4 md:space-y-6"
           >
-            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-3 md:inline-flex">
+            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-4 md:inline-flex">
               <TabsTrigger
                 value="properties"
                 className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
@@ -600,6 +609,13 @@ const LandlordDashboard = () => {
               >
                 <CalendarCheck className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 <span>Bookings</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="tenants"
+                className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
+              >
+                <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Tenants</span>
               </TabsTrigger>
               <TabsTrigger
                 value="maintenance"

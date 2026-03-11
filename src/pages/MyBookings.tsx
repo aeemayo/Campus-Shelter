@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
+import { initializePayment } from "@/services/payments";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -30,12 +31,78 @@ import {
   FileText,
   Star,
   Wrench,
+  AlertCircle,
+  Ban,
+  CreditCard,
+  ShieldAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+/* ── Booking Progress Stepper ── */
+const STEPS = ["Requested", "Approved", "Paid", "Active"] as const;
+
+function getStepIndex(booking: Booking): number {
+  if (booking.status === "REJECTED" || booking.status === "CANCELLED" || booking.status === "EVICTED") return -1;
+  if (booking.paymentStatus === "PAID" && booking.status === "APPROVED") return 3; // Active
+  if (booking.paymentStatus === "PAID") return 2;
+  if (booking.status === "APPROVED") return 1;
+  return 0; // PENDING = Requested
+}
+
+function BookingStepper({ booking }: { booking: Booking }) {
+  const current = getStepIndex(booking);
+  if (current === -1) return null; // Don't show for rejected/cancelled/evicted
+
+  return (
+    <div className="flex items-center gap-1 w-full mb-4">
+      {STEPS.map((step, i) => {
+        const done = i <= current;
+        const active = i === current;
+        return (
+          <div key={step} className="flex items-center flex-1 gap-1">
+            <div className="flex flex-col items-center gap-1 flex-1">
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
+                  done
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                  active && "ring-2 ring-primary/30 ring-offset-1",
+                )}
+              >
+                {done && i < current ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-[10px] font-medium leading-none",
+                  done ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {step}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={cn(
+                  "h-0.5 flex-1 rounded-full -mt-4",
+                  i < current ? "bg-primary" : "bg-muted",
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const MyBookings = () => {
   const { isAuthenticated } = useAuth();
@@ -114,6 +181,16 @@ const MyBookings = () => {
     },
     onError: (err: any) => {
       toast({ title: "Couldn't report issue", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const payMutation = useMutation({
+    mutationFn: (bookingId: string) => initializePayment(bookingId),
+    onSuccess: (res) => {
+      window.location.href = res.data.authorizationUrl;
+    },
+    onError: (err: any) => {
+      toast({ title: "Payment failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -220,6 +297,108 @@ const MyBookings = () => {
                             </div>
                           </div>
                         </div>
+
+                        {/* Booking progress stepper */}
+                        <BookingStepper booking={booking} />
+
+                        {/* Eviction banner */}
+                        {booking.status === "EVICTED" && (
+                          <div className="mb-4 p-4 rounded-xl border-2 border-destructive/30 bg-destructive/5">
+                            <div className="flex items-start gap-3">
+                              <Ban className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                              <div>
+                                <p className="font-semibold text-sm text-destructive">You have been evicted</p>
+                                {booking.evictionReason && (
+                                  <p className="text-sm text-destructive/80 mt-1">{booking.evictionReason}</p>
+                                )}
+                                {booking.evictionDate && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Evicted on {new Date(booking.evictionDate).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Lease terms display */}
+                        {booking.status === "APPROVED" && booking.lease && (
+                          <div className="mb-4 space-y-2">
+                            {booking.lease.gracePeriodDays && booking.lease.gracePeriodDays > 0 ? (
+                              <p className="text-xs text-primary/80 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                Grace period: {booking.lease.gracePeriodDays} days after lease ends
+                              </p>
+                            ) : null}
+                            {booking.lease.duration && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                Duration: {booking.lease.duration}
+                              </p>
+                            )}
+                            {booking.lease.terms && (
+                              <details className="text-xs">
+                                <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1.5">
+                                  <FileText className="w-3.5 h-3.5" />
+                                  View Lease Terms
+                                </summary>
+                                <p className="mt-2 p-3 rounded-lg bg-muted/30 text-muted-foreground whitespace-pre-wrap">
+                                  {booking.lease.terms}
+                                </p>
+                              </details>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Payment status + Pay button */}
+                        {booking.status === "APPROVED" && (
+                          <div className="mb-4">
+                            {(!booking.paymentStatus || booking.paymentStatus === "UNPAID") && (
+                              <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5">
+                                  <CreditCard className="w-4.5 h-4.5 text-primary" />
+                                  <div>
+                                    <p className="text-sm font-semibold">Payment required</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Pay ₦{(booking.property?.priceMonthly || 0).toLocaleString()} to secure your booking
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  className="gradient-primary rounded-lg shrink-0"
+                                  size="sm"
+                                  disabled={payMutation.isPending}
+                                  onClick={() => payMutation.mutate(booking.id)}
+                                >
+                                  {payMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                                  ) : (
+                                    <CreditCard className="w-4 h-4 mr-1.5" />
+                                  )}
+                                  Pay Now
+                                </Button>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PENDING_PAYMENT" && (
+                              <div className="p-3 rounded-xl border border-amber-200/60 bg-amber-50/50 dark:bg-amber-950/20 flex items-center gap-2.5">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                                <p className="text-sm text-amber-800 dark:text-amber-300">Payment processing...</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PAID" && (
+                              <div className="p-3 rounded-xl border border-emerald-200/60 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-2.5">
+                                <CreditCard className="w-4 h-4 text-emerald-600" />
+                                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Payment confirmed</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "REFUNDED" && (
+                              <div className="p-3 rounded-xl border border-blue-200/60 bg-blue-50/50 dark:bg-blue-950/20 flex items-center gap-2.5">
+                                <ShieldAlert className="w-4 h-4 text-blue-600" />
+                                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Payment refunded</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/60">
                           <Button variant="ghost" size="sm" asChild>

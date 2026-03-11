@@ -28,16 +28,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
   Building2,
   Check,
-  Home,
-  Upload,
   Loader2,
   Eye,
   EyeOff,
+  Info,
 } from "lucide-react";
 
 interface EyeButtonProps {
@@ -59,7 +57,6 @@ const formSchema = z
       .min(8, { message: "Password must be at least 8 characters." }),
     confirmPassword: z.string(),
     role: z.enum(["STUDENT", "LANDLORD"]),
-    idCard: z.any().optional(),
     acceptTerms: z.boolean().refine((val) => val === true, {
       message: "You must agree to the terms & conditions.",
     }),
@@ -94,25 +91,14 @@ export default function SignUp() {
       confirmPassword: "",
       role: initialRole,
       acceptTerms: false,
-      idCard: undefined,
     },
   });
 
   const selectedRole = form.watch("role");
 
   async function onSubmit(values: SignUpFormValues) {
-    if (values.role === "LANDLORD" && !values.idCard) {
-      toast({
-        title: "ID Required",
-        description: "Please upload a government ID to register as a landlord.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // Register user first (so we have an auth token for uploads)
       await registerUser({
         name: values.fullName,
         email: values.email,
@@ -121,30 +107,12 @@ export default function SignUp() {
         role: values.role,
       });
 
-      // Upload ID card after registration (now we have a valid token)
-      if (values.role === "LANDLORD" && values.idCard) {
-        try {
-          const { uploadDocument } = await import("@/services/documents");
-          const { compressImage } = await import("@/lib/image-compress");
-          const { updateProfile } = await import("@/services/auth");
-          const compressedFile = await compressImage(values.idCard);
-          const res = await uploadDocument(compressedFile, "ID_CARD");
-          await updateProfile({ idCardUrl: res.data.url });
-        } catch {
-          // Registration succeeded but upload failed — user can re-upload later
-          toast({
-            title: "Account created",
-            description: "Your ID upload failed. Please re-upload from your profile.",
-            variant: "destructive",
-          });
-          navigate("/profile");
-          return;
-        }
-      }
-
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description:
+          values.role === "LANDLORD"
+            ? "Please check your email to verify your account, then upload your ID from your profile."
+            : "Please check your email to verify your account.",
       });
       navigate("/verify-email");
     } catch (err) {
@@ -188,7 +156,7 @@ export default function SignUp() {
             </CardTitle>
             <CardDescription>
               {selectedRole === "STUDENT"
-                ? "Sign up to find and book student accommodation near FUTA"
+                ? "Sign up to find and book accommodation near FUTA — students and non-students welcome"
                 : "Register as a landlord to list your properties"}
             </CardDescription>
           </CardHeader>
@@ -209,7 +177,7 @@ export default function SignUp() {
                         {[
                           {
                             id: "STUDENT",
-                            label: "Student",
+                            label: "Student / Tenant",
                             desc: "Looking for accommodation",
                             icon: User,
                           },
@@ -263,6 +231,14 @@ export default function SignUp() {
                           </button>
                         ))}
                       </div>
+                      {field.value === "STUDENT" && (
+                        <p className="text-xs text-muted-foreground flex items-start gap-1.5 mt-2">
+                          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
+                          <span>
+                            Not a student? No worries — pick <strong>Student / Tenant</strong> to browse and book accommodation. You'll verify your identity from your profile.
+                          </span>
+                        </p>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -373,66 +349,6 @@ export default function SignUp() {
                     )}
                   />
                 </div>
-
-                <AnimatePresence>
-                  {selectedRole === "LANDLORD" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="idCard"
-                        render={({ field: { value, onChange, ...field } }) => (
-                          <FormItem>
-                            <FormLabel>Government ID</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input
-                                  type="file"
-                                  accept="image/*,.pdf"
-                                  className="opacity-0 absolute inset-0 z-10 cursor-pointer h-20"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) onChange(file);
-                                  }}
-                                  {...field}
-                                />
-                                <div
-                                  className={cn(
-                                    "h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors",
-                                    value
-                                      ? "bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-700"
-                                      : "border-border hover:border-primary/40",
-                                  )}
-                                >
-                                  {value ? (
-                                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                                      <Check className="w-4 h-4" />
-                                      <span className="text-sm font-medium">
-                                        {(value as File).name}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                                      <span className="text-xs text-muted-foreground">
-                                        Upload your ID (image or PDF)
-                                      </span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 <FormField
                   control={form.control}

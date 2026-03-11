@@ -26,6 +26,7 @@ const AdminPropertyForm = lazy(() => import("./components/admin/AdminPropertyFor
 const AdminDocumentUpload = lazy(() => import("./components/admin/AdminDocumentUpload"));
 const AdminPropertyReview = lazy(() => import("./pages/AdminPropertyReview"));
 const AdminUserReview = lazy(() => import("./pages/AdminUserReview"));
+const AdminFlaggedMessages = lazy(() => import("./pages/AdminFlaggedMessages"));
 const Messages = lazy(() => import("./pages/Messages"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -128,6 +129,11 @@ const App = () => (
               <Route path="/admin/documents/upload" element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
                   <AdminDocumentUpload />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/flagged-messages" element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminFlaggedMessages />
                 </ProtectedRoute>
               } />
 
