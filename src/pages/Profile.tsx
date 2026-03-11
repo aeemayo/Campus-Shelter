@@ -51,7 +51,6 @@ import {
   Plus,
   Loader2,
   X,
-  Landmark,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -323,12 +322,6 @@ const Profile = () => {
                       <span>Repair Requests</span>
                     </TabsTrigger>
                   )}
-                  {isLandlord && (
-                    <TabsTrigger value="bank" className="gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap lg:w-full lg:justify-start">
-                      <Landmark className="w-4 h-4 shrink-0" />
-                      <span>Bank Details</span>
-                    </TabsTrigger>
-                  )}
                 </TabsList>
               </div>
 
@@ -521,17 +514,6 @@ const Profile = () => {
                 </motion.div>
               </TabsContent>
 
-              {/* ── Bank Details (Landlord) ── */}
-              <TabsContent value="bank" className="mt-0 outline-none">
-                <motion.div
-                  key="bank-tab"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  <BankDetailsSection />
-                </motion.div>
-              </TabsContent>
             </AnimatePresence>
               </div>{/* end content area */}
             </div>{/* end lg:flex-row */}
@@ -1523,166 +1505,6 @@ function MaintenanceRequests() {
           actionOnClick={() => setIsFormOpen(true)}
         />
       )}
-    </div>
-  );
-}
-
-function BankDetailsSection() {
-  const { toast } = useToast();
-  const [bankCode, setBankCode] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const { data: bankDetailRes, isLoading: detailLoading, refetch } = useQuery({
-    queryKey: ["bank-details"],
-    queryFn: async () => {
-      const { fetchBankDetails } = await import("@/services/bank-details");
-      return fetchBankDetails();
-    },
-  });
-
-  const { data: banksRes, isLoading: banksLoading } = useQuery({
-    queryKey: ["banks-list"],
-    queryFn: async () => {
-      const { fetchBanks } = await import("@/services/bank-details");
-      return fetchBanks();
-    },
-  });
-
-  const bankDetail = bankDetailRes?.data;
-  const banks = banksRes?.data || [];
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bankCode || accountNumber.length !== 10) {
-      toast({ title: "Invalid details", description: "Please select a bank and enter a 10-digit account number.", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    try {
-      const { saveBankDetails } = await import("@/services/bank-details");
-      await saveBankDetails({ bankCode, accountNumber });
-      toast({ title: "Bank details saved", description: "Your payment details have been verified and linked." });
-      refetch();
-    } catch (err: any) {
-      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (detailLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-primary/30" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {bankDetail ? (
-        <Card className="border-success/20 bg-success/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Landmark className="w-4 h-4 text-success" />
-              Bank Account Linked
-            </CardTitle>
-            <CardDescription>
-              Your bank account is set up to receive payments from bookings.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">Bank</p>
-                <p className="text-sm font-medium">{bankDetail.bankName}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">Account Number</p>
-                <p className="text-sm font-medium">{bankDetail.accountNumber}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">Account Name</p>
-                <p className="text-sm font-medium">{bankDetail.accountName}</p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="pt-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setBankCode(bankDetail.bankCode);
-                setAccountNumber(bankDetail.accountNumber);
-              }}
-            >
-              <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Update Details
-            </Button>
-          </CardFooter>
-        </Card>
-      ) : null}
-
-      <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <Landmark className="w-4 h-4 text-primary" />
-            {bankDetail ? "Update Bank Details" : "Add Bank Details"}
-          </CardTitle>
-          <CardDescription>
-            {bankDetail
-              ? "Update your bank account for receiving payments."
-              : "Add your bank account to receive payments when students book your properties. Your account name will be automatically verified via Paystack."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="bank-select">Bank</Label>
-              <select
-                id="bank-select"
-                value={bankCode}
-                onChange={(e) => setBankCode(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                disabled={banksLoading}
-              >
-                <option value="">{banksLoading ? "Loading banks..." : "Select your bank"}</option>
-                {banks.map((bank) => (
-                  <option key={bank.code} value={bank.code}>
-                    {bank.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="account-number">Account Number</Label>
-              <Input
-                id="account-number"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="Enter 10-digit account number"
-                className="h-10 rounded-lg"
-                maxLength={10}
-              />
-              {accountNumber.length > 0 && accountNumber.length < 10 && (
-                <p className="text-xs text-muted-foreground">{10 - accountNumber.length} more digits needed</p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              className="gradient-primary rounded-lg h-10 w-full"
-              disabled={saving || !bankCode || accountNumber.length !== 10}
-            >
-              {saving ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying & Saving...</>
-              ) : (
-                <>{bankDetail ? "Update" : "Save"} Bank Details</>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   );
 }
