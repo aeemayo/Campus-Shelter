@@ -13,11 +13,13 @@ import {
   Plus,
   ChevronDown,
   Shield,
+  Wallet,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchUnreadCount } from "@/services/messages";
+import { fetchWallet } from "@/services/wallet";
 const logo1 = "/CampusShelter4.png";
 const logo2 = "/CampusShelter5.png";
 
@@ -106,6 +108,14 @@ const Header = ({ bgColor = "" }) => {
     refetchOnWindowFocus: true,
   });
 
+  const { data: walletResponse } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: fetchWallet,
+    enabled: isAuthenticated && user?.role === "STUDENT",
+    refetchInterval: 60_000,
+  });
+  const walletBalance = walletResponse?.data?.balance ?? 0;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div
@@ -170,6 +180,17 @@ const Header = ({ bgColor = "" }) => {
                   <span className="flex items-center gap-1.5">
                     <CalendarCheck className="w-3.5 h-3.5" />
                     Bookings
+                  </span>
+                </Link>
+              )}
+              {isAuthenticated && user?.role === "STUDENT" && (
+                <Link to="/wallet" className={navLinkClass("/wallet")}>
+                  <span className="flex items-center gap-1.5">
+                    <Wallet className="w-3.5 h-3.5" />
+                    Wallet
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/15 text-white" : "bg-primary/10 text-primary"}`}>
+                      ₦{walletBalance.toLocaleString()}
+                    </span>
                   </span>
                 </Link>
               )}
@@ -349,6 +370,15 @@ const Header = ({ bgColor = "" }) => {
                   icon={CalendarCheck}
                   label="My Bookings"
                   active={isActive("/my-bookings")}
+                  onClick={() => setIsMenuOpen(false)}
+                />
+              )}
+              {isAuthenticated && user?.role === "STUDENT" && (
+                <MobileLink
+                  to="/wallet"
+                  icon={Wallet}
+                  label={`Wallet (₦${walletBalance.toLocaleString()})`}
+                  active={isActive("/wallet")}
                   onClick={() => setIsMenuOpen(false)}
                 />
               )}

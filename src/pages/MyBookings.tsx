@@ -4,6 +4,7 @@ import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
 import { initializePayment, fetchPayments, type Payment } from "@/services/payments";
+import { payFromWallet, fetchWallet } from "@/services/wallet";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -36,6 +37,7 @@ import {
   CreditCard,
   ShieldAlert,
   CheckCircle2,
+  Wallet,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
@@ -138,6 +140,14 @@ const MyBookings = () => {
   });
   const myPayments = paymentsResponse?.data || [];
 
+  // Fetch wallet balance
+  const { data: walletResponse } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: fetchWallet,
+    enabled: isAuthenticated,
+  });
+  const walletBalance = walletResponse?.data?.balance ?? 0;
+
   // Notify when a booking status changes
   useEffect(() => {
     bookings.forEach((b) => {
@@ -200,6 +210,19 @@ const MyBookings = () => {
     },
     onError: (err: any) => {
       toast({ title: "Payment failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const walletPayMutation = useMutation({
+    mutationFn: (bookingId: string) => payFromWallet(bookingId),
+    onSuccess: (res) => {
+      toast({ title: "Payment successful!", description: res.data.message });
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["my-payments"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Wallet payment failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -363,7 +386,7 @@ const MyBookings = () => {
                         {booking.status === "APPROVED" && (
                           <div className="mb-4">
                             {(!booking.paymentStatus || booking.paymentStatus === "UNPAID") && (
-                              <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3">
+                              <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
                                 <div className="flex items-center gap-2.5">
                                   <CreditCard className="w-4.5 h-4.5 text-primary" />
                                   <div>
@@ -373,19 +396,41 @@ const MyBookings = () => {
                                     </p>
                                   </div>
                                 </div>
-                                <Button
-                                  className="gradient-primary rounded-lg shrink-0"
-                                  size="sm"
-                                  disabled={payMutation.isPending}
-                                  onClick={() => payMutation.mutate(booking.id)}
-                                >
-                                  {payMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                                  ) : (
-                                    <CreditCard className="w-4 h-4 mr-1.5" />
-                                  )}
-                                  Pay Now
-                                </Button>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <Button
+                                    variant="outline"
+                                    className="rounded-lg flex-1 gap-1.5"
+                                    size="sm"
+                                    disabled={walletPayMutation.isPending || payMutation.isPending || walletBalance < (booking.property?.priceMonthly || 0)}
+                                    onClick={() => walletPayMutation.mutate(booking.id)}
+                                  >
+                                    {walletPayMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Wallet className="w-4 h-4" />
+                                    )}
+                                    Pay from Wallet (₦{walletBalance.toLocaleString()})
+                                  </Button>
+                                  <Button
+                                    className="gradient-primary rounded-lg flex-1 gap-1.5"
+                                    size="sm"
+                                    disabled={payMutation.isPending || walletPayMutation.isPending}
+                                    onClick={() => payMutation.mutate(booking.id)}
+                                  >
+                                    {payMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <CreditCard className="w-4 h-4" />
+                                    )}
+                                    Pay with Paystack
+                                  </Button>
+                                </div>
+                                {walletBalance < (booking.property?.priceMonthly || 0) && walletBalance > 0 && (
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Insufficient wallet balance.{" "}
+                                    <Link to="/wallet" className="text-primary hover:underline">Fund your wallet</Link>
+                                  </p>
+                                )}
                               </div>
                             )}
                             {booking.paymentStatus === "PENDING_PAYMENT" && (
