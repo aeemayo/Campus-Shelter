@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
-import { initializePayment } from "@/services/payments";
+import { initializePayment, fetchPayments, type Payment } from "@/services/payments";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -129,6 +129,14 @@ const MyBookings = () => {
   });
 
   const bookings = response?.data || [];
+
+  // Fetch student's payment history
+  const { data: paymentsResponse } = useQuery({
+    queryKey: ["my-payments"],
+    queryFn: () => fetchPayments(1, 50),
+    enabled: isAuthenticated,
+  });
+  const myPayments = paymentsResponse?.data || [];
 
   // Notify when a booking status changes
   useEffect(() => {
@@ -480,6 +488,71 @@ const MyBookings = () => {
                 <Button asChild>
                   <Link to="/properties">Browse Properties</Link>
                 </Button>
+              </div>
+            )}
+            {/* ── Payment History ── */}
+            {myPayments.length > 0 && (
+              <div className="mt-10">
+                <h2 className="text-xl font-display font-bold text-foreground tracking-tight mb-4">
+                  Payment <span className="text-primary">History</span>
+                </h2>
+                <Card className="border-border/40 overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border/40">
+                      {myPayments.map((payment) => (
+                        <div
+                          key={payment.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                              <CreditCard className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {payment.booking?.property?.title || "Property"}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {payment.paidAt
+                                  ? new Date(payment.paidAt).toLocaleDateString("en-NG", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : new Date(payment.createdAt).toLocaleDateString("en-NG", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                {" · "}Ref: {payment.paystackReference.slice(0, 8)}...
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 pl-12 sm:pl-0">
+                            <Badge
+                              variant={
+                                payment.refundedAt
+                                  ? "destructive"
+                                  : payment.paystackStatus === "success"
+                                    ? "default"
+                                    : "secondary"
+                              }
+                            >
+                              {payment.refundedAt
+                                ? "Refunded"
+                                : payment.paystackStatus === "success"
+                                  ? "Paid"
+                                  : payment.paystackStatus || "Pending"}
+                            </Badge>
+                            <p className="font-bold text-sm whitespace-nowrap">
+                              ₦{payment.amount.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>

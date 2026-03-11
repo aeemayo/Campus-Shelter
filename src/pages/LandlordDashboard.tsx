@@ -241,20 +241,35 @@ const LandlordDashboard = () => {
     const pendingBookings = bookings.filter(
       (b) => b.status === "PENDING",
     ).length;
-    const totalRevenue = bookings
-      .filter((b) => b.status === "APPROVED")
-      .reduce((sum, b) => sum + (b.property?.priceMonthly || 0), 0);
     const activeMaintenance = maintenanceRequests.filter(
       (r) => r.status !== "RESOLVED",
     ).length;
 
+    // Payment-based earnings
+    const successfulPayments = payments.filter(
+      (p) => p.paystackStatus === "success" && !p.refundedAt,
+    );
+    const totalEarnings = successfulPayments.reduce(
+      (sum, p) => sum + p.landlordAmount,
+      0,
+    );
+    const pendingSettlement = payments
+      .filter((p) => p.paystackStatus === "success" && !p.refundedAt && p.paidAt)
+      .reduce((sum, p) => sum + p.landlordAmount, 0);
+    const totalRefunded = payments
+      .filter((p) => p.refundedAt)
+      .reduce((sum, p) => sum + p.landlordAmount, 0);
+
     return {
       totalProperties,
       pendingBookings,
-      totalRevenue,
+      totalEarnings,
+      pendingSettlement,
+      totalRefunded,
       activeMaintenance,
+      successfulPayments: successfulPayments.length,
     };
-  }, [myProperties, bookings, maintenanceRequests]);
+  }, [myProperties, bookings, maintenanceRequests, payments]);
 
   const bookingDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -483,15 +498,15 @@ const LandlordDashboard = () => {
                 <div className="absolute top-0 left-0 w-1 h-full bg-success" />
                 <CardHeader className="pb-1 p-3 md:p-6 md:pb-1">
                   <CardDescription className="font-medium text-xs md:text-sm">
-                    Annual Revenue
+                    Total Earnings
                   </CardDescription>
                   <CardTitle className="text-xl md:text-3xl font-bold font-display text-success">
-                    ₦{stats.totalRevenue.toLocaleString()}
+                    ₦{stats.totalEarnings.toLocaleString()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
                   <div className="text-[10px] md:text-xs text-muted-foreground font-medium py-1">
-                    Approved bookings
+                    {stats.successfulPayments} payment{stats.successfulPayments !== 1 ? "s" : ""} received
                   </div>
                 </CardContent>
               </Card>
@@ -1756,6 +1771,52 @@ const LandlordDashboard = () => {
 
             {/* ── Payments Tab ── */}
             <TabsContent value="payments" className="space-y-6 outline-none">
+              {/* Earnings Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-success" />
+                    <CardContent className="p-4 md:p-6">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Total Earned</p>
+                      <p className="text-2xl md:text-3xl font-bold font-display text-success">
+                        ₦{stats.totalEarnings.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        After platform fees
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <CardContent className="p-4 md:p-6">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Settled to Bank</p>
+                      <p className="text-2xl md:text-3xl font-bold font-display">
+                        ₦{stats.pendingSettlement.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Via Paystack auto-settlement
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                  <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
+                    <CardContent className="p-4 md:p-6">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Refunded</p>
+                      <p className="text-2xl md:text-3xl font-bold font-display text-destructive">
+                        ₦{stats.totalRefunded.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {payments.filter((p) => p.refundedAt).length} refund{payments.filter((p) => p.refundedAt).length !== 1 ? "s" : ""}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1764,10 +1825,10 @@ const LandlordDashboard = () => {
                 <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
                   <CardHeader>
                     <CardTitle className="text-xl font-bold font-display tracking-tight">
-                      Payments Received
+                      Payment History
                     </CardTitle>
                     <CardDescription>
-                      Track payments from student bookings on your properties.
+                      All payments from student bookings. Funds are automatically settled to your bank account by Paystack.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-2">
