@@ -35,6 +35,7 @@ import {
   Ban,
   CreditCard,
   ShieldAlert,
+  CheckCircle2,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
@@ -46,7 +47,7 @@ import { cn } from "@/lib/utils";
 const STEPS = ["Requested", "Approved", "Paid", "Active"] as const;
 
 function getStepIndex(booking: Booking): number {
-  if (booking.status === "REJECTED" || booking.status === "CANCELLED" || booking.status === "EVICTED") return -1;
+  if (booking.status === "REJECTED" || booking.status === "EVICTED") return -1;
   if (booking.paymentStatus === "PAID" && booking.status === "APPROVED") return 3; // Active
   if (booking.paymentStatus === "PAID") return 2;
   if (booking.status === "APPROVED") return 1;

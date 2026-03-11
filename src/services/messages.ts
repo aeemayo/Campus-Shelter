@@ -61,3 +61,12 @@ export async function fetchFlaggedMessages(page = 1, search?: string) {
   if (search) query.set("search", search);
   return apiFetch<ApiPaginated<ApiMessage>>(`/api/admin/messages/flagged?${query.toString()}`);
 }
+
+/**
+ * Admin: unflag / resolve a flagged message.
+ */
+export async function unflagMessage(id: string) {
+  return apiFetch<ApiSuccess<ApiMessage>>(`/api/admin/messages/${id}/unflag`, {
+    method: "PATCH",
+  });
+}

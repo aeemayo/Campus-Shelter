@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { fetchFlaggedMessages, type ApiMessage } from "@/services/messages";
+import { fetchFlaggedMessages, unflagMessage, type ApiMessage } from "@/services/messages";
+import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -17,11 +18,14 @@ import {
   MessageSquare,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminFlaggedMessages() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -29,6 +33,21 @@ export default function AdminFlaggedMessages() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-flagged-messages", page, search],
     queryFn: () => fetchFlaggedMessages(page, search || undefined),
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => unflagMessage(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-flagged-messages"] });
+      toast({ title: "Message resolved", description: "The message has been unflagged successfully." });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to resolve",
+        description: err?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const messages = data?.data ?? [];
@@ -134,6 +153,21 @@ export default function AdminFlaggedMessages() {
                           )}
                         </div>
                       </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 gap-1.5 text-green-700 border-green-300 hover:bg-green-50 hover:text-green-800 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/40"
+                        disabled={resolveMutation.isPending}
+                        onClick={() => resolveMutation.mutate(msg.id)}
+                      >
+                        {resolveMutation.isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        )}
+                        Resolve
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
