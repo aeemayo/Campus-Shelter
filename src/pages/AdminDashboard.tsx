@@ -43,6 +43,8 @@ import {
   ChevronRight,
   MessageSquare,
   GraduationCap,
+  CreditCard,
+  Undo2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,16 @@ import {
 import { fetchFutaGates, updateFutaGates } from "@/services/settings";
 import { FUTA_GATES, type FutaGate } from "@/lib/futa-gates";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { fetchPayments, refundPayment, type Payment } from "@/services/payments";
 import {
   BarChart,
   Bar,
@@ -344,6 +356,13 @@ const AdminDashboard = () => {
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Stats</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="payments"
+                  className="gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs md:text-sm whitespace-nowrap"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Payments</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="settings"
@@ -658,6 +677,18 @@ const AdminDashboard = () => {
                 </motion.div>
               </TabsContent>
 
+              <TabsContent value="payments" className="mt-0 outline-none">
+                <motion.div
+                  key="payments-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PaymentsTab />
+                </motion.div>
+              </TabsContent>
+
               <TabsContent value="settings" className="mt-0 outline-none">
                 <motion.div
                   key="settings-tab"
@@ -933,6 +964,8 @@ function AnalyticsTab() {
   const analytics = response?.data || {};
   const overview = analytics.overview || {};
 
+  const ps = overview.paymentStats || {};
+
   const stats = [
     {
       label: "Total Users",
@@ -959,6 +992,30 @@ function AnalyticsTab() {
         : "₦0",
       icon: DollarSign,
       color: "text-accent",
+    },
+  ];
+
+  const paymentCards = [
+    {
+      label: "Total Collected",
+      value: ps.totalCollected ? `₦${Number(ps.totalCollected).toLocaleString()}` : "₦0",
+      sub: `${ps.totalPayments ?? 0} payments`,
+      icon: CreditCard,
+      color: "text-primary",
+    },
+    {
+      label: "Commission Earned",
+      value: ps.totalCommission ? `₦${Number(ps.totalCommission).toLocaleString()}` : "₦0",
+      sub: "Platform fees",
+      icon: TrendingUp,
+      color: "text-success",
+    },
+    {
+      label: "Landlord Payouts",
+      value: ps.totalPayouts ? `₦${Number(ps.totalPayouts).toLocaleString()}` : "₦0",
+      sub: "Disbursed to landlords",
+      icon: DollarSign,
+      color: "text-warning",
     },
   ];
 
@@ -1012,6 +1069,31 @@ function AnalyticsTab() {
           </Card>
         ))}
       </div>
+
+      {/* Payment Stats */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            Payment Summary
+          </CardTitle>
+          <CardDescription>Paystack transaction overview</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {paymentCards.map((card) => (
+              <div key={card.label} className="p-4 rounded-xl bg-muted/30 border border-border/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <card.icon className={`w-4 h-4 ${card.color}`} />
+                  <span className="text-xs text-muted-foreground font-medium">{card.label}</span>
+                </div>
+                <p className="text-xl font-bold tracking-tight">{card.value}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{card.sub}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-border/60">
@@ -2292,6 +2374,235 @@ function FutaGatesSettings() {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function PaymentsTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [refundReasonText, setRefundReasonText] = useState("");
+
+  const { data: response, isLoading } = useQuery({
+    queryKey: ["admin-payments", page],
+    queryFn: () => fetchPayments(page, PAGE_SIZE),
+  });
+
+  const payments = response?.data || [];
+  const meta = response?.meta;
+  const totalPages = meta ? Math.ceil(meta.total / meta.limit) : 1;
+
+  const refundMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      refundPayment(id, reason),
+    onSuccess: () => {
+      toast({
+        title: "Payment Refunded",
+        description: "The payment has been refunded successfully.",
+      });
+      setRefundDialogOpen(false);
+      setSelectedPayment(null);
+      setRefundReasonText("");
+      queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Refund Failed",
+        description: err?.message || "Failed to process refund.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openRefundDialog = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setRefundReasonText("");
+    setRefundDialogOpen(true);
+  };
+
+  const handleConfirmRefund = () => {
+    if (!selectedPayment || !refundReasonText.trim()) return;
+    refundMutation.mutate({ id: selectedPayment.id, reason: refundReasonText.trim() });
+  };
+
+  const getPaymentStatusBadge = (payment: Payment) => {
+    if (payment.refundedAt) {
+      return <Badge variant="default" className="text-[9px] bg-blue-500 hover:bg-blue-500/80">REFUNDED</Badge>;
+    }
+    if (payment.booking?.paymentStatus === "PAID" || payment.paidAt) {
+      return <Badge variant="success" className="text-[9px]">PAID</Badge>;
+    }
+    return <Badge variant="warning" className="text-[9px]">PENDING</Badge>;
+  };
+
+  const isPaid = (payment: Payment) =>
+    (payment.booking?.paymentStatus === "PAID" || payment.paidAt) && !payment.refundedAt;
+
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Card className="border-border/60">
+        <CardHeader className="pb-4 md:pb-6 border-b border-border/40">
+          <CardTitle className="text-lg md:text-xl font-bold font-display tracking-tight">
+            Payments
+          </CardTitle>
+          <CardDescription className="font-medium text-muted-foreground/70 text-sm">
+            All payments across the platform.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {payments.length > 0 ? (
+            <div className="divide-y divide-border/40">
+              {payments.map((payment) => (
+                <div key={payment.id} className="p-4 md:p-6 space-y-3">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm">
+                          {payment.booking?.property?.title || "Unknown Property"}
+                        </p>
+                        {getPaymentStatusBadge(payment)}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm text-muted-foreground">
+                        <p className="flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                          <span className="font-medium text-foreground/80">
+                            {payment.booking?.student?.name || "Unknown Student"}
+                          </span>
+                          {payment.booking?.student?.email && (
+                            <span className="text-xs text-muted-foreground/60">
+                              ({payment.booking.student.email})
+                            </span>
+                          )}
+                        </p>
+                        <p className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          {payment.booking?.property?.location || "—"}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="w-3.5 h-3.5 text-green-600" />
+                          <span className="font-semibold">
+                            {"\u20A6"}{payment.amount.toLocaleString()}
+                          </span>
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Fee: {"\u20A6"}{payment.platformFee.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Landlord: {"\u20A6"}{payment.landlordAmount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground/60">
+                        Created {new Date(payment.createdAt).toLocaleDateString()}
+                        {payment.paidAt && (
+                          <> &middot; Paid {new Date(payment.paidAt).toLocaleDateString()}</>
+                        )}
+                      </p>
+
+                      {payment.refundedAt && (
+                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3 space-y-1">
+                          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                            <Undo2 className="w-3 h-3" />
+                            Refunded on {new Date(payment.refundedAt).toLocaleDateString()}
+                          </p>
+                          {payment.refundReason && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                              Reason: {payment.refundReason}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {isPaid(payment) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl text-xs font-bold shrink-0 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                        onClick={() => openRefundDialog(payment)}
+                      >
+                        <Undo2 className="w-3.5 h-3.5 mr-1.5" />
+                        Refund
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <CreditCard className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-semibold text-muted-foreground">No payments found</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                Payments will appear here once students make bookings.
+              </p>
+            </div>
+          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={meta?.total || 0}
+            onPageChange={setPage}
+          />
+        </CardContent>
+      </Card>
+
+      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Refund Payment</DialogTitle>
+            <DialogDescription>
+              Refund {"\u20A6"}{selectedPayment?.amount.toLocaleString()} for{" "}
+              <strong>{selectedPayment?.booking?.property?.title}</strong> to{" "}
+              <strong>{selectedPayment?.booking?.student?.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <label className="text-sm font-medium">Reason for refund</label>
+            <Textarea
+              placeholder="Enter the reason for this refund..."
+              value={refundReasonText}
+              onChange={(e) => setRefundReasonText(e.target.value)}
+              className="min-h-[100px] rounded-xl"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setRefundDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-xl"
+              disabled={!refundReasonText.trim() || refundMutation.isPending}
+              onClick={handleConfirmRefund}
+            >
+              {refundMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              Confirm Refund
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

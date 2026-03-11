@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBookings, type Booking } from "@/services/bookings";
 import { createReview } from "@/services/reviews";
 import { createMaintenanceRequest } from "@/services/maintenance";
+import { initializePayment } from "@/services/payments";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -32,6 +33,8 @@ import {
   Wrench,
   AlertCircle,
   Ban,
+  CreditCard,
+  ShieldAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/lib/status-badge";
 import { Link } from "react-router-dom";
@@ -178,6 +181,16 @@ const MyBookings = () => {
     },
     onError: (err: any) => {
       toast({ title: "Couldn't report issue", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const payMutation = useMutation({
+    mutationFn: (bookingId: string) => initializePayment(bookingId),
+    onSuccess: (res) => {
+      window.location.href = res.data.authorizationUrl;
+    },
+    onError: (err: any) => {
+      toast({ title: "Payment failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -333,6 +346,56 @@ const MyBookings = () => {
                                   {booking.lease.terms}
                                 </p>
                               </details>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Payment status + Pay button */}
+                        {booking.status === "APPROVED" && (
+                          <div className="mb-4">
+                            {(!booking.paymentStatus || booking.paymentStatus === "UNPAID") && (
+                              <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5">
+                                  <CreditCard className="w-4.5 h-4.5 text-primary" />
+                                  <div>
+                                    <p className="text-sm font-semibold">Payment required</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Pay ₦{(booking.property?.priceMonthly || 0).toLocaleString()} to secure your booking
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  className="gradient-primary rounded-lg shrink-0"
+                                  size="sm"
+                                  disabled={payMutation.isPending}
+                                  onClick={() => payMutation.mutate(booking.id)}
+                                >
+                                  {payMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                                  ) : (
+                                    <CreditCard className="w-4 h-4 mr-1.5" />
+                                  )}
+                                  Pay Now
+                                </Button>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PENDING_PAYMENT" && (
+                              <div className="p-3 rounded-xl border border-amber-200/60 bg-amber-50/50 dark:bg-amber-950/20 flex items-center gap-2.5">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                                <p className="text-sm text-amber-800 dark:text-amber-300">Payment processing...</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "PAID" && (
+                              <div className="p-3 rounded-xl border border-emerald-200/60 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-2.5">
+                                <CreditCard className="w-4 h-4 text-emerald-600" />
+                                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Payment confirmed</p>
+                              </div>
+                            )}
+                            {booking.paymentStatus === "REFUNDED" && (
+                              <div className="p-3 rounded-xl border border-blue-200/60 bg-blue-50/50 dark:bg-blue-950/20 flex items-center gap-2.5">
+                                <ShieldAlert className="w-4 h-4 text-blue-600" />
+                                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Payment refunded</p>
+                              </div>
                             )}
                           </div>
                         )}

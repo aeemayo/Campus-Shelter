@@ -10,6 +10,7 @@ import { fetchProperties, deleteProperty, updatePropertyNotes } from "@/services
 import {
   fetchMyBookings,
   updateBookingStatus,
+  evictBooking,
   type Booking,
 } from "@/services/bookings";
 import {
@@ -17,6 +18,8 @@ import {
   updateMaintenanceStatus,
   type MaintenanceRequest,
 } from "@/services/maintenance";
+import { fetchPayments, type Payment } from "@/services/payments";
+import { fetchBankDetails } from "@/services/bank-details";
 import { uploadDocument } from "@/services/documents";
 import { compressImage } from "@/lib/image-compress";
 import { createLease } from "@/services/leases";
@@ -59,6 +62,11 @@ import {
   ChevronUp,
   StickyNote,
   Save,
+  Users,
+  Ban,
+  CreditCard,
+  ChevronLeft,
+  Landmark,
 } from "lucide-react";
 import {
   Dialog,
@@ -90,6 +98,10 @@ const LandlordDashboard = () => {
   const [activeTab, setActiveTab] = useState("properties");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [evictTarget, setEvictTarget] = useState<Booking | null>(null);
+  const [evictReason, setEvictReason] = useState("");
+  const [isEvicting, setIsEvicting] = useState(false);
+  const [paymentsPage, setPaymentsPage] = useState(1);
 
   // Fetch landlord's properties
   const { data: propertiesResponse, isLoading: propsLoading } = useQuery({
@@ -122,6 +134,24 @@ const LandlordDashboard = () => {
   );
 
   const maintenanceRequests = maintenanceResponse?.data || [];
+
+  // Fetch payments
+  const { data: paymentsResponse, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["landlord-payments", paymentsPage],
+    queryFn: () => fetchPayments(paymentsPage, 20),
+    enabled: isAuthenticated && user?.role === "LANDLORD",
+  });
+
+  const payments = paymentsResponse?.data || [];
+  const paymentsMeta = paymentsResponse?.meta;
+
+  // Check if landlord has bank details set up
+  const { data: bankDetailsResponse } = useQuery({
+    queryKey: ["landlord-bank-details"],
+    queryFn: fetchBankDetails,
+    enabled: isAuthenticated && user?.role === "LANDLORD",
+  });
+  const hasBankDetails = !!bankDetailsResponse?.data;
 
   // Booking status mutation
   const bookingMutation = useMutation({
@@ -366,6 +396,33 @@ const LandlordDashboard = () => {
             </Card>
           )}
 
+          {/* Bank details prompt */}
+          {user?.landlordStatus === "VERIFIED" && !hasBankDetails && (
+            <Card className="mb-6 md:mb-8 border-2 border-amber-300/40 bg-amber-50/60 dark:bg-amber-950/20">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl shrink-0 bg-amber-100 dark:bg-amber-900/30">
+                    <Landmark className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm md:text-base mb-1 text-amber-900 dark:text-amber-200">
+                      Set Up Your Bank Details
+                    </p>
+                    <p className="text-xs md:text-sm text-amber-800/80 dark:text-amber-300/80 mb-3">
+                      You need to add your bank account before you can approve bookings. Students won't be able to pay until your bank details are configured.
+                    </p>
+                    <Button size="sm" className="gradient-primary rounded-lg" asChild>
+                      <Link to="/profile">
+                        <Landmark className="w-3.5 h-3.5 mr-1.5" />
+                        Add Bank Details
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Stats Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
             <motion.div
@@ -595,7 +652,7 @@ const LandlordDashboard = () => {
             onValueChange={setActiveTab}
             className="space-y-4 md:space-y-6"
           >
-            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-4 md:inline-flex">
+            <TabsList className="bg-muted/50 p-1 w-full md:w-auto grid grid-cols-5 md:inline-flex">
               <TabsTrigger
                 value="properties"
                 className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
@@ -623,6 +680,13 @@ const LandlordDashboard = () => {
               >
                 <Wrench className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 <span>Repairs</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="payments"
+                className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-4"
+              >
+                <CreditCard className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span>Payments</span>
               </TabsTrigger>
             </TabsList>
 
@@ -1682,6 +1746,158 @@ const LandlordDashboard = () => {
                         <p className="text-muted-foreground text-sm max-w-xs mx-auto">
                           No maintenance requests reported for your properties
                           at the moment.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* ── Payments Tab ── */}
+            <TabsContent value="payments" className="space-y-6 outline-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-border/40 bg-background/60 backdrop-blur-md shadow-primary-md">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold font-display tracking-tight">
+                      Payments Received
+                    </CardTitle>
+                    <CardDescription>
+                      Track payments from student bookings on your properties.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {paymentsLoading ? (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Loading payments...
+                        </p>
+                      </div>
+                    ) : payments.length > 0 ? (
+                      <>
+                        <div className="space-y-3 md:space-y-4">
+                          {payments.map((payment) => (
+                            <div
+                              key={payment.id}
+                              className="group flex flex-col gap-4 md:gap-6 p-4 md:p-6 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300"
+                            >
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                                <div className="flex-1 space-y-2 md:space-y-3">
+                                  <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                                    <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/5 text-primary">
+                                      <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
+                                    </div>
+                                    <p className="font-bold text-base md:text-lg tracking-tight">
+                                      {payment.booking?.property?.title || "Property"}
+                                    </p>
+                                    <Badge
+                                      variant={
+                                        payment.paystackStatus === "success"
+                                          ? "default"
+                                          : payment.refundedAt
+                                            ? "destructive"
+                                            : "secondary"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {payment.refundedAt
+                                        ? "Refunded"
+                                        : payment.paystackStatus === "success"
+                                          ? "Paid"
+                                          : payment.paystackStatus || "Pending"}
+                                    </Badge>
+                                  </div>
+
+                                  {payment.booking?.student && (
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pl-0 md:pl-1">
+                                      <span className="font-semibold text-foreground">
+                                        {payment.booking.student.name}
+                                      </span>
+                                      <a
+                                        href={`mailto:${payment.booking.student.email}`}
+                                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                                      >
+                                        <Mail className="w-3 h-3" />
+                                        {payment.booking.student.email}
+                                      </a>
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pl-0 md:pl-1">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {payment.paidAt
+                                        ? new Date(payment.paidAt).toLocaleDateString("en-NG", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                          })
+                                        : new Date(payment.createdAt).toLocaleDateString("en-NG", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                          })}
+                                    </span>
+                                    <span>Ref: {payment.paystackReference}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col items-end gap-1 text-right min-w-[140px]">
+                                  <p className="text-lg md:text-xl font-bold text-primary tracking-tight">
+                                    ₦{payment.landlordAmount.toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Total: ₦{payment.amount.toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Fee: ₦{payment.platformFee.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {paymentsMeta && paymentsMeta.totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-2 pt-6">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={paymentsPage <= 1}
+                              onClick={() => setPaymentsPage((p) => Math.max(1, p - 1))}
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground px-2">
+                              Page {paymentsMeta.page} of {paymentsMeta.totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={paymentsPage >= paymentsMeta.totalPages}
+                              onClick={() => setPaymentsPage((p) => p + 1)}
+                            >
+                              Next
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="py-24 flex flex-col items-center justify-center gap-3">
+                        <div className="p-3 rounded-full bg-muted/50">
+                          <CreditCard className="w-8 h-8 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                          No payments received yet. Payments will appear here
+                          once students pay for bookings on your properties.
                         </p>
                       </div>
                     )}
