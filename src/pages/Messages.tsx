@@ -1,27 +1,23 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Navigate, useParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMessages, sendMessage, ApiMessage } from "@/services/messages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Send,
   Search,
-  MoreVertical,
   Phone,
   Video,
   Info,
   Loader2,
   MessageSquare,
   ArrowLeft,
-  User,
   AlertTriangle,
   ShieldAlert,
 } from "lucide-react";
@@ -136,16 +132,16 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <SEO title="Messages" description="Your CampusShelter messages with landlords and students." path="/messages" noIndex />
       <Header />
 
-      <main className="flex-1 pt-20 pb-4 overflow-hidden h-[calc(100vh-80px)]">
-        <div className="container mx-auto h-full px-4 flex gap-6">
+      <main className="flex-1 min-h-0 pt-20 pb-0">
+        <div className="h-full px-4 flex gap-0 lg:gap-0 max-w-[1600px] mx-auto">
 
           {/* Sidebar: Conversation List */}
-          <div className={`w-full lg:w-96 h-full flex-col ${partnerId ? 'hidden lg:flex' : 'flex'}`}>
-            <Card className="h-full border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
+          <div className={`w-full lg:w-96 h-full flex-col border-r border-border/40 ${partnerId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="h-full bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
               <div className="p-4 border-b space-y-4">
                 <div className="flex items-center justify-between">
                   <h1 className="text-xl font-display font-bold tracking-tight">Messages</h1>
@@ -175,9 +171,9 @@ const Messages = () => {
                       <Link
                         key={conv.userId}
                         to={`/messages/${conv.userId}`}
-                        className={`flex items-center gap-4 p-4 hover:bg-primary/5 transition-colors cursor-pointer ${partnerId === conv.userId ? 'bg-primary/5 border-l-4 border-primary' : ''}`}
+                        className={`flex items-center gap-4 p-4 hover:bg-primary/5 transition-colors cursor-pointer overflow-hidden ${partnerId === conv.userId ? 'bg-primary/5 border-l-4 border-primary' : ''}`}
                       >
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-12 h-12 shrink-0">
                           <AvatarFallback className="bg-primary/10 text-primary uppercase">
                             {conv.user?.name.slice(0, 2)}
                           </AvatarFallback>
@@ -189,7 +185,7 @@ const Messages = () => {
                               {format(new Date(conv.lastMessage.createdAt), 'HH:mm')}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-muted-foreground truncate line-clamp-1">
                             {conv.lastMessage.senderId === user?.id ? 'You: ' : ''}
                             {conv.lastMessage.content}
                           </p>
@@ -206,13 +202,13 @@ const Messages = () => {
                   </div>
                 )}
               </ScrollArea>
-            </Card>
+            </div>
           </div>
 
           {/* Chat Window */}
           <div className={`flex-1 h-full flex flex-col ${!partnerId ? 'hidden lg:flex' : 'flex'}`}>
             {partnerId ? (
-              <Card className="flex-1 border-border/60 shadow-primary-sm bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col relative">
+              <div className="flex-1 bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col relative">
 
                 {/* Chat Header */}
                 <div className="p-4 border-b flex items-center justify-between">
@@ -345,7 +341,7 @@ const Messages = () => {
                   </form>
                 </div>
 
-              </Card>
+              </div>
             ) : (
               <div className="flex-1 flex items-center justify-center p-8 text-center">
                 <div className="max-w-xs space-y-4">
